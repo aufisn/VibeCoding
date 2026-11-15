@@ -5,6 +5,7 @@ import { validateQuestions } from "./validate.js";
 import { createGame } from "./state.js";
 import { createUI } from "./ui.js";
 import { saveRun } from "./storage.js";
+import { bindThemeToggle } from "./theme.js";
 
 const QUESTIONS_URL = "data/questions.json";
 
@@ -22,7 +23,7 @@ async function loadQuestions() {
   }
 }
 
-/** Replace the whole page body with an error screen listing `messages`. */
+/** Replace the page's <main> with an error screen listing `messages`. */
 function showErrorScreen(title, messages) {
   const main = document.createElement("main");
   main.className = "error-screen";
@@ -43,10 +44,16 @@ function showErrorScreen(title, messages) {
   }
 
   main.append(h1, intro, list);
-  document.body.replaceChildren(main);
+  // Keep the top bar (and its theme switch); replace only the content.
+  const current = document.querySelector("main");
+  if (current) current.replaceWith(main);
+  else document.body.append(main);
 }
 
 async function init() {
+  const toggle = document.getElementById("theme-toggle");
+  if (toggle) bindThemeToggle(toggle);
+
   let questions;
   try {
     questions = await loadQuestions();

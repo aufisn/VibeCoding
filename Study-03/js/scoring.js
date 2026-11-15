@@ -1,19 +1,23 @@
 // Pure scoring functions. No DOM, no I/O.
 
-import { CATEGORIES, RANK_TIERS } from "./config.js";
+import { CATEGORIES, RANK_TIERS, TOTAL_QUESTIONS } from "./config.js";
 
 /**
  * The highest tier whose `min` is less than or equal to `total`.
+ * Tier minimums are out of TOTAL_QUESTIONS (40); for a shorter run they are
+ * scaled to `maxScore`, so 9 of 10 ranks like 36 of 40.
  * Tiers may be in any order. Falls back to the lowest tier.
  * @param {number} total
  * @param {readonly {name: string, min: number}[]} [tiers]
+ * @param {number} [maxScore] questions in the run
  * @returns {{name: string, min: number}}
  */
-export function tierFor(total, tiers = RANK_TIERS) {
+export function tierFor(total, tiers = RANK_TIERS, maxScore = TOTAL_QUESTIONS) {
   const sorted = [...tiers].sort((a, b) => a.min - b.min);
   let best = sorted[0];
   for (const tier of sorted) {
-    if (tier.min <= total) best = tier;
+    // Compare total * 40 with min * maxScore to stay in whole numbers.
+    if (tier.min * maxScore <= total * TOTAL_QUESTIONS) best = tier;
   }
   return best;
 }

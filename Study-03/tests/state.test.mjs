@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { createGame, SCREENS, cleanNickname } from "../js/state.js";
 import { seededRng } from "../js/quiz.js";
-import { CATEGORIES } from "../js/config.js";
+import { ALL_SUBJECTS, CATEGORIES } from "../js/config.js";
 import { loadBank } from "./helpers.mjs";
 
 const bank = await loadBank();
@@ -129,8 +129,12 @@ test("the finished-run record is handed out exactly once", () => {
   assert.deepEqual(record, {
     nickname: "Ana",
     finishedAt: FIXED_NOW.toISOString(),
+    subject: "All",
     total: 40,
+    maxScore: 40,
     byCategory: { History: 10, Science: 10, Geography: 10, "Arts & Culture": 10 },
+    skipped: 0,
+    eliminated: 0,
     tier: "Grandmaster",
   });
   assert.equal(game.takeResultToSave(), null, "second call returns null (no double save)");
@@ -176,4 +180,126 @@ test("cleanNickname trims and caps at 20 characters", () => {
   assert.equal(cleanNickname("   "), "");
   assert.equal(cleanNickname(undefined), "");
   assert.equal(cleanNickname("  abcdefghijklmnopqrstuvwxyz "), "abcdefghijklmnopqrst");
+});
+
+/* ---------- Subject choice ---------- */
+
+test("each single subject plays its 10 questions and goes straight to results", () => {
+  for (const subject of CATEGORIES) {
+    const game = newGame(3);
+    assert.equal(game.start("Ana", subject), true);
+    assert.equal(game.getState().totalQuestions, 10);
+    for (let i = 0; i < 10; i++) {
+      const s = game.getState();
+      assert.equal(s.screen, SCREENS.QUESTION);
+      assert.equal(s.category, subject);
+      answerAndNext(game, { correct: i < 9 });
+    }
+    const s = game.getState();
+    assert.equal(s.screen, SCREENS.RESULTS, "no category summary for a one-subject run");
+    assert.deepEqual(Object.keys(s.byCategory), [subject]);
+    const record = game.takeResultToSave();
+    assert.equal(record.subject, subject);
+    assert.equal(record.total, 9);
+    assert.equal(record.maxScore, 10);
+    assert.equal(record.tier, "Grandmaster", "9 of 10 ranks like 36 of 40");
+  }
+});
+
+test("All plays 40 questions; an unknown subject is refused", () => {
+  const game = newGame();
+  assert.equal(game.start("Ana", "Cooking"), false);
+  assert.equal(game.getState().screen, SCREENS.START);
+  assert.equal(game.start("Ana", ALL_SUBJECTS), true);
+  assert.equal(game.getState().totalQuestions, 40);
+  assert.equal(game.getState().subject, ALL_SUBJECTS);
+});
+
+/* ---------- Eliminate ---------- */
+
+test("eliminate removes one wrong option, once per question", () => {
+  const game = newGame(5);
+  game.start("Ana", "Science");
+  let s = game.getState();
+  assert.equal(s.canEliminate, true);
+  assert.equal(game.eliminate(), true);
+  s = game.getState();
+  assert.equal(s.eliminated.length, 1);
+  assert.notEqual(s.eliminated[0], s.question.correctIndex, "never the correct option");
+  assert.equal(s.canEliminate, false);
+  assert.equal(game.eliminate(), false, "second press on the same question is refused");
+  assert.equal(game.answer(s.eliminated[0]), false, "an eliminated option can't be chosen");
+
+  answerAndNext(game);
+  s = game.getState();
+  assert.deepEqual(s.eliminated, [], "the next question starts with all 4 options");
+  assert.equal(s.canEliminate, true);
+  assert.equal(s.eliminationsUsed, 1);
+});
+
+test("eliminate is refused after answering, and never removes the correct option", () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const game = newGame(seed);
+    game.start("", "History");
+    const { question } = game.getState();
+    game.eliminate();
+    assert.notEqual(game.getState().eliminated[0], question.correctIndex);
+  }
+  const game = newGame();
+  game.start();
+  game.answer(game.getState().question.correctIndex);
+  assert.equal(game.eliminate(), false);
+});
+
+test("with a larger allowance, eliminate stops when one wrong option is left", () => {
+  const game = createGame(bank, { rng: seededRng(2), eliminatePerQuestion: 3 });
+  game.start();
+  assert.equal(game.eliminate(), true);
+  assert.equal(game.eliminate(), true);
+  assert.equal(game.eliminate(), false);
+  const s = game.getState();
+  assert.equal(s.eliminated.length, 2);
+  assert.ok(!s.eliminated.includes(s.question.correctIndex));
+});
+
+/* ---------- Skip ---------- */
+
+test("skip scores 0, moves to the next question and is recorded", () => {
+  const game = newGame();
+  game.start("Ana", "Geography");
+  const first = game.getState().question.id;
+  assert.equal(game.skip(), true);
+  const s = game.getState();
+  assert.equal(s.index, 1);
+  assert.notEqual(s.question.id, first);
+  assert.equal(s.score, 0);
+  assert.equal(s.skippedCount, 1);
+  assert.equal(s.answeredCount, 1, "skipped counts as done for progress");
+});
+
+test("skip is refused after answering", () => {
+  const game = newGame();
+  game.start();
+  game.answer(0);
+  assert.equal(game.skip(), false);
+  assert.equal(game.getState().index, 0);
+});
+
+test("skipping the last question of a category reaches its summary; skips are saved", () => {
+  const game = newGame();
+  game.start("Ana");
+  for (let i = 0; i < 9; i++) answerAndNext(game);
+  game.skip();
+  let s = game.getState();
+  assert.equal(s.screen, SCREENS.SUMMARY);
+  assert.equal(s.categoryScore, 9);
+  assert.equal(s.categorySkipped, 1);
+  while (game.getState().screen !== SCREENS.RESULTS) {
+    if (game.getState().screen === SCREENS.QUESTION) game.skip();
+    else game.next();
+  }
+  const record = game.takeResultToSave();
+  assert.equal(record.total, 9);
+  assert.equal(record.skipped, 31);
+  assert.equal(record.tier, "Novice");
 });

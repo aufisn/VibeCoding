@@ -2,11 +2,20 @@
 
 A single-player general knowledge quiz: 4-option multiple choice, 10 questions in each of four categories (History, Science, Geography, Arts & Culture), 40 in total. Plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no dependencies.
 
-**Status: Phase 2 (core game) done.** Phase 3 adds "Review mistakes" and a leaderboard (placeholders are on the Results screen).
+**Status: Phase 2 (core game) done, plus subject choice, Eliminate, Skip and a light/dark switch.** Phase 3 adds "Review mistakes" and a leaderboard (placeholders are on the Results screen).
 
 ## How to play
 
-Enter an optional nickname and press **Start**. Questions come in four rounds of 10: History, Science, Geography, then Arts & Culture. Question and answer order are reshuffled every run. You get one try per question: the first answer you pick locks, and you see right away whether it was correct, plus a one-line explanation. Press **Next** to go on. After each category you see your score out of 10, and at the end your total out of 40 and your rank (see [Rank tiers](#rank-tiers)).
+Enter an optional nickname, then pick a subject: **History**, **Science**, **Geography** or **Arts & Culture** for a round of 10, or **All subjects** for all 40 (four rounds in that order, with a score summary after each). Pressing Enter in the nickname box starts All subjects. Question and answer order are reshuffled every run.
+
+You get one try per question: the first answer you pick locks, and you see right away whether it was correct, plus a one-line explanation. Press **Next** to go on. Before answering you can also press:
+
+- **Eliminate**: removes one wrong answer from the current question (once per question).
+- **Skip**: moves to the next question without answering. A skipped question scores 0 and isn't shown again.
+
+At the end you see your score, your rank (see [Rank tiers](#rank-tiers)), and how many questions you skipped and eliminations you used.
+
+The **Dark mode** switch in the top bar changes the theme. The choice is remembered in the browser (`quiz.theme`); until you use it, the page follows your system setting.
 
 ## How to run
 
@@ -17,7 +26,7 @@ python3 -m http.server 8000     # then open http://localhost:8000
 npx serve                       # then open the URL it prints
 ```
 
-If the data is valid, the page shows **Questions loaded: 40**. If not, it shows an error screen listing each problem.
+If the data is valid, the Start screen appears. If not, it shows an error screen listing each problem.
 
 ## How to validate the questions
 
@@ -42,14 +51,15 @@ Uses Node's built-in test runner (Node 18+). Tests are in `tests/*.test.mjs`.
 
 | Path | Purpose |
 | --- | --- |
-| `index.html` | Page shell with the `#app` container; loads `js/app.js` |
+| `index.html` | Page shell: top bar with the dark mode switch, and the `#app` container; loads `js/app.js` |
 | `css/style.css` | Mobile-first styles, colour and category accent variables, dark mode, reduced motion |
 | `js/app.js` | Entry point: fetches and validates the questions (error screen on failure), then wires state, UI and storage |
-| `js/config.js` | `CATEGORIES` (play order), `QUESTIONS_PER_CATEGORY`, `NICKNAME_MAX`, `DIFFICULTY_MIX`, `RANK_TIERS` |
+| `js/config.js` | `CATEGORIES` (play order), `ALL_SUBJECTS`, `QUESTIONS_PER_CATEGORY`, `ELIMINATE_PER_QUESTION`, `NICKNAME_MAX`, `DIFFICULTY_MIX`, `RANK_TIERS` |
 | `js/validate.js` | Pure validation functions (no DOM), shared by the browser and Node |
 | `js/quiz.js` | Pure: `shuffle` (Fisher-Yates), `seededRng`, `shuffleOptions`, `buildRun` |
 | `js/scoring.js` | Pure: `tierFor`, `summarize` |
-| `js/state.js` | Run state machine (`createGame`): `start`, `answer`, `next`, `exit`, `toStart`, `getState`. No DOM |
+| `js/state.js` | Run state machine (`createGame`): `start(name, subject)`, `answer`, `eliminate`, `skip`, `next`, `exit`, `toStart`, `getState`. No DOM |
+| `js/theme.js` | Light/dark switch, remembered under `quiz.theme` |
 | `js/storage.js` | `saveRun`, `loadRuns` for the `quiz.runs` history in localStorage (never throws) |
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
 | `data/questions.json` | The 40 questions |
@@ -82,18 +92,20 @@ Uses Node's built-in test runner (Node 18+). Tests are in `tests/*.test.mjs`.
 Each finished run is saved in the browser's localStorage under `quiz.runs`, newest first, at most 100 entries:
 
 ```json
-{ "nickname": "Sam", "finishedAt": "2026-11-15T12:00:00.000Z", "total": 30,
-  "byCategory": { "History": 8, "Science": 7, "Geography": 9, "Arts & Culture": 6 }, "tier": "Expert" }
+{ "nickname": "Sam", "finishedAt": "2026-11-15T12:00:00.000Z", "subject": "All",
+  "total": 30, "maxScore": 40,
+  "byCategory": { "History": 8, "Science": 7, "Geography": 9, "Arts & Culture": 6 },
+  "skipped": 2, "eliminated": 5, "tier": "Expert" }
 ```
 
-Exiting mid-run saves nothing. If storage is blocked, full or corrupt, the game still plays and just doesn't save. `nickname` is `""` when none was entered.
+`subject` is a category name or `"All"`; for a one-subject run `maxScore` is 10 and `byCategory` has only that category. Exiting mid-run saves nothing. If storage is blocked, full or corrupt, the game still plays and just doesn't save. `nickname` is `""` when none was entered.
 
 ## Rank tiers
 
-| Rank | Minimum score (of 40) |
-| --- | --- |
-| Novice | 0 |
-| Apprentice | 12 |
-| Scholar | 20 |
-| Expert | 28 |
-| Grandmaster | 36 |
+| Rank | Minimum score (of 40) | One subject (of 10) |
+| --- | --- | --- |
+| Novice | 0 | 0 |
+| Apprentice | 12 | 3 |
+| Scholar | 20 | 5 |
+| Expert | 28 | 7 |
+| Grandmaster | 36 | 9 |

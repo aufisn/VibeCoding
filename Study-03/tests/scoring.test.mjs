@@ -22,6 +22,13 @@ test("tierFor at every boundary", () => {
   }
 });
 
+test("tierFor scales the minimums for a 10-question run", () => {
+  const expected = { 0: "Novice", 2: "Novice", 3: "Apprentice", 4: "Apprentice", 5: "Scholar", 6: "Scholar", 7: "Expert", 8: "Expert", 9: "Grandmaster", 10: "Grandmaster" };
+  for (const [score, name] of Object.entries(expected)) {
+    assert.equal(tierFor(Number(score), RANK_TIERS, 10).name, name, `score ${score} of 10`);
+  }
+});
+
 test("tierFor does not depend on tier order", () => {
   const shuffled = [RANK_TIERS[3], RANK_TIERS[0], RANK_TIERS[4], RANK_TIERS[1], RANK_TIERS[2]];
   assert.equal(tierFor(29, shuffled).name, "Expert");

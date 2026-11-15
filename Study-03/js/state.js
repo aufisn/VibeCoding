@@ -1,15 +1,21 @@
 // Run state machine. No DOM access: the UI reads getState() and calls the
 // transition functions; each returns true if it changed anything.
 //
-//   start ──start()──▶ question ──answer()──▶ (answered) ──next()──┐
-//     ▲                   ▲                                         │
-//     │                   └────── next() (more in category) ◀───────┤
-//     │                                                             ▼
-//     ├──── exit() from question/summary            summary (end of category)
-//     │                                                             │
-//     └──── toStart() from results ◀── results ◀── next() (last category)
+//   start ──start(name, subject)──▶ question ──answer()/eliminate()──▶ …
+//     ▲                               │  ▲
+//     │              next() / skip()  │  └── more questions in the category
+//     │                               ▼
+//     ├── exit() from question/summary   summary (end of a category, "All" only)
+//     │                               │
+//     └── toStart() ◀── results ◀─────┘  last category (or a one-subject run)
 
-import { CATEGORIES, RANK_TIERS, NICKNAME_MAX } from "./config.js";
+import {
+  ALL_SUBJECTS,
+  CATEGORIES,
+  ELIMINATE_PER_QUESTION,
+  RANK_TIERS,
+  NICKNAME_MAX,
+} from "./config.js";
 import { buildRun } from "./quiz.js";
 import { summarize, tierFor } from "./scoring.js";
 
@@ -28,20 +34,30 @@ export function cleanNickname(value) {
 /**
  * @param {object[]} questions validated question bank
  * @param {object} [options]
- * @param {() => number} [options.rng] for shuffling (inject a seeded one in tests)
+ * @param {() => number} [options.rng] for shuffling and eliminating (inject a seeded one in tests)
  * @param {() => Date} [options.now] clock for finishedAt
  * @param {readonly string[]} [options.categories]
  * @param {readonly {name: string, min: number}[]} [options.tiers]
+ * @param {number} [options.eliminatePerQuestion]
  */
 export function createGame(
   questions,
-  { rng = Math.random, now = () => new Date(), categories = CATEGORIES, tiers = RANK_TIERS } = {}
+  {
+    rng = Math.random,
+    now = () => new Date(),
+    categories = CATEGORIES,
+    tiers = RANK_TIERS,
+    eliminatePerQuestion = ELIMINATE_PER_QUESTION,
+  } = {}
 ) {
   let screen = SCREENS.START;
   let nickname = "";
+  let subject = ALL_SUBJECTS;
+  let playCategories = categories;
   let run = [];
   let index = 0;
-  let answers = [];
+  let answers = []; // per question: answer record, or undefined while open
+  let eliminated = []; // per question: option indexes removed by eliminate()
   let score = 0;
   let resultToSave = null;
 
@@ -49,6 +65,7 @@ export function createGame(
     run = [];
     index = 0;
     answers = [];
+    eliminated = [];
     score = 0;
     resultToSave = null;
   }
@@ -57,12 +74,50 @@ export function createGame(
     return i === run.length - 1 || run[i + 1].category !== run[i].category;
   }
 
-  /** Begin a new run with a fresh shuffle. Allowed from start or results. */
-  function start(name = nickname) {
+  function eliminatedAt(i) {
+    return eliminated[i] ?? [];
+  }
+
+  function countEliminations() {
+    return eliminated.reduce((sum, list) => sum + (list ? list.length : 0), 0);
+  }
+
+  function finish() {
+    screen = SCREENS.RESULTS;
+    const { total, byCategory } = summarize(answers, playCategories);
+    resultToSave = {
+      nickname,
+      finishedAt: now().toISOString(),
+      subject,
+      total,
+      maxScore: run.length,
+      byCategory,
+      skipped: answers.filter((a) => a && a.skipped).length,
+      eliminated: countEliminations(),
+      tier: tierFor(total, tiers, run.length).name,
+    };
+  }
+
+  /** Move on from an answered or skipped question. */
+  function advanceFromQuestion() {
+    if (!isLastInCategory(index)) index += 1;
+    else if (playCategories.length === 1) finish(); // one subject: no summary
+    else screen = SCREENS.SUMMARY;
+  }
+
+  /**
+   * Begin a new run with a fresh shuffle. Allowed from start or results.
+   * @param {string} [name]
+   * @param {string} [chosen] a category name, or ALL_SUBJECTS
+   */
+  function start(name = nickname, chosen = ALL_SUBJECTS) {
     if (screen !== SCREENS.START && screen !== SCREENS.RESULTS) return false;
+    if (chosen !== ALL_SUBJECTS && !categories.includes(chosen)) return false;
     nickname = cleanNickname(name);
+    subject = chosen;
+    playCategories = chosen === ALL_SUBJECTS ? categories : [chosen];
     resetRun();
-    run = buildRun(questions, rng, categories);
+    run = buildRun(questions, rng, playCategories);
     screen = SCREENS.QUESTION;
     return true;
   }
@@ -74,7 +129,8 @@ export function createGame(
     if (
       !Number.isInteger(optionIndex) ||
       optionIndex < 0 ||
-      optionIndex >= question.options.length
+      optionIndex >= question.options.length ||
+      eliminatedAt(index).includes(optionIndex)
     ) {
       return false;
     }
@@ -85,31 +141,57 @@ export function createGame(
       chosenIndex: optionIndex,
       correctIndex: question.correctIndex,
       correct,
+      skipped: false,
     };
     if (correct) score += 1;
+    return true;
+  }
+
+  /**
+   * Remove one wrong option from the current question, chosen at random.
+   * At most `eliminatePerQuestion` per question, and at least one wrong
+   * option always stays. Only before answering.
+   */
+  function eliminate() {
+    if (screen !== SCREENS.QUESTION || answers[index]) return false;
+    const gone = eliminatedAt(index);
+    if (gone.length >= eliminatePerQuestion) return false;
+    const question = run[index];
+    const candidates = question.options
+      .map((_, i) => i)
+      .filter((i) => i !== question.correctIndex && !gone.includes(i));
+    if (candidates.length <= 1) return false;
+    const pick = candidates[Math.floor(rng() * candidates.length)];
+    eliminated[index] = [...gone, pick];
+    return true;
+  }
+
+  /** Skip the current question: it scores 0 and play moves straight on. */
+  function skip() {
+    if (screen !== SCREENS.QUESTION || answers[index]) return false;
+    const question = run[index];
+    answers[index] = {
+      questionId: question.id,
+      category: question.category,
+      chosenIndex: null,
+      correctIndex: question.correctIndex,
+      correct: false,
+      skipped: true,
+    };
+    advanceFromQuestion();
     return true;
   }
 
   /** Advance: next question, category summary, next category, or results. */
   function next() {
     if (screen === SCREENS.QUESTION) {
-      if (!answers[index]) return false; // must answer first
-      if (isLastInCategory(index)) screen = SCREENS.SUMMARY;
-      else index += 1;
+      if (!answers[index]) return false; // must answer (or skip) first
+      advanceFromQuestion();
       return true;
     }
     if (screen === SCREENS.SUMMARY) {
-      if (index === run.length - 1) {
-        screen = SCREENS.RESULTS;
-        const { total, byCategory } = summarize(answers, categories);
-        resultToSave = {
-          nickname,
-          finishedAt: now().toISOString(),
-          total,
-          byCategory,
-          tier: tierFor(total, tiers).name,
-        };
-      } else {
+      if (index === run.length - 1) finish();
+      else {
         index += 1;
         screen = SCREENS.QUESTION;
       }
@@ -151,29 +233,42 @@ export function createGame(
     const inCategory = run.filter((q) => q.category === category);
     const firstOfCategory = run.findIndex((q) => q.category === category);
     const categoryAnswers = answers.filter((a) => a && a.category === category);
-    const { total, byCategory } = summarize(answers, categories);
+    const { total, byCategory } = summarize(answers, playCategories);
+    const gone = eliminatedAt(index);
+    const open = screen === SCREENS.QUESTION && !answers[index];
+    const wrongLeft = question ? question.options.length - 1 - gone.length : 0;
 
     return Object.freeze({
       screen,
       nickname,
+      subject,
+      playCategories,
       totalQuestions: run.length,
+      maxScore: run.length,
       index,
       question,
       answer: answers[index] ?? null,
-      answeredCount: answers.filter(Boolean).length,
+      answeredCount: answers.filter(Boolean).length, // answered or skipped
+      skippedCount: answers.filter((a) => a && a.skipped).length,
+      eliminationsUsed: countEliminations(),
+      eliminated: Object.freeze([...gone]),
+      eliminationsLeft: Math.max(0, eliminatePerQuestion - gone.length),
+      canEliminate: open && gone.length < eliminatePerQuestion && wrongLeft > 1,
+      canSkip: open,
       score,
       category,
-      categoryIndex: categories.indexOf(category),
-      categoryCount: categories.length,
+      categoryIndex: playCategories.indexOf(category),
+      categoryCount: playCategories.length,
       positionInCategory: index - firstOfCategory + 1,
       categorySize: inCategory.length,
       categoryScore: categoryAnswers.filter((a) => a.correct).length,
+      categorySkipped: categoryAnswers.filter((a) => a.skipped).length,
       isLastCategory: run.length > 0 && category === run[run.length - 1].category,
       total,
       byCategory,
-      tier: tierFor(total, tiers),
+      tier: tierFor(total, tiers, run.length || undefined),
     });
   }
 
-  return { start, answer, next, exit, toStart, takeResultToSave, getState };
+  return { start, answer, eliminate, skip, next, exit, toStart, takeResultToSave, getState };
 }

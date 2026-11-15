@@ -12,6 +12,12 @@ export const QUESTIONS_PER_CATEGORY = 10;
 
 export const TOTAL_QUESTIONS = CATEGORIES.length * QUESTIONS_PER_CATEGORY; // 40
 
+/** Subject choice on the Start screen that plays every category. */
+export const ALL_SUBJECTS = "All";
+
+/** How many wrong options "Eliminate" may remove from one question. */
+export const ELIMINATE_PER_QUESTION = 1;
+
 /** Longest nickname allowed on the start screen (after trimming). */
 export const NICKNAME_MAX = 20;
 
@@ -20,7 +26,8 @@ export const DIFFICULTY_MIX = Object.freeze({ easy: 3, medium: 4, hard: 3 });
 
 /**
  * Rank tiers by final score. `min` is inclusive, so a score of 12 is
- * "Apprentice". Ordered lowest to highest. Max score is TOTAL_QUESTIONS.
+ * "Apprentice". Ordered lowest to highest. The minimums are out of
+ * TOTAL_QUESTIONS; shorter runs (one subject) scale them, see tierFor().
  */
 export const RANK_TIERS = Object.freeze([
   Object.freeze({ name: "Novice", min: 0 }),
