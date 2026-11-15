@@ -4,7 +4,7 @@
 import { validateQuestions } from "./validate.js";
 import { createGame } from "./state.js";
 import { createUI } from "./ui.js";
-import { saveRun } from "./storage.js";
+import { saveRun, loadRuns, clearRuns } from "./storage.js";
 import { bindThemeToggle } from "./theme.js";
 
 const QUESTIONS_URL = "data/questions.json";
@@ -77,10 +77,34 @@ async function init() {
       // takeResultToSave() hands out each finished run once, so a
       // re-rendered Results screen can't save it twice.
       const record = game.takeResultToSave();
-      if (record) saveRun(record);
+      return record && saveRun(record) ? record : null;
     },
+    getRuns: () => loadRuns(),
+    clearRuns: () => clearRuns(),
   });
   ui.render({ focus: false });
+  registerServiceWorker(() => ui.setOfflineReady());
+}
+
+/**
+ * Offline support (sw.js). Only on https or localhost, where browsers allow
+ * service workers. Any failure is ignored: the game works without it.
+ * @param {() => void} onReady runs once the precache is complete
+ */
+function registerServiceWorker(onReady) {
+  try {
+    const local = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+    if (!("serviceWorker" in navigator) || (location.protocol !== "https:" && !local)) return;
+    navigator.serviceWorker
+      .register("sw.js")
+      // ready resolves once a worker is active, i.e. its install (the
+      // precache) has finished.
+      .then(() => navigator.serviceWorker.ready)
+      .then(() => onReady())
+      .catch((err) => console.info("Service worker not available:", err));
+  } catch (err) {
+    console.info("Service worker not available:", err);
+  }
 }
 
 init();

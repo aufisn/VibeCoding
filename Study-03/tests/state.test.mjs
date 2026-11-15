@@ -303,3 +303,87 @@ test("skipping the last question of a category reaches its summary; skips are sa
   assert.equal(record.skipped, 31);
   assert.equal(record.tier, "Novice");
 });
+
+/* ---------- Mistake tracking (review screen) ---------- */
+
+test("wrong answers are recorded with the text of the chosen and correct options", () => {
+  const game = newGame(6);
+  game.start("Ana", "History");
+  const { question } = game.getState();
+  const wrong = (question.correctIndex + 1) % 4;
+  game.answer(wrong);
+  game.next();
+
+  const [m] = game.getState().mistakes;
+  assert.equal(m.questionId, question.id);
+  assert.equal(m.question, question.question);
+  assert.equal(m.chosenText, question.options[wrong]);
+  assert.equal(m.correctText, question.options[question.correctIndex]);
+  assert.equal(m.explanation, question.explanation);
+  assert.equal(m.category, "History");
+  assert.equal(m.skipped, false);
+  assert.equal(game.getState().mistakes.length, 1);
+});
+
+test("a perfect run records no mistakes and openReview is refused", () => {
+  const game = newGame();
+  game.start("Ana");
+  while (game.getState().screen !== SCREENS.RESULTS) {
+    if (game.getState().screen === SCREENS.QUESTION) answerAndNext(game);
+    else game.next();
+  }
+  assert.deepEqual(game.getState().mistakes, []);
+  assert.equal(game.openReview(), false);
+});
+
+test("the recorded correct text matches the bank, whatever the shuffle", () => {
+  const byId = new Map(bank.map((q) => [q.id, q]));
+  for (let seed = 1; seed <= 10; seed++) {
+    const game = newGame(seed);
+    game.start("", "Science");
+    while (game.getState().screen === SCREENS.QUESTION) answerAndNext(game, { correct: false });
+    const { mistakes } = game.getState();
+    assert.equal(mistakes.length, 10);
+    for (const m of mistakes) {
+      const original = byId.get(m.questionId);
+      assert.equal(m.correctText, original.options[original.correctIndex], `${m.questionId} seed ${seed}`);
+      assert.notEqual(m.chosenText, m.correctText);
+    }
+  }
+});
+
+test("skipped questions appear in the review as skipped, with no chosen text", () => {
+  const game = newGame();
+  game.start("", "Geography");
+  game.skip();
+  const [m] = game.getState().mistakes;
+  assert.equal(m.skipped, true);
+  assert.equal(m.chosenText, null);
+});
+
+test("review opens from results and goes back; mistakes are not in the saved record", () => {
+  const game = newGame();
+  game.start("Ana", "Arts & Culture");
+  while (game.getState().screen === SCREENS.QUESTION) answerAndNext(game, { correct: false });
+  const record = game.takeResultToSave();
+  assert.equal("mistakes" in record, false, "review data stays in memory only");
+  assert.equal(game.openReview(), true);
+  assert.equal(game.getState().screen, SCREENS.REVIEW);
+  assert.equal(game.closeReview(), true);
+  assert.equal(game.getState().screen, SCREENS.RESULTS);
+});
+
+test("the leaderboard returns to wherever it was opened from", () => {
+  const game = newGame();
+  assert.equal(game.openLeaderboard(), true);
+  assert.equal(game.getState().screen, SCREENS.LEADERBOARD);
+  assert.equal(game.closeLeaderboard(), true);
+  assert.equal(game.getState().screen, SCREENS.START);
+
+  game.start("", "History");
+  assert.equal(game.openLeaderboard(), false, "not from a question");
+  while (game.getState().screen === SCREENS.QUESTION) answerAndNext(game);
+  assert.equal(game.openLeaderboard(), true);
+  game.closeLeaderboard();
+  assert.equal(game.getState().screen, SCREENS.RESULTS);
+});

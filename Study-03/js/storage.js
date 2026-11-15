@@ -60,3 +60,39 @@ export function saveRun(run, store) {
     return false;
   }
 }
+
+/**
+ * Remove the saved history (only the quiz.runs key). Never throws.
+ * @param {Storage} [store]
+ * @returns {boolean} true if it was removed
+ */
+export function clearRuns(store) {
+  try {
+    const s = resolveStore(store);
+    if (!s) return false;
+    s.removeItem(RUNS_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The best `n` runs: highest total first; equal totals newest first.
+ * Pure: does not modify `runs`. Unparseable dates sort as oldest.
+ * @param {object[]} runs
+ * @param {number} [n]
+ * @returns {object[]}
+ */
+export function topRuns(runs, n = 10) {
+  if (!Array.isArray(runs)) return [];
+  const time = (run) => {
+    const t = Date.parse(run.finishedAt);
+    return Number.isNaN(t) ? -Infinity : t;
+  };
+  return runs
+    .filter(isRunRecord)
+    .slice()
+    .sort((a, b) => b.total - a.total || time(b) - time(a))
+    .slice(0, Math.max(0, n));
+}

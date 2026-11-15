@@ -2,7 +2,7 @@
 
 A single-player general knowledge quiz: 4-option multiple choice, 10 questions in each of four categories (History, Science, Geography, Arts & Culture), 40 in total. Plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no dependencies.
 
-**Status: Phase 2 (core game) done, plus subject choice, Eliminate, Skip and a light/dark switch.** Phase 3 adds "Review mistakes" and a leaderboard (placeholders are on the Results screen).
+**Status: Phase 3 (polish and launch) done.** Subject choice, Eliminate, Skip, review of mistakes, a personal leaderboard, keyboard and screen-reader support, a light/dark switch, and offline play. See [DEPLOY.md](DEPLOY.md) to publish it.
 
 ## How to play
 
@@ -13,11 +13,18 @@ You get one try per question: the first answer you pick locks, and you see right
 - **Eliminate**: removes one wrong answer from the current question (once per question).
 - **Skip**: moves to the next question without answering. A skipped question scores 0 and isn't shown again.
 
-At the end you see your score, your rank (see [Rank tiers](#rank-tiers)), and how many questions you skipped and eliminations you used.
+At the end you see your score, your rank (see [Rank tiers](#rank-tiers)), and how many questions you skipped and eliminations you used. From there:
+
+- **Review mistakes** lists every question you got wrong or skipped, grouped by category, with your answer, the correct answer and the explanation. It's kept in memory for the current run only. A perfect run shows "Perfect score, nothing to review" instead.
+- **Leaderboard** (also on the Start screen) shows your 10 best saved runs on this device: highest score first, ties newest first. The run you just finished is marked "This run". **Clear history** deletes the saved runs after a confirmation.
+
+**Keyboard:** on a question, press A to D (or 1 to 4) to answer, then Enter or Space for the next question. Everything else works with Tab, Enter and Escape. Focus moves to each screen's heading, and results are announced to screen readers.
+
+**Offline:** after one visit online (over https or on localhost), the game works without a connection. The Start screen shows "Offline ready" once everything is stored.
 
 The **Dark mode** switch in the top bar changes the theme. The choice is remembered in the browser (`quiz.theme`); until you use it, the page follows your system setting.
 
-## How to run
+## How to run locally
 
 ES modules and `fetch` don't work from `file://`, so serve the folder over HTTP. From this folder, run one of:
 
@@ -27,6 +34,8 @@ npx serve                       # then open the URL it prints
 ```
 
 If the data is valid, the Start screen appears. If not, it shows an error screen listing each problem.
+
+The service worker caches the game, so while developing, a plain reload can show old code. In Chrome DevTools, use **Application → Service workers → Update on reload**, or bump `CACHE_VERSION` (see below).
 
 ## How to validate the questions
 
@@ -45,7 +54,7 @@ This prints every error and warning, then a summary. It exits with code `1` if t
 node --test
 ```
 
-Uses Node's built-in test runner (Node 18+). Tests are in `tests/*.test.mjs`.
+Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests are in `tests/*.test.mjs`. They include a check that `sw.js` precaches every file `index.html` and the JS modules load.
 
 ## Files
 
@@ -58,14 +67,36 @@ Uses Node's built-in test runner (Node 18+). Tests are in `tests/*.test.mjs`.
 | `js/validate.js` | Pure validation functions (no DOM), shared by the browser and Node |
 | `js/quiz.js` | Pure: `shuffle` (Fisher-Yates), `seededRng`, `shuffleOptions`, `buildRun` |
 | `js/scoring.js` | Pure: `tierFor`, `summarize` |
-| `js/state.js` | Run state machine (`createGame`): `start(name, subject)`, `answer`, `eliminate`, `skip`, `next`, `exit`, `toStart`, `getState`. No DOM |
+| `js/state.js` | Run state machine (`createGame`): `start(name, subject)`, `answer`, `eliminate`, `skip`, `next`, `exit`, `toStart`, `openReview`, `openLeaderboard` and more, `getState`. Tracks mistakes for the review. No DOM |
 | `js/theme.js` | Light/dark switch, remembered under `quiz.theme` |
-| `js/storage.js` | `saveRun`, `loadRuns` for the `quiz.runs` history in localStorage (never throws) |
+| `js/keys.js` | Pure: `mapKey(key, context)` keyboard shortcuts for the Question screen |
+| `sw.js` | Service worker: precache, cache-first for files, network-first for the questions. Holds `CACHE_VERSION` |
+| `manifest.webmanifest`, `icons/` | Install and home-screen metadata; placeholder icons |
+| `scripts/make-icons.mjs` | Regenerates the placeholder icons (no dependencies) |
+| `DEPLOY.md` | How to publish, plus the launch checklist |
+| `js/storage.js` | `saveRun`, `loadRuns`, `clearRuns` for the `quiz.runs` history in localStorage (never throw), and pure `topRuns(runs, n)` for the leaderboard |
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
 | `data/questions.json` | The 40 questions |
 | `scripts/validate-questions.mjs` | Command-line validator |
-| `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, state, storage); `tests/helpers.mjs` has shared fakes |
+| `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
+
+## How to edit questions
+
+1. Edit `data/questions.json` (format below). Keep exactly 3 easy, 4 medium and 3 hard per category.
+2. Follow the cross-verification guidelines in `CLAUDE.md`: one correct answer, clear superlatives, a clear time and scope.
+3. Set `"verified": true` only after you have fact-checked the question.
+4. Run `node scripts/validate-questions.mjs` and `node --test`.
+5. Bump `CACHE_VERSION` in `sw.js` (see the checklist below).
+
+Players who are online get corrected questions on their next load even without the bump, because the service worker fetches `questions.json` network-first. The bump also refreshes the copy used offline.
+
+## Releasing a change: checklist
+
+- [ ] Changed questions or code, bump `CACHE_VERSION` in `sw.js` (`"v1"` → `"v2"` and so on). Without it, players keep the old cached code.
+- [ ] Added a new file the page loads (JS module, icon, stylesheet)? Add it to `PRECACHE_URLS` in `sw.js`. `node --test` fails if one is missing.
+- [ ] `node scripts/validate-questions.mjs` shows 0 errors.
+- [ ] `node --test` passes.
 
 ## Question format
 

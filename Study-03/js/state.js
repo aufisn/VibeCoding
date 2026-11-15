@@ -8,6 +8,9 @@
 //     ├── exit() from question/summary   summary (end of a category, "All" only)
 //     │                               │
 //     └── toStart() ◀── results ◀─────┘  last category (or a one-subject run)
+//
+//   results ⇄ review       (openReview / closeReview; only with mistakes)
+//   start or results ⇄ leaderboard  (openLeaderboard / closeLeaderboard)
 
 import {
   ALL_SUBJECTS,
@@ -24,6 +27,8 @@ export const SCREENS = Object.freeze({
   QUESTION: "question",
   SUMMARY: "summary",
   RESULTS: "results",
+  REVIEW: "review",
+  LEADERBOARD: "leaderboard",
 });
 
 /** Trim and cap a nickname. */
@@ -60,6 +65,7 @@ export function createGame(
   let eliminated = []; // per question: option indexes removed by eliminate()
   let score = 0;
   let resultToSave = null;
+  let leaderboardFrom = SCREENS.START;
 
   function resetRun() {
     run = [];
@@ -96,6 +102,34 @@ export function createGame(
       eliminated: countEliminations(),
       tier: tierFor(total, tiers, run.length).name,
     };
+  }
+
+  /**
+   * What happened on one question. Option texts are stored (not just
+   * indexes) because options are shuffled per run; the review screen needs
+   * the words. In memory only: never saved.
+   * @param {object} question the shuffled question
+   * @param {number | null} chosenIndex null when skipped
+   */
+  function record(question, chosenIndex) {
+    const skipped = chosenIndex === null;
+    return {
+      questionId: question.id,
+      category: question.category,
+      question: question.question,
+      chosenIndex,
+      correctIndex: question.correctIndex,
+      chosenText: skipped ? null : question.options[chosenIndex],
+      correctText: question.options[question.correctIndex],
+      explanation: question.explanation,
+      correct: chosenIndex === question.correctIndex,
+      skipped,
+    };
+  }
+
+  /** Wrong and skipped answers of the current run, in play order. */
+  function mistakes() {
+    return answers.filter((a) => a && !a.correct);
   }
 
   /** Move on from an answered or skipped question. */
@@ -135,14 +169,7 @@ export function createGame(
       return false;
     }
     const correct = optionIndex === question.correctIndex;
-    answers[index] = {
-      questionId: question.id,
-      category: question.category,
-      chosenIndex: optionIndex,
-      correctIndex: question.correctIndex,
-      correct,
-      skipped: false,
-    };
+    answers[index] = record(question, optionIndex);
     if (correct) score += 1;
     return true;
   }
@@ -169,15 +196,7 @@ export function createGame(
   /** Skip the current question: it scores 0 and play moves straight on. */
   function skip() {
     if (screen !== SCREENS.QUESTION || answers[index]) return false;
-    const question = run[index];
-    answers[index] = {
-      questionId: question.id,
-      category: question.category,
-      chosenIndex: null,
-      correctIndex: question.correctIndex,
-      correct: false,
-      skipped: true,
-    };
+    answers[index] = record(run[index], null);
     advanceFromQuestion();
     return true;
   }
@@ -213,6 +232,33 @@ export function createGame(
     if (screen !== SCREENS.RESULTS) return false;
     resetRun();
     screen = SCREENS.START;
+    return true;
+  }
+
+  /** Results -> review of wrong and skipped questions (if there are any). */
+  function openReview() {
+    if (screen !== SCREENS.RESULTS || mistakes().length === 0) return false;
+    screen = SCREENS.REVIEW;
+    return true;
+  }
+
+  function closeReview() {
+    if (screen !== SCREENS.REVIEW) return false;
+    screen = SCREENS.RESULTS;
+    return true;
+  }
+
+  /** Start or Results -> leaderboard; closeLeaderboard() goes back there. */
+  function openLeaderboard() {
+    if (screen !== SCREENS.START && screen !== SCREENS.RESULTS) return false;
+    leaderboardFrom = screen;
+    screen = SCREENS.LEADERBOARD;
+    return true;
+  }
+
+  function closeLeaderboard() {
+    if (screen !== SCREENS.LEADERBOARD) return false;
+    screen = leaderboardFrom;
     return true;
   }
 
@@ -267,8 +313,24 @@ export function createGame(
       total,
       byCategory,
       tier: tierFor(total, tiers, run.length || undefined),
+      mistakes: Object.freeze(mistakes().map((m) => Object.freeze({ ...m }))),
+      leaderboardFrom,
     });
   }
 
-  return { start, answer, eliminate, skip, next, exit, toStart, takeResultToSave, getState };
+  return {
+    start,
+    answer,
+    eliminate,
+    skip,
+    next,
+    exit,
+    toStart,
+    openReview,
+    closeReview,
+    openLeaderboard,
+    closeLeaderboard,
+    takeResultToSave,
+    getState,
+  };
 }

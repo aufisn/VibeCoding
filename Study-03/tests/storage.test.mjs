@@ -65,3 +65,56 @@ test("no store at all gives an empty history", () => {
   assert.deepEqual(loadRuns(null), []);
   assert.equal(saveRun(sampleRun(1), null), false);
 });
+
+/* ---------- topRuns and clearRuns ---------- */
+
+import { topRuns, clearRuns } from "../js/storage.js";
+
+const at = (minute) => new Date(Date.UTC(2026, 10, 15, 10, minute)).toISOString();
+const run = (total, minute, nickname = `p${minute}`) => ({ nickname, total, finishedAt: at(minute), tier: "Novice" });
+
+test("topRuns sorts by total, highest first", () => {
+  const runs = [run(10, 1), run(30, 2), run(20, 3)];
+  assert.deepEqual(topRuns(runs).map((r) => r.total), [30, 20, 10]);
+});
+
+test("topRuns breaks ties by newest first", () => {
+  const runs = [run(25, 1, "old"), run(25, 9, "newest"), run(25, 5, "middle"), run(40, 0, "best")];
+  assert.deepEqual(topRuns(runs).map((r) => r.nickname), ["best", "newest", "middle", "old"]);
+});
+
+test("topRuns returns at most 10 by default, or n", () => {
+  const runs = Array.from({ length: 25 }, (_, i) => run(i, i));
+  const top = topRuns(runs);
+  assert.equal(top.length, 10);
+  assert.deepEqual(top.map((r) => r.total), [24, 23, 22, 21, 20, 19, 18, 17, 16, 15]);
+  assert.equal(topRuns(runs, 3).length, 3);
+});
+
+test("topRuns with fewer than 10 runs returns them all", () => {
+  assert.equal(topRuns([run(5, 1), run(7, 2)]).length, 2);
+});
+
+test("topRuns of an empty list or non-list is empty", () => {
+  assert.deepEqual(topRuns([]), []);
+  assert.deepEqual(topRuns(null), []);
+});
+
+test("topRuns does not modify its input and skips malformed entries", () => {
+  const runs = [run(1, 1), null, { total: "9" }, run(2, 2)];
+  const copy = JSON.stringify(runs);
+  assert.deepEqual(topRuns(runs).map((r) => r.total), [2, 1]);
+  assert.equal(JSON.stringify(runs), copy);
+});
+
+test("clearRuns removes only quiz.runs", () => {
+  const store = fakeStorage({ [RUNS_KEY]: "[]", "quiz.theme": "dark" });
+  assert.equal(clearRuns(store), true);
+  assert.equal(store.getItem(RUNS_KEY), null);
+  assert.equal(store.getItem("quiz.theme"), "dark");
+});
+
+test("clearRuns never throws on blocked storage", () => {
+  assert.equal(clearRuns(throwingStorage()), false);
+  assert.equal(clearRuns(null), false);
+});
