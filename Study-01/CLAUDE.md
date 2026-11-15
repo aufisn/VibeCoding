@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-A handwriting recognizer for single characters (digits 0-9, A-Z, a-z), built on scikit-learn `MLPClassifier` models. Dependencies (installed in `.venv`): scikit-learn, numpy, pillow, joblib. There is no requirements file, test suite, linter or git repo.
+A handwriting recognizer for single characters (digits 0-9, A-Z, a-z), built on scikit-learn `MLPClassifier` models. Dependencies (installed in `.venv`): scikit-learn, numpy, pillow, joblib. There is no requirements file, test suite or linter. Version control is the parent `VibeCoding` git repo; `data/` and `.venv/` are git-ignored.
 
 ## Sub-projects
 
