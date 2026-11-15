@@ -1,7 +1,10 @@
-// Entry point. Phase 1: load and validate the question bank only.
-// The game UI arrives in Phase 2.
+// Entry point: load and validate the questions (blocking error screen on
+// failure), then wire the game state, the UI and storage together.
 
 import { validateQuestions } from "./validate.js";
+import { createGame } from "./state.js";
+import { createUI } from "./ui.js";
+import { saveRun } from "./storage.js";
 
 const QUESTIONS_URL = "data/questions.json";
 
@@ -43,12 +46,6 @@ function showErrorScreen(title, messages) {
   document.body.replaceChildren(main);
 }
 
-function showLoaded(count) {
-  const status = document.getElementById("status");
-  status.textContent = `Questions loaded: ${count}`;
-  status.classList.add("is-ready");
-}
-
 async function init() {
   let questions;
   try {
@@ -67,7 +64,16 @@ async function init() {
     return;
   }
 
-  showLoaded(questions.length);
+  const game = createGame(questions);
+  const ui = createUI(document.getElementById("app"), game, {
+    onResults() {
+      // takeResultToSave() hands out each finished run once, so a
+      // re-rendered Results screen can't save it twice.
+      const record = game.takeResultToSave();
+      if (record) saveRun(record);
+    },
+  });
+  ui.render({ focus: false });
 }
 
 init();

@@ -12,6 +12,9 @@ export const QUESTIONS_PER_CATEGORY = 10;
 
 export const TOTAL_QUESTIONS = CATEGORIES.length * QUESTIONS_PER_CATEGORY; // 40
 
+/** Longest nickname allowed on the start screen (after trimming). */
+export const NICKNAME_MAX = 20;
+
 /** Required difficulty mix for each category. */
 export const DIFFICULTY_MIX = Object.freeze({ easy: 3, medium: 4, hard: 3 });
 
