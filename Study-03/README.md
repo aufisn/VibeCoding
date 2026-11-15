@@ -69,6 +69,18 @@ This prints every error and warning, then a summary. It exits with code `1` if t
 - **Errors** block the game: wrong counts, a bad schema, the wrong difficulty mix, questions longer than 25 words, options longer than 8 words, or "all/none of the above" options.
 - **Warnings** list every question whose `verified` isn't `true`. Set `"verified": true` on each question once you've fact-checked it.
 
+### Checking superlatives
+
+Guideline 2 in `CLAUDE.md` says expressions like "largest" need a stated measure. To list every superlative or ranking word (most, first, largest, longest, only and others) in the questions and options:
+
+```sh
+node scripts/find-superlatives.mjs                   # questions and options
+node scripts/find-superlatives.mjs --explanations    # explanations too
+node scripts/find-superlatives.mjs --words primary,major   # extra words
+```
+
+In Claude Code, the **`/quiz-validate`** skill (`.claude/skills/quiz-validate/`) runs this and shows a table that also says whether each question states its criterion (for example "by surface area"). It only reports; it never edits the questions. Add `explanations` or extra words after the command, for example `/quiz-validate explanations`.
+
 ## Running the tests
 
 ```sh
@@ -100,6 +112,8 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
 | `data/questions.json` | The 40 questions |
 | `scripts/validate-questions.mjs` | Command-line validator |
+| `scripts/find-superlatives.mjs` | Lists superlative and ranking words in the questions (used by `/quiz-validate`) |
+| `.claude/skills/quiz-validate/` | The `/quiz-validate` Claude Code skill |
 | `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, score manager, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
 

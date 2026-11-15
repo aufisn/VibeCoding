@@ -12,6 +12,7 @@ Phases 1 to 3 are done, plus points and game modes: question content, core game,
 
 ```sh
 node scripts/validate-questions.mjs   # validate data/questions.json; exits 1 on errors
+node scripts/find-superlatives.mjs    # list "most", "first", "largest"... (guideline 2); /quiz-validate wraps it
 node --test                           # unit tests in tests/
 python3 -m http.server 8000           # serve the folder, then open http://localhost:8000
 ```

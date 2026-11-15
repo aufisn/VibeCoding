@@ -12,3 +12,8 @@ Study-01/data/
 
 # Local Claude Code settings (preview server config etc.)
 .claude/
+
+# ...except project skills, which belong in the repo.
+!Study-03/.claude/
+Study-03/.claude/*
+!Study-03/.claude/skills/
