@@ -86,3 +86,27 @@ test("seededRng returns floats in [0, 1)", () => {
     assert.ok(x >= 0 && x < 1);
   }
 });
+
+/* ---------- Speed Quiz run ---------- */
+
+import { buildSpeedRun } from "../js/quiz.js";
+
+test("buildSpeedRun picks 5 per category, 20 in all, no repeats", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const run = buildSpeedRun(bank, seededRng(seed));
+    assert.equal(run.length, 20);
+    assert.equal(new Set(run.map((q) => q.id)).size, 20);
+    for (const category of CATEGORIES) {
+      assert.equal(run.filter((q) => q.category === category).length, 5, `${category} seed ${seed}`);
+    }
+    for (const q of run) assert.equal(correctText(q), correctText(byId.get(q.id)));
+  }
+});
+
+test("buildSpeedRun mixes categories and varies between runs", () => {
+  const a = buildSpeedRun(bank, seededRng(1));
+  const b = buildSpeedRun(bank, seededRng(2));
+  assert.notDeepEqual(a.map((q) => q.id), b.map((q) => q.id));
+  const blocks = a.map((q) => q.category).filter((c, i, arr) => c !== arr[i - 1]).length;
+  assert.ok(blocks > 4, "categories are interleaved, not in four blocks");
+});

@@ -2,13 +2,28 @@
 // keyboard rules in keys.js. The DOM is built with createElement/textContent;
 // question and saved data never go through innerHTML.
 
-import { ALL_SUBJECTS, CATEGORIES, NICKNAME_MAX, QUESTIONS_PER_CATEGORY, TOTAL_QUESTIONS } from "./config.js";
+import {
+  ALL_SUBJECTS,
+  CATEGORIES,
+  MODES,
+  NICKNAME_MAX,
+  QUESTIONS_PER_CATEGORY,
+  SCORING,
+  SPEED_PER_CATEGORY,
+  SPEED_SECONDS,
+  SPEED_SUBJECT,
+  TOTAL_QUESTIONS,
+} from "./config.js";
 import { SCREENS } from "./state.js";
 import { mapKey } from "./keys.js";
-import { topRuns } from "./storage.js";
+import { runMode, topRuns } from "./storage.js";
 
 const LETTERS = ["A", "B", "C", "D"];
 const LEADERBOARD_SIZE = 10;
+const TICK_MS = 200; // Speed Quiz countdown refresh
+const WARN_SECONDS = 5; // countdown turns urgent (and is announced) here
+const MODE_LABELS = { [MODES.FULL]: "Full Challenge", [MODES.CATEGORY]: "By Category", [MODES.SPEED]: "Speed Quiz" };
+const DIFFICULTY_LABELS = { easy: "easy", medium: "medium", hard: "hard" };
 const SVG_NS = "http://www.w3.org/2000/svg";
 const ICON_PATHS = {
   check: "M5 12.5l4.5 4.5L19 7.5",
@@ -27,6 +42,10 @@ const LINE_ICON_PATHS = {
   trophy: "M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5v1.5A3.5 3.5 0 0 0 8 11M16 6h3.5v1.5A3.5 3.5 0 0 1 16 11M12 13v4M8.5 20h7M10 17h4v3h-4z",
   review: "M4 5h16M4 12h10M4 19h7M16 16l2 2 4-4",
   back: "M15 5l-7 7 7 7",
+  speed: "M13 2L4 14h7l-1 8 9-12h-7z",
+  star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z",
+  flame: "M12 22c4 0 7-2.7 7-6.6 0-3.1-2-5.6-3.6-7.4-.3 1.9-1.2 3.2-2.4 3.7.2-3.4-1.2-6.4-4-8.7 0 3.4-4 6.2-4 11.6C5 19 8 22 12 22z",
+  timer: "M12 8v5l3 2M9 2h6M12 4a9 9 0 1 0 0 18a9 9 0 1 0 0-18",
 };
 
 /* ---------- DOM helpers ---------- */
@@ -96,6 +115,11 @@ function formatDate(iso) {
   }
 }
 
+const capitalize = (text) => String(text).charAt(0).toUpperCase() + String(text).slice(1);
+
+/** Base points for a correct answer at this difficulty. */
+const pointsFor = (difficulty) => Math.round(SCORING.base * (SCORING.multipliers[difficulty] ?? 1));
+
 const sameRun = (a, b) =>
   Boolean(a && b) && a.finishedAt === b.finishedAt && a.total === b.total && a.nickname === b.nickname;
 
@@ -120,6 +144,8 @@ export function createUI(
   let justFinished = null; // the record saved for the run that just ended
   let offlineReady = false;
   let questionView = null; // { choose(i), next() } while a question is showing
+  let countdown = null; // Speed Quiz interval id
+  let leaderboardMode = MODES.FULL; // which mode the leaderboard shows
 
   const exitDialog = buildConfirmDialog({
     id: "exit",
@@ -134,7 +160,7 @@ export function createUI(
   const clearDialog = buildConfirmDialog({
     id: "clear",
     title: "Clear history?",
-    description: "This deletes every saved run on this device. It can't be undone.",
+    description: "This deletes every saved run on this device, in all modes. It can't be undone.",
     cancelText: "Cancel",
     confirmText: "Clear history",
     onConfirm() {
@@ -146,7 +172,13 @@ export function createUI(
   document.body.append(exitDialog.dialog, clearDialog.dialog);
   document.addEventListener("keydown", onKeydown);
 
+  function stopCountdown() {
+    if (countdown !== null) clearInterval(countdown);
+    countdown = null;
+  }
+
   function render({ focus = true } = {}) {
+    stopCountdown();
     const state = game.getState();
     questionView = null;
     if (state.screen === SCREENS.RESULTS) {
@@ -225,28 +257,43 @@ export function createUI(
       }
     });
 
-    const subjects = [...CATEGORIES, ALL_SUBJECTS].map((subject) => {
-      const isAll = subject === ALL_SUBJECTS;
-      const slug = isAll ? "all" : categorySlug(subject);
-      const count = isAll ? CATEGORIES.length * QUESTIONS_PER_CATEGORY : QUESTIONS_PER_CATEGORY;
+    function card(subject, { slug, name, detail, className = "" }) {
       return el(
         "button",
         {
           type: "submit",
           name: "subject",
           value: subject,
-          className: `subject-card${isAll ? " subject-all" : ""}`,
+          className: `subject-card ${className}`.trim(),
           attrs: { "data-category": slug },
         },
         [
           el("span", { className: "subject-icon" }, [lineIcon(slug)]),
           el("span", { className: "subject-text" }, [
-            el("span", { className: "subject-name", text: isAll ? "All subjects" : subject }),
-            el("span", { className: "subject-count", text: `${count} questions` }),
+            el("span", { className: "subject-name", text: name }),
+            el("span", { className: "subject-count", text: detail }),
           ]),
         ]
       );
-    });
+    }
+
+    const modeCards = [
+      card(ALL_SUBJECTS, {
+        slug: "all",
+        name: "Full Challenge",
+        detail: `All ${TOTAL_QUESTIONS} questions, category by category`,
+        className: "mode-card subject-all",
+      }),
+      card(SPEED_SUBJECT, {
+        slug: "speed",
+        name: "Speed Quiz",
+        detail: `${SPEED_PER_CATEGORY * CATEGORIES.length} mixed questions, ${SPEED_SECONDS} seconds each`,
+        className: "mode-card subject-speed",
+      }),
+    ];
+    const categoryCards = CATEGORIES.map((category) =>
+      card(category, { slug: categorySlug(category), name: category, detail: `${QUESTIONS_PER_CATEGORY} questions` })
+    );
 
     const form = el(
       "form",
@@ -266,8 +313,10 @@ export function createUI(
           el("p", { id: "nickname-hint", className: "hint", text: `Up to ${NICKNAME_MAX} characters.` }),
         ]),
         el("fieldset", { className: "subjects" }, [
-          el("legend", { text: "Choose a subject to start" }),
-          el("div", { className: "subject-grid" }, subjects),
+          el("legend", { text: "Choose a game mode" }),
+          el("div", { className: "mode-grid" }, modeCards),
+          el("p", { className: "group-label", id: "by-category", text: "By Category" }),
+          el("div", { className: "subject-grid", attrs: { role: "group", "aria-labelledby": "by-category" } }, categoryCards),
         ]),
       ]
     );
@@ -275,7 +324,7 @@ export function createUI(
     return el("section", { className: "screen screen-start" }, [
       el("div", { className: "hero" }, [
         focusHeading("h1", "How much do you know?", "app-title"),
-        el("p", { className: "app-tagline", text: "Pick one subject for a quick round of 10, or play all four." }),
+        el("p", { className: "app-tagline", text: "Earn points for every right answer. Be quick, skip the hints and build a streak for bonuses." }),
       ]),
       form,
       el("div", { className: "start-links" }, [
@@ -283,6 +332,7 @@ export function createUI(
           className: "btn btn-secondary",
           iconKind: "trophy",
           onClick() {
+            leaderboardMode = MODES.FULL;
             if (game.openLeaderboard()) render();
           },
         }),
@@ -291,8 +341,20 @@ export function createUI(
         el("h2", { className: "how-to-title", text: "How it works" }),
         el("ul", { className: "rules" }, [
           el("li", { text: "One try per question: your first answer locks, and you see right away if it was right." }),
+          el("li", {}, [
+            el("strong", { text: "Points:" }),
+            document.createTextNode(
+              ` ${SCORING.base} per correct answer, ×${SCORING.multipliers.medium} for medium and ×${SCORING.multipliers.hard} for hard questions. ` +
+                `+${SCORING.fastBonus} for answering in under ${SCORING.fastMs / 1000} seconds, +${SCORING.noHintBonus} for not using Eliminate, ` +
+                `and a streak bonus at 3 (+${SCORING.streakBonuses[3]}), 5 (+${SCORING.streakBonuses[5]}) and every 10 (+${SCORING.streakBonuses[10]}) right in a row.`
+            ),
+          ]),
           el("li", {}, [el("strong", { text: "Eliminate" }), document.createTextNode(" removes one wrong answer from the current question.")]),
-          el("li", {}, [el("strong", { text: "Skip" }), document.createTextNode(" moves on without answering. A skipped question scores 0.")]),
+          el("li", {}, [el("strong", { text: "Skip" }), document.createTextNode(" moves on without answering. A skipped question scores 0 and ends your streak.")]),
+          el("li", {}, [
+            el("strong", { text: "Speed Quiz:" }),
+            document.createTextNode(` ${SPEED_SECONDS} seconds per question. When time runs out, the question scores 0.`),
+          ]),
           el("li", {}, [
             el("strong", { text: "Keyboard:" }),
             document.createTextNode(" press A to D (or 1 to 4) to answer, then Enter or Space for the next question."),
@@ -311,8 +373,8 @@ export function createUI(
   function renderQuestion(state) {
     const { question } = state;
     const slug = categorySlug(state.category);
+    const isSpeed = state.mode === MODES.SPEED;
 
-    const scoreValue = el("span", { text: String(state.score) });
     const progressFill = el("div", { className: "progress-fill" });
     const progress = el(
       "div",
@@ -333,6 +395,21 @@ export function createUI(
       progressFill.style.width = `${(done / state.totalQuestions) * 100}%`;
     }
     setProgress(state.answeredCount);
+
+    // Points and streak: updated in place after each answer.
+    const pointsValue = el("span", { className: "stat-value", text: String(state.points) });
+    const streakValue = el("span", { className: "stat-value", text: String(state.streak) });
+    const pointsPill = el("span", { className: "stat-pill points-pill" }, [
+      lineIcon("star"),
+      pointsValue,
+      el("span", { className: "stat-unit", text: " pts" }),
+    ]);
+    const streakPill = el("span", { className: `stat-pill streak-pill${state.streak >= 2 ? " is-hot" : ""}` }, [
+      lineIcon("flame"),
+      el("span", { className: "visually-hidden", text: "Streak: " }),
+      streakValue,
+      el("span", { className: "stat-unit", text: " in a row" }),
+    ]);
 
     const heading = focusHeading("h2", question.question, "question-text");
     heading.id = "question-text";
@@ -405,16 +482,36 @@ export function createUI(
       const after = game.getState();
       const removed = after.eliminated.find((i) => !before.has(i));
       markEliminated(optionButtons[removed]);
-      lifelineStatus.textContent = `Option ${LETTERS[removed]} removed: it was a wrong answer.`;
+      lifelineStatus.textContent = `Option ${LETTERS[removed]} removed: it was a wrong answer. No-hint bonus lost for this question.`;
       eliminateButton.disabled = !after.canEliminate;
       if (eliminateButton.disabled) optionButtons.find((b) => !isLocked(b))?.focus();
+    }
+
+    /* Speed Quiz countdown. The state decides when time is up (timeOut()
+       refuses early calls); this only displays it and asks. */
+    const timer = isSpeed ? buildTimer(state.timeLimitMs) : null;
+    if (timer) {
+      timer.update(state.timeLeftMs);
+      countdown = setInterval(() => {
+        const left = game.getState().timeLeftMs;
+        if (left === null) return stopCountdown();
+        timer.update(left);
+        if (left <= 0 && game.timeOut()) reveal(game.getState());
+      }, TICK_MS);
     }
 
     // All feedback is applied synchronously, in the click/key handler.
     function choose(optionIndex) {
       if (isLocked(optionButtons[optionIndex]) || !game.answer(optionIndex)) return;
-      const { answer, score, answeredCount } = game.getState();
+      reveal(game.getState());
+    }
+
+    /** Lock the question and show the result (answered or timed out). */
+    function reveal(after) {
+      stopCountdown();
+      const { answer } = after;
       const correctLabel = `${LETTERS[answer.correctIndex]}: ${answer.correctText}`;
+      if (timer) timer.stop(answer.timedOut);
 
       eliminateButton.disabled = true;
       skipButton.disabled = true;
@@ -431,18 +528,31 @@ export function createUI(
         if (i === answer.chosenIndex) b.setAttribute("aria-pressed", "true");
       });
 
+      let resultText = "Correct";
+      if (answer.timedOut) resultText = `Time's up. The correct answer is ${correctLabel}`;
+      else if (!answer.correct) resultText = `Incorrect. The correct answer is ${correctLabel}`;
+
       feedback.replaceChildren(
         el("div", { className: "feedback" }, [
           el("p", { className: `feedback-result ${answer.correct ? "is-correct" : "is-wrong"}` }, [
-            icon(answer.correct ? "check" : "cross"),
-            el("span", { text: answer.correct ? "Correct" : `Incorrect. The correct answer is ${correctLabel}` }),
+            answer.timedOut ? lineIcon("timer") : icon(answer.correct ? "check" : "cross"),
+            el("span", { text: resultText }),
           ]),
+          pointsBreakdown(answer, question, state.streak),
           el("p", { className: "feedback-explanation", text: question.explanation }),
         ])
       );
 
-      scoreValue.textContent = String(score);
-      setProgress(answeredCount);
+      pointsValue.textContent = String(after.points);
+      streakValue.textContent = String(after.streak);
+      streakPill.classList.toggle("is-hot", after.streak >= 2);
+      if (answer.points.total > 0) {
+        // Decorative pop (after the feedback is already shown; off with reduced motion).
+        pointsPill.classList.remove("is-bumped");
+        void pointsPill.offsetWidth;
+        pointsPill.classList.add("is-bumped");
+      }
+      setProgress(after.answeredCount);
       nextButton.disabled = false;
       // Keyboard users land on Next; the live region announces the result.
       nextButton.focus();
@@ -456,22 +566,29 @@ export function createUI(
       onClick: (event) => exitDialog.open(event.currentTarget),
     });
 
-    const position =
-      state.categoryCount > 1
-        ? `Question ${state.positionInCategory} of ${state.categorySize} · ${state.index + 1} of ${state.totalQuestions} overall`
-        : `Question ${state.positionInCategory} of ${state.categorySize}`;
+    let position;
+    if (state.mode === MODES.FULL) {
+      position = `Question ${state.positionInCategory} of ${state.categorySize} · ${state.index + 1} of ${state.totalQuestions} overall`;
+    } else {
+      position = `Question ${state.index + 1} of ${state.totalQuestions}`;
+    }
 
     return el("section", { className: "screen screen-question", attrs: { "data-category": slug } }, [
       el("div", { className: "question-header" }, [
-        el("p", { className: "category-chip" }, [lineIcon(slug), el("span", { text: state.category })]),
+        el("p", { className: "category-chip" }, [
+          lineIcon(slug),
+          el("span", { text: isSpeed ? `Speed · ${state.category}` : state.category }),
+        ]),
         exitButton,
       ]),
       el("div", { className: "question-meta" }, [
-        el("span", { text: position }),
-        el("span", { className: "score-pill" }, [document.createTextNode("Score "), scoreValue]),
+        el("span", { className: "position", text: position }),
+        el("span", { className: "stats-row" }, [streakPill, pointsPill]),
       ]),
       progress,
+      timer ? timer.element : null,
       el("div", { className: "card question-card" }, [
+        el("p", { className: "difficulty", text: `${capitalize(question.difficulty)} · ${pointsFor(question.difficulty)} pts` }),
         heading,
         el("div", { className: "options", attrs: { role: "group", "aria-labelledby": "question-text" } }, optionButtons),
         el("div", { className: "lifelines" }, [eliminateButton, skipButton]),
@@ -480,6 +597,63 @@ export function createUI(
       feedback,
       el("div", { className: "actions" }, [nextButton]),
     ]);
+  }
+
+  /** "+15 base (medium ×1.5) +3 fast +2 no hint +2 streak of 3" as chips. */
+  function pointsBreakdown(answer, question, streakBefore) {
+    const p = answer.points;
+    if (!answer.correct) {
+      const note = streakBefore >= 2 ? `0 points. Your streak of ${streakBefore} ended.` : "0 points.";
+      return el("p", { className: "points-line" }, [el("span", { text: note })]);
+    }
+    const multiplier = SCORING.multipliers[question.difficulty] ?? 1;
+    const chips = [
+      `${p.base} ${DIFFICULTY_LABELS[question.difficulty] ?? ""}${multiplier !== 1 ? ` ×${multiplier}` : ""}`,
+      p.time ? `+${p.time} fast` : null,
+      p.noHint ? `+${p.noHint} no hint` : null,
+      p.streak ? `+${p.streak} streak of ${answer.points.streakAfter}` : null,
+    ].filter(Boolean);
+    return el("p", { className: "points-line" }, [
+      el("strong", { className: "points-total", text: `+${p.total} points` }),
+      el("span", { className: "visually-hidden", text: ": " }),
+      // Commas only for screen readers, so the chips read as a list.
+      ...chips.map((text, i) => el("span", { className: "chip" }, [document.createTextNode(text), i < chips.length - 1 ? srOnly(",") : null])),
+    ]);
+  }
+
+  /** The Speed Quiz countdown: a bar plus seconds as text, never colour alone. */
+  function buildTimer(limitMs) {
+    const seconds = el("span", { className: "timer-seconds" });
+    const fill = el("div", { className: "timer-fill" });
+    // Announced once, at WARN_SECONDS, not every second.
+    const announce = el("span", { className: "visually-hidden", attrs: { "aria-live": "assertive" } });
+    const element = el("div", { className: "timer" }, [
+      el("div", { className: "timer-label" }, [lineIcon("timer"), seconds]),
+      el("div", { className: "timer-track", attrs: { "aria-hidden": "true" } }, [fill]),
+      announce,
+    ]);
+    let warned = false;
+    return {
+      element,
+      update(leftMs) {
+        const s = Math.ceil(leftMs / 1000);
+        seconds.textContent = `${s} s left`;
+        fill.style.width = `${Math.max(0, Math.min(1, leftMs / limitMs)) * 100}%`;
+        const urgent = s <= WARN_SECONDS;
+        element.classList.toggle("is-urgent", urgent);
+        if (urgent && !warned && s > 0) {
+          warned = true;
+          announce.textContent = `${WARN_SECONDS} seconds left`;
+        }
+      },
+      stop(timedOut) {
+        element.classList.add("is-stopped");
+        if (timedOut) {
+          seconds.textContent = "Time's up";
+          fill.style.width = "0%";
+        }
+      },
+    };
   }
 
   /* ----- Category summary ----- */
@@ -496,7 +670,7 @@ export function createUI(
       state.categorySkipped > 0
         ? el("p", { className: "running-total", text: `Skipped: ${state.categorySkipped}` })
         : null,
-      el("p", { className: "running-total", text: `Total so far: ${state.score} / ${state.answeredCount}` }),
+      el("p", { className: "running-total", text: `Total so far: ${state.score} / ${state.answeredCount} correct · ${state.points} points` }),
       el("div", { className: "actions" }, [
         button(state.isLastCategory ? "See results" : "Continue", {
           onClick() {
@@ -510,18 +684,38 @@ export function createUI(
   /* ----- Results ----- */
 
   function renderResults(state) {
-    const single = state.playCategories.length === 1;
+    const isCategory = state.mode === MODES.CATEGORY;
     const rows = Object.entries(state.byCategory).map(([category, n]) =>
       el("tr", { attrs: { "data-category": categorySlug(category) } }, [
         el("th", { scope: "row", text: category }),
-        el("td", { text: `${n} / ${QUESTIONS_PER_CATEGORY}` }),
+        el("td", { text: `${n} / ${state.categoryTotals[category] ?? QUESTIONS_PER_CATEGORY}` }),
       ])
     );
     const stats = [
-      `Subject: ${single ? state.subject : "All subjects"}`,
+      isCategory ? `${MODE_LABELS[state.mode]}: ${state.subject}` : MODE_LABELS[state.mode],
+      `Best streak: ${state.bestStreak}`,
+      `Hints used: ${state.eliminationsUsed}`,
       `Skipped: ${state.skippedCount}`,
-      `Eliminations used: ${state.eliminationsUsed}`,
-    ];
+      state.mode === MODES.SPEED ? `Timed out: ${state.timedOutCount}` : null,
+    ].filter(Boolean);
+
+    const t = state.pointTotals;
+    const breakdown = el("table", { className: "breakdown-table" }, [
+      el("caption", { text: "How you scored" }),
+      el(
+        "tbody",
+        {},
+        [
+          ["Correct answers (with difficulty)", t.base],
+          [`Speed bonus (under ${SCORING.fastMs / 1000} s)`, t.time],
+          ["No-hint bonus", t.noHint],
+          ["Streak bonus", t.streak],
+        ].map(([label, value]) =>
+          el("tr", {}, [el("th", { scope: "row", text: label }), el("td", { text: value > 0 ? `+${value}` : "0" })])
+        )
+      ),
+      el("tfoot", {}, [el("tr", {}, [el("th", { scope: "row", text: "Total" }), el("td", { text: `${t.total} pts` })])]),
+    ]);
 
     const review =
       state.mistakes.length > 0
@@ -536,24 +730,31 @@ export function createUI(
 
     return el(
       "section",
-      { className: "screen screen-results", attrs: single ? { "data-category": categorySlug(state.subject) } : {} },
+      {
+        className: "screen screen-results",
+        attrs: {
+          "data-category": isCategory ? categorySlug(state.subject) : state.mode === MODES.SPEED ? "speed" : "all",
+        },
+      },
       [
         el("div", { className: "card results-card" }, [
           focusHeading("h2", state.nickname ? `Well played, ${state.nickname}!` : "Your results"),
           el("p", { className: "big-score" }, [
-            el("span", { className: "big-score-value", text: String(state.total) }),
-            el("span", { className: "big-score-max", text: ` / ${state.maxScore}` }),
+            el("span", { className: "big-score-value", text: String(state.points) }),
+            el("span", { className: "big-score-max", text: " points" }),
           ]),
+          el("p", { className: "correct-line", text: `${state.total} of ${state.maxScore} correct` }),
           el("p", { className: "tier" }, [
             el("span", { className: "tier-label", text: "Rank: " }),
             el("strong", { className: "tier-name", text: state.tier.name }),
           ]),
           el("ul", { className: "stats" }, stats.map((text) => el("li", { text }))),
         ]),
-        single
+        breakdown,
+        isCategory
           ? null
           : el("table", { className: "category-table" }, [
-              el("caption", { text: "Score by category" }),
+              el("caption", { text: "Correct answers by category" }),
               el("tbody", {}, rows),
             ]),
         el("div", { className: "results-links" }, [
@@ -562,6 +763,7 @@ export function createUI(
             className: "btn btn-secondary",
             iconKind: "trophy",
             onClick() {
+              leaderboardMode = state.mode;
               if (game.openLeaderboard()) render();
             },
           }),
@@ -605,10 +807,10 @@ export function createUI(
               el("li", { className: "card review-item" }, [
                 el("p", { className: "review-question", text: m.question }),
                 el("p", { className: "review-answer is-wrong" }, [
-                  m.skipped ? lineIcon("skip") : icon("cross"),
+                  m.skipped ? lineIcon("skip") : m.timedOut ? lineIcon("timer") : icon("cross"),
                   el("span", {}, [
                     el("span", { className: "review-label", text: "Your answer: " }),
-                    el("span", { text: m.skipped ? "Skipped" : m.chosenText }),
+                    el("span", { text: m.skipped ? "Skipped" : m.timedOut ? "No answer (time ran out)" : m.chosenText }),
                   ]),
                 ]),
                 el("p", { className: "review-answer is-correct" }, [
@@ -625,10 +827,12 @@ export function createUI(
         ])
       );
 
-    const wrong = state.mistakes.filter((m) => !m.skipped).length;
-    const skipped = state.mistakes.length - wrong;
+    const wrong = state.mistakes.filter((m) => !m.skipped && !m.timedOut).length;
+    const skipped = state.mistakes.filter((m) => m.skipped).length;
+    const timedOut = state.mistakes.filter((m) => m.timedOut).length;
     const parts = [`${wrong} wrong`];
     if (skipped > 0) parts.push(`${skipped} skipped`);
+    if (timedOut > 0) parts.push(`${timedOut} timed out`);
 
     return el("section", { className: "screen screen-review" }, [
       el("div", { className: "screen-head" }, [back("btn btn-quiet")]),
@@ -645,12 +849,21 @@ export function createUI(
     const fromResults = state.leaderboardFrom === SCREENS.RESULTS;
     let runs = [];
     try {
-      runs = topRuns(getRuns(), LEADERBOARD_SIZE);
+      runs = topRuns(getRuns(), LEADERBOARD_SIZE, leaderboardMode);
     } catch {
       runs = []; // corrupt or blocked storage: show the empty state
     }
+    let anyRuns = runs.length > 0;
+    if (!anyRuns) {
+      try {
+        anyRuns = topRuns(getRuns(), 1).length > 0;
+      } catch {
+        anyRuns = false;
+      }
+    }
     const highlight = fromResults ? justFinished : null;
     const highlightShown = runs.some((r) => sameRun(r, highlight));
+    const highlightInMode = highlight && runMode(highlight) === leaderboardMode;
 
     const back = button(fromResults ? "Back to results" : "Back", {
       className: "btn btn-quiet",
@@ -660,9 +873,37 @@ export function createUI(
       },
     });
 
+    // Mode filter: one leaderboard per mode, since 20, 10 and 40-question
+    // runs can't be compared fairly.
+    const tabs = el(
+      "div",
+      { className: "mode-tabs", attrs: { role: "group", "aria-label": "Show runs for" } },
+      [MODES.FULL, MODES.CATEGORY, MODES.SPEED].map((mode) =>
+        el("button", {
+          type: "button",
+          className: "mode-tab",
+          text: MODE_LABELS[mode],
+          attrs: { "aria-pressed": String(mode === leaderboardMode), "data-mode": mode },
+          on: {
+            click() {
+              if (leaderboardMode === mode) return;
+              leaderboardMode = mode;
+              render({ focus: false });
+              container.querySelector(`.mode-tab[data-mode="${mode}"]`)?.focus();
+            },
+          },
+        })
+      )
+    );
+
     let body;
     if (runs.length === 0) {
-      body = el("p", { className: "empty-state card", text: "No saved runs yet. Finish a game to appear here." });
+      body = el("p", {
+        className: "empty-state card",
+        text: anyRuns
+          ? `No ${MODE_LABELS[leaderboardMode]} runs yet. Finish one to appear here.`
+          : "No saved runs yet. Finish a game to appear here.",
+      });
     } else {
       const rows = runs.map((run, i) => {
         const isNew = sameRun(run, highlight);
@@ -673,20 +914,38 @@ export function createUI(
           el("th", { scope: "row", className: "lb-name" }, [
             el("span", { text: name }),
             isNew ? el("span", { className: "new-badge", text: "This run" }) : null,
-            typeof run.subject === "string" && run.subject !== ALL_SUBJECTS
+            runMode(run) === MODES.CATEGORY && typeof run.subject === "string"
               ? el("span", { className: "lb-subject", text: run.subject })
               : null,
           ]),
-          el("td", { className: "lb-score", text: `${run.total} / ${max}` }),
-          el("td", { className: "lb-tier", text: typeof run.tier === "string" ? run.tier : "" }),
+          el("td", { className: "lb-points", text: typeof run.points === "number" ? String(run.points) : "–" }),
+          el("td", { className: "lb-score" }, [
+            el("span", { text: `${run.total} / ${max}` }),
+            typeof run.tier === "string" ? el("span", { className: "lb-tier", text: run.tier }) : null,
+          ]),
           el("td", { className: "lb-date", text: formatDate(run.finishedAt) }),
         ]);
       });
       body = el("div", { className: "table-scroll" }, [
         el("table", { className: "leaderboard-table" }, [
-          el("caption", { className: "visually-hidden", text: `Top ${LEADERBOARD_SIZE} saved runs` }),
+          el("caption", { className: "visually-hidden", text: `Top ${LEADERBOARD_SIZE} ${MODE_LABELS[leaderboardMode]} runs` }),
           el("thead", {}, [
-            el("tr", {}, ["#", "Name", "Score", "Rank", "Date"].map((h) => el("th", { scope: "col", text: h }))),
+            el(
+              "tr",
+              {},
+              [
+                ["#", "#"],
+                ["Name", "Name"],
+                ["Points", "Pts"],
+                ["Correct and rank", "Correct"],
+                ["Date", "Date"],
+              ].map(([full, short]) =>
+                el("th", { scope: "col" }, [
+                  el("span", { text: short, attrs: { "aria-hidden": "true" } }),
+                  srOnly(full),
+                ])
+              )
+            ),
           ]),
           el("tbody", {}, rows),
         ]),
@@ -696,15 +955,16 @@ export function createUI(
     return el("section", { className: "screen screen-leaderboard" }, [
       el("div", { className: "screen-head" }, [back]),
       focusHeading("h2", "Leaderboard"),
-      el("p", { className: "app-tagline", text: `Your top ${LEADERBOARD_SIZE} runs on this device.` }),
-      highlight && !highlightShown && runs.length > 0
+      el("p", { className: "app-tagline", text: `Your top ${LEADERBOARD_SIZE} runs on this device, by points.` }),
+      tabs,
+      highlightInMode && !highlightShown && runs.length > 0
         ? el("p", {
             className: "hint",
-            text: `Your latest run (${highlight.total} / ${highlight.maxScore ?? TOTAL_QUESTIONS}) isn't in your top ${LEADERBOARD_SIZE}.`,
+            text: `Your latest run (${highlight.points} points) isn't in your top ${LEADERBOARD_SIZE}.`,
           })
         : null,
       body,
-      runs.length > 0
+      anyRuns
         ? el("div", { className: "actions" }, [
             button("Clear history", {
               className: "btn btn-danger-outline",

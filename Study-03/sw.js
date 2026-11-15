@@ -8,7 +8,7 @@
 // - data/questions.json: network first, falling back to the cache when
 //   offline, so corrected questions reach players on their next online load.
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `quiz-${CACHE_VERSION}`;
 const QUESTIONS_PATH = "data/questions.json";
 
@@ -23,6 +23,7 @@ const PRECACHE_URLS = [
   "js/config.js",
   "js/keys.js",
   "js/quiz.js",
+  "js/score-manager.js",
   "js/scoring.js",
   "js/state.js",
   "js/storage.js",

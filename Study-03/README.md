@@ -6,17 +6,38 @@ A single-player general knowledge quiz: 4-option multiple choice, 10 questions i
 
 ## How to play
 
-Enter an optional nickname, then pick a subject: **History**, **Science**, **Geography** or **Arts & Culture** for a round of 10, or **All subjects** for all 40 (four rounds in that order, with a score summary after each). Pressing Enter in the nickname box starts All subjects. Question and answer order are reshuffled every run.
+Enter an optional nickname, then pick a game mode:
+
+| Mode | Questions | Notes |
+| --- | --- | --- |
+| **Full Challenge** | All 40 | Four rounds (History, Science, Geography, Arts & Culture) with a summary after each. Pressing Enter in the nickname box starts it. |
+| **By Category** | 10 | All the questions of the category you pick. |
+| **Speed Quiz** | 20 | 5 random questions from each category, mixed. **15 seconds per question**; when time runs out the question scores 0 and the answer is shown. |
+
+Question and answer order are reshuffled every run.
+
+### Points
+
+Each correct answer earns points (the ScoreManager in `js/score-manager.js`; the numbers are in `SCORING` in `js/config.js`):
+
+| | Points |
+| --- | --- |
+| Base | 10 × difficulty multiplier: easy ×1 (10), medium ×1.5 (15), hard ×2 (20) |
+| Time bonus | +3 for answering in under 10 seconds |
+| No-hint bonus | +2 if you didn't use Eliminate on that question |
+| Streak bonus | +2 at 3 correct in a row, +5 at 5, +10 at 10 (and again at 20, 30, 40) |
+
+A wrong, skipped or timed-out answer scores 0 and ends the streak. After each answer you see the points it earned and why. The top of the question shows your points and current streak. The best possible Full Challenge score is 847.
 
 You get one try per question: the first answer you pick locks, and you see right away whether it was correct, plus a one-line explanation. Press **Next** to go on. Before answering you can also press:
 
 - **Eliminate**: removes one wrong answer from the current question (once per question).
 - **Skip**: moves to the next question without answering. A skipped question scores 0 and isn't shown again.
 
-At the end you see your score, your rank (see [Rank tiers](#rank-tiers)), and how many questions you skipped and eliminations you used. From there:
+At the end you see your points, how many you got right, your rank (see [Rank tiers](#rank-tiers); it's based on correct answers), your best streak, and a breakdown of where the points came from. From there:
 
 - **Review mistakes** lists every question you got wrong or skipped, grouped by category, with your answer, the correct answer and the explanation. It's kept in memory for the current run only. A perfect run shows "Perfect score, nothing to review" instead.
-- **Leaderboard** (also on the Start screen) shows your 10 best saved runs on this device: highest score first, ties newest first. The run you just finished is marked "This run". **Clear history** deletes the saved runs after a confirmation.
+- **Leaderboard** (also on the Start screen) shows your 10 best saved runs on this device, with a tab per mode (Full Challenge, By Category, Speed Quiz), since 40, 10 and 20-question runs can't be compared fairly. Runs are ranked by points, then correct answers, then newest. The run you just finished is marked "This run". Runs saved before points existed show "–" and rank last. **Clear history** deletes the saved runs of all modes after a confirmation.
 
 **Keyboard:** on a question, press A to D (or 1 to 4) to answer, then Enter or Space for the next question. Everything else works with Tab, Enter and Escape. Focus moves to each screen's heading, and results are announced to screen readers.
 
@@ -63,22 +84,23 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `index.html` | Page shell: top bar with the dark mode switch, and the `#app` container; loads `js/app.js` |
 | `css/style.css` | Mobile-first styles, colour and category accent variables, dark mode, reduced motion |
 | `js/app.js` | Entry point: fetches and validates the questions (error screen on failure), then wires state, UI and storage |
-| `js/config.js` | `CATEGORIES` (play order), `ALL_SUBJECTS`, `QUESTIONS_PER_CATEGORY`, `ELIMINATE_PER_QUESTION`, `NICKNAME_MAX`, `DIFFICULTY_MIX`, `RANK_TIERS` |
+| `js/config.js` | `CATEGORIES` (play order), `MODES`, `ALL_SUBJECTS`, `SPEED_SUBJECT`, `SPEED_PER_CATEGORY`, `SPEED_SECONDS`, `SCORING`, `QUESTIONS_PER_CATEGORY`, `ELIMINATE_PER_QUESTION`, `NICKNAME_MAX`, `DIFFICULTY_MIX`, `RANK_TIERS` |
 | `js/validate.js` | Pure validation functions (no DOM), shared by the browser and Node |
-| `js/quiz.js` | Pure: `shuffle` (Fisher-Yates), `seededRng`, `shuffleOptions`, `buildRun` |
+| `js/quiz.js` | Pure: `shuffle` (Fisher-Yates), `seededRng`, `shuffleOptions`, `buildRun`, `buildSpeedRun` |
+| `js/score-manager.js` | Pure ScoreManager: `scoreAnswer`, `streakBonus`, `createScoreManager` (points, bonuses, streaks) |
 | `js/scoring.js` | Pure: `tierFor`, `summarize` |
-| `js/state.js` | Run state machine (`createGame`): `start(name, subject)`, `answer`, `eliminate`, `skip`, `next`, `exit`, `toStart`, `openReview`, `openLeaderboard` and more, `getState`. Tracks mistakes for the review. No DOM |
+| `js/state.js` | Run state machine (`createGame`): `start(name, subject)`, `answer`, `eliminate`, `skip`, `timeOut`, `next`, `exit`, `toStart`, `openReview`, `openLeaderboard` and more, `getState`. Times each answer, scores it, tracks mistakes. No DOM |
 | `js/theme.js` | Light/dark switch, remembered under `quiz.theme` |
 | `js/keys.js` | Pure: `mapKey(key, context)` keyboard shortcuts for the Question screen |
 | `sw.js` | Service worker: precache, cache-first for files, network-first for the questions. Holds `CACHE_VERSION` |
 | `manifest.webmanifest`, `icons/` | Install and home-screen metadata; placeholder icons |
 | `scripts/make-icons.mjs` | Regenerates the placeholder icons (no dependencies) |
 | `DEPLOY.md` | How to publish, plus the launch checklist |
-| `js/storage.js` | `saveRun`, `loadRuns`, `clearRuns` for the `quiz.runs` history in localStorage (never throw), and pure `topRuns(runs, n)` for the leaderboard |
+| `js/storage.js` | `saveRun`, `loadRuns`, `clearRuns` for the `quiz.runs` history in localStorage (never throw), and pure `topRuns(runs, n, mode)` and `runMode(run)` for the leaderboard |
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
 | `data/questions.json` | The 40 questions |
 | `scripts/validate-questions.mjs` | Command-line validator |
-| `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
+| `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, score manager, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
 
 ## How to edit questions
@@ -123,20 +145,23 @@ Players who are online get corrected questions on their next load even without t
 Each finished run is saved in the browser's localStorage under `quiz.runs`, newest first, at most 100 entries:
 
 ```json
-{ "nickname": "Sam", "finishedAt": "2026-11-15T12:00:00.000Z", "subject": "All",
-  "total": 30, "maxScore": 40,
+{ "nickname": "Sam", "finishedAt": "2026-11-15T12:00:00.000Z",
+  "mode": "full", "subject": "All", "points": 612, "total": 30, "maxScore": 40,
   "byCategory": { "History": 8, "Science": 7, "Geography": 9, "Arts & Culture": 6 },
-  "skipped": 2, "eliminated": 5, "tier": "Expert" }
+  "skipped": 2, "timedOut": 0, "eliminated": 5, "bestStreak": 9,
+  "bonuses": { "base": 450, "time": 75, "noHint": 50, "streak": 37 }, "tier": "Expert" }
 ```
 
-`subject` is a category name or `"All"`; for a one-subject run `maxScore` is 10 and `byCategory` has only that category. Exiting mid-run saves nothing. If storage is blocked, full or corrupt, the game still plays and just doesn't save. `nickname` is `""` when none was entered.
+`mode` is `"full"`, `"category"` or `"speed"`. `subject` is `"All"`, a category name, or `"Speed"`. For a category run `maxScore` is 10 and `byCategory` has only that category; for a Speed Quiz it's 20. Exiting mid-run saves nothing. If storage is blocked, full or corrupt, the game still plays and just doesn't save. `nickname` is `""` when none was entered.
 
 ## Rank tiers
 
-| Rank | Minimum score (of 40) | One subject (of 10) |
-| --- | --- | --- |
-| Novice | 0 | 0 |
-| Apprentice | 12 | 3 |
-| Scholar | 20 | 5 |
-| Expert | 28 | 7 |
-| Grandmaster | 36 | 9 |
+The rank comes from correct answers, not points, scaled to the run length.
+
+| Rank | Full Challenge (of 40) | Speed Quiz (of 20) | By Category (of 10) |
+| --- | --- | --- | --- |
+| Novice | 0 | 0 | 0 |
+| Apprentice | 12 | 6 | 3 |
+| Scholar | 20 | 10 | 5 |
+| Expert | 28 | 14 | 7 |
+| Grandmaster | 36 | 18 | 9 |

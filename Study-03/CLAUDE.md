@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Single-player general knowledge quiz: 4-option multiple choice, 10 questions in each of four categories (History, Science, Geography, Arts & Culture), 40 in total. Static web app in plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no npm dependencies (`package.json` only sets `"type": "module"`). Mobile-first.
 
-Phases 1 to 3 are done: question content, core game, subject choice (one category or All), Eliminate (removes one wrong option per question), Skip (scores 0), a light/dark switch, Review mistakes, a personal leaderboard, keyboard and screen-reader support, and offline play (service worker). Publishing steps and the launch checklist are in `DEPLOY.md`.
+Phases 1 to 3 are done, plus points and game modes: question content, core game, three modes (Full Challenge 40, By Category 10, Speed Quiz 20 with 15 s per question), ScoreManager points (difficulty multiplier, time, no-hint and streak bonuses), Eliminate (removes one wrong option per question), Skip (scores 0), a light/dark switch, Review mistakes, a personal leaderboard, keyboard and screen-reader support, and offline play (service worker). Publishing steps and the launch checklist are in `DEPLOY.md`.
 
 ## Commands
 
@@ -23,7 +23,8 @@ ES modules and `fetch` need HTTP, so the page doesn't work from `file://`.
 - `js/config.js`: `CATEGORIES` (also the play order), `ALL_SUBJECTS`, `QUESTIONS_PER_CATEGORY`, `ELIMINATE_PER_QUESTION`, `NICKNAME_MAX`, `DIFFICULTY_MIX`, `RANK_TIERS`. Single source of truth for these values. Rank minimums are out of 40; `tierFor` scales them for a 10-question run.
 - `js/validate.js`: pure validation (no DOM), shared by the browser and Node. `validateQuestions(list)` returns `{ errors, warnings }`.
 - `js/app.js`: entry point. Loads and validates the questions, shows a blocking error screen (`role="alert"`) on errors, then wires state, UI and storage.
-- `js/quiz.js`, `js/scoring.js`: pure functions. `buildRun(questions, rng)` shuffles questions within each category and options within each question, tracking the correct option by identity and storing its new `correctIndex`.
+- `js/score-manager.js`: pure ScoreManager. Rules live in `SCORING` in config.js; state.js passes in the answer time (from the injected `now`) and whether Eliminate was used.
+- `js/quiz.js`, `js/scoring.js`: pure functions. `buildSpeedRun` picks 5 per category and mixes them. `buildRun(questions, rng)` shuffles questions within each category and options within each question, tracking the correct option by identity and storing its new `correctIndex`.
 - `js/state.js`: `createGame()` state machine (screens: start, question, summary, results). The only place game rules live, including `eliminate()`, `skip()`, the review and leaderboard screens, and the mistake list (`getState().mistakes`, in memory only, never saved). A one-subject run goes from its last question straight to results. `takeResultToSave()` returns the finished run once, which is what stops double-saving.
 - `js/storage.js`: `saveRun`/`loadRuns`/`clearRuns` for `quiz.runs`, plus pure `topRuns(runs, n)`. Every storage access is in try/catch and must never throw.
 - `js/keys.js`: pure `mapKey(key, context)` for the Question screen shortcuts. ui.js gathers the context and calls `preventDefault()` on handled keys so a focused button never also clicks.
@@ -35,7 +36,7 @@ ES modules and `fetch` need HTTP, so the page doesn't work from `file://`.
 ## Conventions
 
 - Keep game logic out of the DOM so it stays testable in Node. Inject `rng`, `now` and storage in tests (see `tests/helpers.mjs`).
-- Feedback is applied synchronously in the click handler: no setTimeout or animation before locking. Never signal right/wrong by colour alone; always an icon plus text.
+- Feedback is applied synchronously in the click handler: no setTimeout or animation before locking. The Speed Quiz countdown (setInterval in ui.js) only displays time; `timeOut()` in state.js decides, refuses early calls, and late answers count as timed out. Clear the interval on every render (`stopCountdown`). Never signal right/wrong by colour alone; always an icon plus text.
 - Every screen change focuses that screen's heading (`data-autofocus`). Locked options use `aria-disabled`, not `disabled`, so they stay readable. Dialogs come from `buildConfirmDialog` in ui.js (focus trap, focus returns to the opener on cancel).
 - No external requests (fonts, CDNs, analytics).
 - Colours are CSS variables in `css/style.css` and are chosen to pass WCAG AA in light and dark mode. Re-check contrast if you change one. The dark values appear twice (system setting and `[data-theme="dark"]`); keep both copies in sync.

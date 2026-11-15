@@ -78,21 +78,36 @@ export function clearRuns(store) {
 }
 
 /**
- * The best `n` runs: highest total first; equal totals newest first.
+ * The game mode of a saved run. Runs saved before modes existed have no
+ * `mode`: a category subject means "category", anything else "full".
+ * @param {object} run
+ * @returns {"full" | "category" | "speed"}
+ */
+export function runMode(run) {
+  if (run && (run.mode === "full" || run.mode === "category" || run.mode === "speed")) return run.mode;
+  return run && typeof run.subject === "string" && run.subject !== "All" ? "category" : "full";
+}
+
+/**
+ * The best `n` runs: most points first, then most correct answers, then
+ * newest. Runs saved before points existed rank below runs with points.
  * Pure: does not modify `runs`. Unparseable dates sort as oldest.
  * @param {object[]} runs
  * @param {number} [n]
+ * @param {string} [mode] only runs of this mode (see runMode); all if omitted
  * @returns {object[]}
  */
-export function topRuns(runs, n = 10) {
+export function topRuns(runs, n = 10, mode) {
   if (!Array.isArray(runs)) return [];
   const time = (run) => {
     const t = Date.parse(run.finishedAt);
     return Number.isNaN(t) ? -Infinity : t;
   };
+  const points = (run) => (typeof run.points === "number" ? run.points : -Infinity);
   return runs
     .filter(isRunRecord)
+    .filter((run) => mode === undefined || runMode(run) === mode)
     .slice()
-    .sort((a, b) => b.total - a.total || time(b) - time(a))
+    .sort((a, b) => points(b) - points(a) || b.total - a.total || time(b) - time(a))
     .slice(0, Math.max(0, n));
 }

@@ -118,3 +118,44 @@ test("clearRuns never throws on blocked storage", () => {
   assert.equal(clearRuns(throwingStorage()), false);
   assert.equal(clearRuns(null), false);
 });
+
+/* ---------- Points ranking and modes ---------- */
+
+import { runMode } from "../js/storage.js";
+
+test("topRuns ranks by points first, then correct answers, then newest", () => {
+  const runs = [
+    { ...run(30, 1, "many correct, fewer points"), points: 400 },
+    { ...run(25, 2, "most points"), points: 500 },
+    { ...run(28, 3, "tie on points, more correct"), points: 400 },
+    { ...run(28, 4, "tie on both, newest"), points: 400 },
+    run(40, 5, "old record without points"),
+  ];
+  assert.deepEqual(topRuns(runs).map((r) => r.nickname), [
+    "most points",
+    "many correct, fewer points",
+    "tie on both, newest",
+    "tie on points, more correct",
+    "old record without points",
+  ]);
+});
+
+test("topRuns can filter by mode", () => {
+  const runs = [
+    { ...run(10, 1), mode: "speed", points: 200 },
+    { ...run(30, 2), mode: "full", points: 300 },
+    { ...run(8, 3), subject: "History" }, // old record: category
+    { ...run(20, 4) }, // old record, no subject: full
+  ];
+  assert.deepEqual(topRuns(runs, 10, "speed").map((r) => r.total), [10]);
+  assert.deepEqual(topRuns(runs, 10, "full").map((r) => r.total), [30, 20]);
+  assert.deepEqual(topRuns(runs, 10, "category").map((r) => r.total), [8]);
+});
+
+test("runMode reads the mode, or works it out for old records", () => {
+  assert.equal(runMode({ mode: "speed" }), "speed");
+  assert.equal(runMode({ subject: "Science" }), "category");
+  assert.equal(runMode({ subject: "All" }), "full");
+  assert.equal(runMode({}), "full");
+  assert.equal(runMode(null), "full");
+});

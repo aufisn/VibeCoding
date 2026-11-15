@@ -68,3 +68,21 @@ export function buildRun(questions, rng = Math.random, categories = CATEGORIES) 
     ).map((q) => shuffleOptions(q, rng))
   );
 }
+
+/**
+ * Build a Speed Quiz run: `perCategory` random questions from each category,
+ * mixed together in random order, options shuffled.
+ * @param {object[]} questions validated question bank
+ * @param {() => number} [rng]
+ * @param {number} [perCategory]
+ * @param {readonly string[]} [categories]
+ */
+export function buildSpeedRun(questions, rng = Math.random, perCategory = 5, categories = CATEGORIES) {
+  const picked = categories.flatMap((category) =>
+    shuffle(
+      questions.filter((q) => q.category === category),
+      rng
+    ).slice(0, perCategory)
+  );
+  return shuffle(picked, rng).map((q) => shuffleOptions(q, rng));
+}

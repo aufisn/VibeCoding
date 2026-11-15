@@ -31,6 +31,7 @@
   --accent-science: #17698c;
   --accent-geography: #23744a;
   --accent-arts: #8a3496;
+  --accent-speed: #5b3cc4;
   --color-on-accent: #ffffff;
 
   /* Layout */
@@ -77,6 +78,8 @@
     --accent-science: #6cc6ea;
     --accent-geography: #78d6a2;
     --accent-arts: #dc9be8;
+  --accent-speed: #b9a6ff;
+    --accent-speed: #b9a6ff;
     --color-on-accent: #10121a;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
   }
@@ -119,6 +122,7 @@
 [data-category="geography"] { --accent: var(--accent-geography); }
 [data-category="arts-culture"] { --accent: var(--accent-arts); }
 [data-category="all"] { --accent: var(--color-primary); }
+[data-category="speed"] { --accent: var(--accent-speed); }
 
 /* ---------- Base ---------- */
 
@@ -1227,6 +1231,252 @@ p {
   color: var(--color-success-bg);
 }
 
+/* ---------- Modes, points, streak, timer ---------- */
+
+.mode-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: var(--space-2);
+}
+
+.mode-card {
+  flex-direction: row;
+  align-items: center;
+  min-height: 5rem;
+}
+
+.subject-speed {
+  background: var(--accent-speed);
+  color: var(--color-on-accent);
+  border-color: var(--accent-speed);
+}
+
+.subject-speed:hover {
+  background: var(--accent-speed);
+  filter: brightness(1.06);
+}
+
+.subject-speed .subject-icon {
+  background: var(--color-on-accent);
+  color: var(--accent-speed);
+}
+
+.subject-speed .subject-count {
+  color: inherit;
+}
+
+.group-label {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.question-meta {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stats-row {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.625rem 0.125rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  color: var(--color-text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stat-pill .icon-line {
+  width: 1rem;
+  height: 1rem;
+}
+
+.stat-unit {
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.streak-pill.is-hot {
+  border-color: var(--accent-history);
+  color: var(--accent-history);
+}
+
+.streak-pill.is-hot .icon-line {
+  fill: currentColor;
+}
+
+.points-pill.is-bumped {
+  animation: bump 0.35s ease-out;
+}
+
+@keyframes bump {
+  40% { transform: scale(1.15); }
+}
+
+.difficulty {
+  margin: 0 0 0.375rem;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.points-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.points-total {
+  margin-right: 0.25rem;
+}
+
+.chip {
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+}
+
+.timer {
+  margin: -0.75rem 0 var(--space-2);
+}
+
+.timer-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-label .icon-line {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.timer-track {
+  height: 0.5rem;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.timer-fill {
+  height: 100%;
+  background: var(--accent-speed);
+  border-radius: inherit;
+}
+
+/* Last seconds: red bar plus red, bold text (the number itself says it too). */
+.timer.is-urgent .timer-label {
+  color: var(--color-error-text);
+}
+
+.timer.is-urgent .timer-fill {
+  background: var(--color-error);
+}
+
+.timer.is-stopped .timer-fill {
+  opacity: 0.5;
+}
+
+.correct-line {
+  margin: 0 0 0.25rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.breakdown-table {
+  width: 100%;
+  margin: var(--space-2) 0 0;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-table caption {
+  margin-bottom: var(--space-1);
+  text-align: left;
+  font-weight: 700;
+}
+
+.breakdown-table th,
+.breakdown-table td {
+  padding: 0.625rem var(--space-2);
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+  font-weight: 500;
+}
+
+.breakdown-table td {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.breakdown-table tfoot th,
+.breakdown-table tfoot td {
+  border-top: 2px solid var(--color-border-strong);
+  font-weight: 800;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: var(--space-2);
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.mode-tab {
+  flex: 1;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: var(--color-text);
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mode-tab[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.lb-points {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lb-tier {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.leaderboard-table tr.is-new .lb-tier {
+  color: var(--color-success-text);
+}
+
 /* ---------- Larger screens ---------- */
 
 @media (min-width: 48rem) {
@@ -1248,6 +1498,10 @@ p {
 
   .subject-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mode-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .start-links,

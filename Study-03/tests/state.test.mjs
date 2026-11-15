@@ -126,15 +126,24 @@ test("the finished-run record is handed out exactly once", () => {
     else game.next();
   }
   const record = game.takeResultToSave();
+  // Fixed clock: every answer takes 0 ms, so all get the time bonus.
+  // base: 12 easy x10 + 16 medium x15 + 12 hard x20 = 600
+  // time: 40 x 3 = 120; no hint: 40 x 2 = 80
+  // streak: +2 (3) +5 (5) +10 (10, 20, 30, 40) = 47
   assert.deepEqual(record, {
     nickname: "Ana",
     finishedAt: FIXED_NOW.toISOString(),
+    mode: "full",
     subject: "All",
+    points: 847,
     total: 40,
     maxScore: 40,
     byCategory: { History: 10, Science: 10, Geography: 10, "Arts & Culture": 10 },
     skipped: 0,
+    timedOut: 0,
     eliminated: 0,
+    bestStreak: 40,
+    bonuses: { base: 600, time: 120, noHint: 80, streak: 47 },
     tier: "Grandmaster",
   });
   assert.equal(game.takeResultToSave(), null, "second call returns null (no double save)");
@@ -386,4 +395,119 @@ test("the leaderboard returns to wherever it was opened from", () => {
   assert.equal(game.openLeaderboard(), true);
   game.closeLeaderboard();
   assert.equal(game.getState().screen, SCREENS.RESULTS);
+});
+
+/* ---------- Points, timing and Speed Quiz ---------- */
+
+import { SPEED_SUBJECT } from "../js/config.js";
+
+/** A clock the test moves by hand. */
+function fakeClock(start = Date.UTC(2026, 10, 15, 12)) {
+  let t = start;
+  return { now: () => new Date(t), advance: (ms) => (t += ms) };
+}
+
+test("points: fast vs slow answers, and hints cost the no-hint bonus", () => {
+  const clock = fakeClock();
+  const game = createGame(bank, { rng: seededRng(8), now: clock.now });
+  game.start("", "History");
+
+  clock.advance(4_000);
+  const q1 = game.getState().question;
+  game.answer(q1.correctIndex);
+  const p1 = game.getState().answer.points;
+  assert.equal(p1.time, 3, "under 10 s");
+  assert.equal(p1.noHint, 2);
+  game.next();
+
+  clock.advance(12_000);
+  game.eliminate();
+  const q2 = game.getState().question;
+  game.answer(q2.correctIndex);
+  const p2 = game.getState().answer.points;
+  assert.equal(p2.time, 0, "over 10 s");
+  assert.equal(p2.noHint, 0, "used Eliminate");
+  assert.equal(game.getState().points, p1.total + p2.total);
+  assert.equal(game.getState().streak, 2);
+});
+
+test("the answer clock restarts on every question", () => {
+  const clock = fakeClock();
+  const game = createGame(bank, { rng: seededRng(8), now: clock.now });
+  game.start("", "Science");
+  clock.advance(30_000); // slow on the first question
+  game.skip();
+  clock.advance(2_000); // quick on the second
+  game.answer(game.getState().question.correctIndex);
+  assert.equal(game.getState().answer.timeMs, 2_000);
+  assert.equal(game.getState().answer.points.time, 3);
+});
+
+test("skipping resets the streak", () => {
+  const game = newGame();
+  game.start("", "Geography");
+  answerAndNext(game);
+  answerAndNext(game);
+  assert.equal(game.getState().streak, 2);
+  game.skip();
+  assert.equal(game.getState().streak, 0);
+});
+
+test("Speed Quiz: 20 mixed questions, no category summaries", () => {
+  const game = newGame(3);
+  assert.equal(game.start("Ana", SPEED_SUBJECT), true);
+  const s = game.getState();
+  assert.equal(s.mode, "speed");
+  assert.equal(s.totalQuestions, 20);
+  assert.equal(s.timeLimitMs, 15_000);
+  for (let i = 0; i < 20; i++) {
+    assert.equal(game.getState().screen, SCREENS.QUESTION, `question ${i + 1}`);
+    answerAndNext(game);
+  }
+  assert.equal(game.getState().screen, SCREENS.RESULTS);
+  const record = game.takeResultToSave();
+  assert.equal(record.mode, "speed");
+  assert.equal(record.maxScore, 20);
+  assert.equal(record.total, 20);
+  assert.deepEqual(Object.values(record.byCategory), [5, 5, 5, 5]);
+});
+
+test("Speed Quiz: timeOut() is refused before 15 s and works after", () => {
+  const clock = fakeClock();
+  const game = createGame(bank, { rng: seededRng(4), now: clock.now });
+  game.start("", SPEED_SUBJECT);
+  clock.advance(14_999);
+  assert.equal(game.timeOut(), false, "not yet");
+  assert.equal(game.getState().timeLeftMs, 1);
+  clock.advance(1);
+  assert.equal(game.timeOut(), true);
+  const s = game.getState();
+  assert.equal(s.answer.timedOut, true);
+  assert.equal(s.answer.correct, false);
+  assert.equal(s.answer.points.total, 0);
+  assert.equal(s.timeLeftMs, null, "no clock once answered");
+  assert.equal(s.mistakes[0].timedOut, true);
+  assert.equal(game.answer(s.question.correctIndex), false, "locked after time-out");
+  assert.equal(game.next(), true);
+});
+
+test("Speed Quiz: a late answer (after the deadline) counts as timed out", () => {
+  const clock = fakeClock();
+  const game = createGame(bank, { rng: seededRng(4), now: clock.now });
+  game.start("", SPEED_SUBJECT);
+  clock.advance(20_000);
+  assert.equal(game.answer(game.getState().question.correctIndex), true);
+  assert.equal(game.getState().answer.timedOut, true);
+  assert.equal(game.getState().score, 0);
+});
+
+test("untimed modes have no time limit and no timeOut", () => {
+  const clock = fakeClock();
+  const game = createGame(bank, { rng: seededRng(4), now: clock.now });
+  game.start("", "History");
+  clock.advance(60_000);
+  assert.equal(game.getState().timeLimitMs, null);
+  assert.equal(game.timeOut(), false);
+  assert.equal(game.answer(game.getState().question.correctIndex), true);
+  assert.equal(game.getState().answer.correct, true);
 });

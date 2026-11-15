@@ -5,9 +5,15 @@
 //     ▲                               │  ▲
 //     │              next() / skip()  │  └── more questions in the category
 //     │                               ▼
-//     ├── exit() from question/summary   summary (end of a category, "All" only)
+//     ├── exit() from question/summary   summary (end of a category, Full Challenge only)
 //     │                               │
-//     └── toStart() ◀── results ◀─────┘  last category (or a one-subject run)
+//     └── toStart() ◀── results ◀─────┘  last question of the run
+//
+//   Modes (start's `chosen`): ALL_SUBJECTS = Full Challenge (40),
+//   a category name = By Category (10), SPEED_SUBJECT = Speed Quiz (20,
+//   SPEED_SECONDS per question; timeOut() ends a question when time is up).
+//   Points come from the ScoreManager (score-manager.js); `score` stays the
+//   count of correct answers, which sets the rank.
 //
 //   results ⇄ review       (openReview / closeReview; only with mistakes)
 //   start or results ⇄ leaderboard  (openLeaderboard / closeLeaderboard)
@@ -16,11 +22,17 @@ import {
   ALL_SUBJECTS,
   CATEGORIES,
   ELIMINATE_PER_QUESTION,
-  RANK_TIERS,
+  MODES,
   NICKNAME_MAX,
+  RANK_TIERS,
+  SCORING,
+  SPEED_PER_CATEGORY,
+  SPEED_SECONDS,
+  SPEED_SUBJECT,
 } from "./config.js";
-import { buildRun } from "./quiz.js";
+import { buildRun, buildSpeedRun } from "./quiz.js";
 import { summarize, tierFor } from "./scoring.js";
+import { createScoreManager } from "./score-manager.js";
 
 export const SCREENS = Object.freeze({
   START: "start",
@@ -40,10 +52,12 @@ export function cleanNickname(value) {
  * @param {object[]} questions validated question bank
  * @param {object} [options]
  * @param {() => number} [options.rng] for shuffling and eliminating (inject a seeded one in tests)
- * @param {() => Date} [options.now] clock for finishedAt
+ * @param {() => Date} [options.now] clock for finishedAt and answer times (inject a fake in tests)
  * @param {readonly string[]} [options.categories]
  * @param {readonly {name: string, min: number}[]} [options.tiers]
  * @param {number} [options.eliminatePerQuestion]
+ * @param {typeof SCORING} [options.scoring]
+ * @param {number} [options.speedSeconds]
  */
 export function createGame(
   questions,
@@ -53,12 +67,17 @@ export function createGame(
     categories = CATEGORIES,
     tiers = RANK_TIERS,
     eliminatePerQuestion = ELIMINATE_PER_QUESTION,
+    scoring = SCORING,
+    speedSeconds = SPEED_SECONDS,
   } = {}
 ) {
   let screen = SCREENS.START;
   let nickname = "";
   let subject = ALL_SUBJECTS;
+  let mode = MODES.FULL;
   let playCategories = categories;
+  let scores = createScoreManager(scoring);
+  let questionShownAt = 0; // ms, from now(), when the current question appeared
   let run = [];
   let index = 0;
   let answers = []; // per question: answer record, or undefined while open
@@ -74,6 +93,19 @@ export function createGame(
     eliminated = [];
     score = 0;
     resultToSave = null;
+    scores = createScoreManager(scoring);
+  }
+
+  const clock = () => now().getTime();
+  const timeLimitMs = () => (mode === MODES.SPEED ? speedSeconds * 1000 : null);
+
+  /** Call whenever a new question appears: starts its clock. */
+  function showQuestion() {
+    questionShownAt = clock();
+  }
+
+  function elapsedMs() {
+    return Math.max(0, clock() - questionShownAt);
   }
 
   function isLastInCategory(i) {
@@ -91,15 +123,21 @@ export function createGame(
   function finish() {
     screen = SCREENS.RESULTS;
     const { total, byCategory } = summarize(answers, playCategories);
+    const { points, bestStreak, totals } = scores.getState();
     resultToSave = {
       nickname,
       finishedAt: now().toISOString(),
+      mode,
       subject,
+      points,
       total,
       maxScore: run.length,
       byCategory,
       skipped: answers.filter((a) => a && a.skipped).length,
+      timedOut: answers.filter((a) => a && a.timedOut).length,
       eliminated: countEliminations(),
+      bestStreak,
+      bonuses: { base: totals.base, time: totals.time, noHint: totals.noHint, streak: totals.streak },
       tier: tierFor(total, tiers, run.length).name,
     };
   }
@@ -108,22 +146,35 @@ export function createGame(
    * What happened on one question. Option texts are stored (not just
    * indexes) because options are shuffled per run; the review screen needs
    * the words. In memory only: never saved.
+   * Also scores it with the ScoreManager.
    * @param {object} question the shuffled question
-   * @param {number | null} chosenIndex null when skipped
+   * @param {number | null} chosenIndex null when skipped or timed out
+   * @param {{ timedOut?: boolean }} [how]
    */
-  function record(question, chosenIndex) {
-    const skipped = chosenIndex === null;
+  function record(question, chosenIndex, { timedOut = false } = {}) {
+    const noAnswer = chosenIndex === null;
+    const correct = chosenIndex === question.correctIndex;
+    const timeMs = elapsedMs();
+    const points = scores.record({
+      difficulty: question.difficulty,
+      correct,
+      timeMs,
+      usedHint: eliminatedAt(index).length > 0,
+    });
     return {
       questionId: question.id,
       category: question.category,
       question: question.question,
       chosenIndex,
       correctIndex: question.correctIndex,
-      chosenText: skipped ? null : question.options[chosenIndex],
+      chosenText: noAnswer ? null : question.options[chosenIndex],
       correctText: question.options[question.correctIndex],
       explanation: question.explanation,
-      correct: chosenIndex === question.correctIndex,
-      skipped,
+      correct,
+      skipped: noAnswer && !timedOut,
+      timedOut,
+      timeMs,
+      points,
     };
   }
 
@@ -134,25 +185,38 @@ export function createGame(
 
   /** Move on from an answered or skipped question. */
   function advanceFromQuestion() {
-    if (!isLastInCategory(index)) index += 1;
-    else if (playCategories.length === 1) finish(); // one subject: no summary
-    else screen = SCREENS.SUMMARY;
+    if (index === run.length - 1) {
+      // Full Challenge shows the last category's summary before results.
+      if (mode === MODES.FULL) screen = SCREENS.SUMMARY;
+      else finish();
+    } else if (mode === MODES.FULL && isLastInCategory(index)) {
+      screen = SCREENS.SUMMARY;
+    } else {
+      index += 1;
+      showQuestion();
+    }
   }
 
   /**
    * Begin a new run with a fresh shuffle. Allowed from start or results.
    * @param {string} [name]
-   * @param {string} [chosen] a category name, or ALL_SUBJECTS
+   * @param {string} [chosen] ALL_SUBJECTS (Full Challenge), a category name
+   *   (By Category) or SPEED_SUBJECT (Speed Quiz)
    */
   function start(name = nickname, chosen = ALL_SUBJECTS) {
     if (screen !== SCREENS.START && screen !== SCREENS.RESULTS) return false;
-    if (chosen !== ALL_SUBJECTS && !categories.includes(chosen)) return false;
+    if (chosen !== ALL_SUBJECTS && chosen !== SPEED_SUBJECT && !categories.includes(chosen)) return false;
     nickname = cleanNickname(name);
     subject = chosen;
-    playCategories = chosen === ALL_SUBJECTS ? categories : [chosen];
+    mode = chosen === ALL_SUBJECTS ? MODES.FULL : chosen === SPEED_SUBJECT ? MODES.SPEED : MODES.CATEGORY;
+    playCategories = mode === MODES.CATEGORY ? [chosen] : categories;
     resetRun();
-    run = buildRun(questions, rng, playCategories);
+    run =
+      mode === MODES.SPEED
+        ? buildSpeedRun(questions, rng, SPEED_PER_CATEGORY, categories)
+        : buildRun(questions, rng, playCategories);
     screen = SCREENS.QUESTION;
+    showQuestion();
     return true;
   }
 
@@ -168,9 +232,30 @@ export function createGame(
     ) {
       return false;
     }
-    const correct = optionIndex === question.correctIndex;
+    // An answer that arrives after the Speed Quiz deadline (e.g. the tab was
+    // in the background and the countdown didn't fire) counts as timed out.
+    if (isOutOfTime()) {
+      answers[index] = record(question, null, { timedOut: true });
+      return true;
+    }
     answers[index] = record(question, optionIndex);
-    if (correct) score += 1;
+    if (answers[index].correct) score += 1;
+    return true;
+  }
+
+  function isOutOfTime() {
+    const limit = timeLimitMs();
+    return limit !== null && elapsedMs() >= limit;
+  }
+
+  /**
+   * Speed Quiz: end the current question when its time is up. It scores 0,
+   * resets the streak, and reveals the answer like a wrong answer. Refused
+   * (false) before the deadline, so an early call can't cut a question short.
+   */
+  function timeOut() {
+    if (screen !== SCREENS.QUESTION || answers[index] || !isOutOfTime()) return false;
+    answers[index] = record(run[index], null, { timedOut: true });
     return true;
   }
 
@@ -213,6 +298,7 @@ export function createGame(
       else {
         index += 1;
         screen = SCREENS.QUESTION;
+        showQuestion();
       }
       return true;
     }
@@ -283,11 +369,17 @@ export function createGame(
     const gone = eliminatedAt(index);
     const open = screen === SCREENS.QUESTION && !answers[index];
     const wrongLeft = question ? question.options.length - 1 - gone.length : 0;
+    const limit = timeLimitMs();
+    const scoreState = scores.getState();
+    const categoryTotals = Object.fromEntries(
+      playCategories.map((c) => [c, run.filter((q) => q.category === c).length])
+    );
 
     return Object.freeze({
       screen,
       nickname,
       subject,
+      mode,
       playCategories,
       totalQuestions: run.length,
       maxScore: run.length,
@@ -315,6 +407,16 @@ export function createGame(
       tier: tierFor(total, tiers, run.length || undefined),
       mistakes: Object.freeze(mistakes().map((m) => Object.freeze({ ...m }))),
       leaderboardFrom,
+      categoryTotals,
+      timedOutCount: answers.filter((a) => a && a.timedOut).length,
+      // Points (ScoreManager)
+      points: scoreState.points,
+      streak: scoreState.streak,
+      bestStreak: scoreState.bestStreak,
+      pointTotals: scoreState.totals,
+      // Speed Quiz clock (null in untimed modes)
+      timeLimitMs: limit,
+      timeLeftMs: limit !== null && open ? Math.max(0, limit - elapsedMs()) : null,
     });
   }
 
@@ -323,6 +425,7 @@ export function createGame(
     answer,
     eliminate,
     skip,
+    timeOut,
     next,
     exit,
     toStart,
