@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Handwriting Recognizer</title>
+    <!-- Landing page for GitHub Pages only. The real app is served by
+         app.py or web_version/server.py, which never serve this file. -->
+    <style>
+      :root { --bg: #f7f7fb; --surface: #fff; --text: #1c1d24; --muted: #5b5e6b; --border: #dcdde5; --link: #3d5afe; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #13141a; --surface: #1d1f27; --text: #ececf1; --muted: #a3a6b4; --border: #343744; --link: #8c9eff; }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+      main { max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+      h1 { margin: 0 0 0.5rem; font-size: 1.75rem; }
+      p { margin: 0 0 1rem; }
+      a { color: var(--link); }
+      pre {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+        padding: 1rem; overflow-x: auto; font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Study-01 · Handwriting Recognizer</h1>
+      <p>
+        You draw a single character (0-9, A-Z, a-z) and a scikit-learn model predicts it.
+        The page sends each drawing to a Python server that runs the model, and GitHub
+        Pages can't run Python. So this one has to run on your own computer.
+      </p>
+      <p>Clone the repository, then from the <code>Study-01</code> folder:</p>
+      <pre>python3 -m venv .venv
+.venv/bin/pip install scikit-learn numpy pillow joblib
+.venv/bin/python web_version/server.py   # then open http://localhost:8000</pre>
+      <p>
+        <a href="https://github.com/aufisn/VibeCoding/tree/main/Study-01">View the code on GitHub</a>
+        · <a href="../">All studies</a>
+      </p>
+    </main>
+  </body>
+</html>

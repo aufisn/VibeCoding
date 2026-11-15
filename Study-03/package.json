@@ -1,0 +1,10 @@
+{
+  "name": "quiz-game",
+  "private": true,
+  "type": "module",
+  "description": "General knowledge quiz game. No dependencies; this file only tells Node that .js files are ES modules.",
+  "scripts": {
+    "validate": "node scripts/validate-questions.mjs",
+    "test": "node --test"
+  }
+}

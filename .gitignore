@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Study-01 EMNIST training data (193 MB; one file is over GitHub's 100 MB limit).
+# Download it locally to retrain; see Study-01/CLAUDE.md.
+Study-01/data/
+
+# Local Claude Code settings (preview server config etc.)
+.claude/

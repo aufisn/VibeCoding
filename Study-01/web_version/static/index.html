@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Handwriting Recognizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Handwriting Recognizer</h1>
+  <p>Draw one character in the box</p>
+  <div class="modes" role="group" aria-label="Recognition mode">
+    <button data-m="digits" class="on">Digits 0-9</button>
+    <button data-m="letters">Letters A-z</button>
+    <button data-m="all">All</button>
+  </div>
+  <div class="tools">
+    <div class="colors" role="radiogroup" aria-label="Pen color">
+      <button class="sw" data-c="#000000" style="--c:#000000" aria-label="Black"></button>
+      <button class="sw" data-c="#2563eb" style="--c:#2563eb" aria-label="Blue"></button>
+      <button class="sw" data-c="#dc2626" style="--c:#dc2626" aria-label="Red"></button>
+      <button class="sw" data-c="#16a34a" style="--c:#16a34a" aria-label="Green"></button>
+      <button class="sw" data-c="#9333ea" style="--c:#9333ea" aria-label="Purple"></button>
+      <button class="sw" data-c="#ea580c" style="--c:#ea580c" aria-label="Orange"></button>
+      <label class="custom" title="Custom color"><input type="color" id="custom" value="#0891b2" aria-label="Custom color"></label>
+    </div>
+    <label class="size">Tip
+      <input type="range" id="size" min="6" max="36" step="2" value="18" aria-label="Tip thickness">
+      <span class="dot-box"><span id="dot"></span></span>
+      <span id="sizeVal">18px</span>
+    </label>
+  </div>
+  <div class="wrap">
+    <div class="left">
+      <canvas id="c" width="280" height="280" aria-label="Drawing area"></canvas>
+      <div><button class="clear" id="clear">Clear</button></div>
+      <div id="err" role="alert"></div>
+    </div>
+    <div class="right">
+      <div id="guess">?</div>
+      <div id="kind"></div>
+      <div id="bars"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
