@@ -8,7 +8,7 @@
     "correctIndex": 2,
     "explanation": "Germany surrendered in May 1945, and Japan formally signed its surrender on 2 September 1945, ending the war.",
     "sourceHint": "Encyclopaedia Britannica: World War II",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-02",
@@ -19,7 +19,7 @@
     "correctIndex": 0,
     "explanation": "The Giza pyramids were built as royal tombs by the ancient Egyptians during the Old Kingdom, around 4,500 years ago.",
     "sourceHint": "Encyclopaedia Britannica: Pyramids of Giza",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-03",
@@ -30,7 +30,7 @@
     "correctIndex": 2,
     "explanation": "Neil Armstrong stepped onto the Moon on 20 July 1969 during NASA's Apollo 11 mission, with Buzz Aldrin following shortly after.",
     "sourceHint": "NASA: Apollo 11 mission overview",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-04",
@@ -41,7 +41,7 @@
     "correctIndex": 1,
     "explanation": "East German authorities opened the border crossings on 9 November 1989; official demolition of the wall followed in 1990.",
     "sourceHint": "Encyclopaedia Britannica: Berlin Wall",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-05",
@@ -52,7 +52,7 @@
     "correctIndex": 0,
     "explanation": "Johannes Gutenberg of Mainz developed a movable-type printing press around 1440, later printing the famous Gutenberg Bible.",
     "sourceHint": "Encyclopaedia Britannica: Johannes Gutenberg",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-06",
@@ -63,7 +63,7 @@
     "correctIndex": 3,
     "explanation": "RMS Titanic struck an iceberg in the North Atlantic on 14 April 1912 and sank early the next morning.",
     "sourceHint": "Encyclopaedia Britannica: Titanic",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-07",
@@ -74,7 +74,7 @@
     "correctIndex": 3,
     "explanation": "Genghis Khan united the Mongol tribes in 1206 and founded the Mongol Empire, which under his successors became the largest contiguous land empire in history by area.",
     "sourceHint": "Encyclopaedia Britannica: Genghis Khan",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-08",
@@ -85,18 +85,18 @@
     "correctIndex": 2,
     "explanation": "King John agreed to the Magna Carta at Runnymede in June 1215 under pressure from rebel barons.",
     "sourceHint": "British Library: Magna Carta",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-09",
     "category": "History",
     "difficulty": "hard",
     "question": "Which 1919 treaty formally ended World War I between Germany and the Allied Powers?",
-    "options": ["Treaty of Versailles", "Treaty of Paris", "Treaty of Ghent", "Treaty of Utrecht"],
+    "options": ["Treaty of Versailles", "Treaty of Brest-Litovsk", "Treaty of Ghent", "Treaty of Utrecht"],
     "correctIndex": 0,
     "explanation": "The Treaty of Versailles was signed on 28 June 1919 and took effect on 10 January 1920, ending the war between Germany and the Allied Powers.",
     "sourceHint": "Encyclopaedia Britannica: Treaty of Versailles",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-10",
@@ -107,7 +107,7 @@
     "correctIndex": 1,
     "explanation": "Qin Shi Huang united the warring Chinese states in 221 BCE and declared himself the first emperor of the Qin dynasty.",
     "sourceHint": "Encyclopaedia Britannica: Qin Shi Huang",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-11",
@@ -152,7 +152,7 @@
     "correctIndex": 1,
     "explanation": "Gold's symbol Au comes from its Latin name, aurum.",
     "sourceHint": "Royal Society of Chemistry periodic table: Gold",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-02",
@@ -163,7 +163,7 @@
     "correctIndex": 2,
     "explanation": "Iron oxide (rust) in the dust and rocks on its surface gives Mars its reddish colour.",
     "sourceHint": "NASA Science: Mars",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-03",
@@ -174,7 +174,7 @@
     "correctIndex": 0,
     "explanation": "The human heart has two upper chambers called atria and two lower chambers called ventricles.",
     "sourceHint": "Encyclopaedia Britannica: Heart",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-04",
@@ -185,7 +185,7 @@
     "correctIndex": 0,
     "explanation": "Chloroplasts contain chlorophyll, which captures light energy to turn carbon dioxide and water into sugar.",
     "sourceHint": "Encyclopaedia Britannica: Chloroplast",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-05",
@@ -196,7 +196,7 @@
     "correctIndex": 3,
     "explanation": "Electrons carry a negative charge, protons a positive charge, and neutrons no charge.",
     "sourceHint": "Encyclopaedia Britannica: Electron",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-06",
@@ -207,7 +207,7 @@
     "correctIndex": 2,
     "explanation": "Isaac Newton set out his three laws of motion in his book Principia, published in 1687.",
     "sourceHint": "Encyclopaedia Britannica: Newton's laws of motion",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-07",
@@ -218,7 +218,7 @@
     "correctIndex": 1,
     "explanation": "Nitrogen makes up about 78 percent of dry air by volume, compared with about 21 percent for oxygen.",
     "sourceHint": "NASA Earth Observatory: Earth's atmosphere",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-08",
@@ -229,7 +229,7 @@
     "correctIndex": 1,
     "explanation": "A typical human body cell has 46 chromosomes arranged in 23 pairs, including one pair of sex chromosomes.",
     "sourceHint": "National Human Genome Research Institute: Chromosomes fact sheet",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-09",
@@ -240,7 +240,7 @@
     "correctIndex": 2,
     "explanation": "Light travels at exactly 299,792,458 metres per second in a vacuum, which is roughly 300,000 kilometres per second.",
     "sourceHint": "NIST: Speed of light in vacuum (CODATA constant)",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-10",
@@ -251,7 +251,7 @@
     "correctIndex": 0,
     "explanation": "Jupiter's moon Ganymede is about 5,270 km across, wider than any other moon and even wider than the planet Mercury.",
     "sourceHint": "NASA Science: Ganymede",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-11",
@@ -296,7 +296,7 @@
     "correctIndex": 2,
     "explanation": "The Pacific Ocean covers about a third of Earth's surface, a larger area than all the land combined.",
     "sourceHint": "NOAA Ocean Service: How big is the Pacific Ocean?",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-02",
@@ -305,9 +305,9 @@
     "question": "In which city is the ancient Colosseum located?",
     "options": ["Athens", "Rome", "Istanbul", "Naples"],
     "correctIndex": 1,
-    "explanation": "The Colosseum is an amphitheatre in the centre of Rome, completed in 80 CE under Emperor Titus.",
+    "explanation": "The Colosseum is an amphitheatre in the centre of Rome, opened in 80 CE under Emperor Titus.",
     "sourceHint": "UNESCO World Heritage: Historic Centre of Rome",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-03",
@@ -318,7 +318,7 @@
     "correctIndex": 0,
     "explanation": "Cairo sits on the banks of the Nile, just south of where the river spreads out into its delta.",
     "sourceHint": "Encyclopaedia Britannica: Cairo",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-04",
@@ -329,7 +329,7 @@
     "correctIndex": 3,
     "explanation": "Canberra was purpose-built as the capital as a compromise between rivals Sydney and Melbourne.",
     "sourceHint": "Encyclopaedia Britannica: Canberra",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-05",
@@ -340,7 +340,7 @@
     "correctIndex": 1,
     "explanation": "Mount Everest lies in the Himalayas on the border between Nepal and the Tibet region of China.",
     "sourceHint": "Encyclopaedia Britannica: Mount Everest",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-06",
@@ -349,9 +349,9 @@
     "question": "The Andes mountain range runs along the western side of which continent?",
     "options": ["Africa", "Asia", "North America", "South America"],
     "correctIndex": 3,
-    "explanation": "The Andes stretch about 7,000 km along South America's Pacific coast, from Venezuela to the southern tip of Chile and Argentina.",
+    "explanation": "The Andes run for thousands of kilometres along South America's Pacific side, from Venezuela to the southern tip of Chile and Argentina.",
     "sourceHint": "Encyclopaedia Britannica: Andes",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-07",
@@ -362,7 +362,7 @@
     "correctIndex": 2,
     "explanation": "Ottawa, in the province of Ontario, was chosen as the capital by Queen Victoria in 1857.",
     "sourceHint": "Encyclopaedia Britannica: Ottawa",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-08",
@@ -373,7 +373,7 @@
     "correctIndex": 0,
     "explanation": "The Danube rises in Germany's Black Forest and empties into the Black Sea through a delta in Romania and Ukraine.",
     "sourceHint": "Encyclopaedia Britannica: Danube River",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-09",
@@ -384,7 +384,7 @@
     "correctIndex": 3,
     "explanation": "Angkor Wat was built in the early 12th century under King Suryavarman II and stands near the city of Siem Reap in Cambodia.",
     "sourceHint": "UNESCO World Heritage: Angkor",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-10",
@@ -395,7 +395,7 @@
     "correctIndex": 1,
     "explanation": "Lesotho is an enclave entirely surrounded by South Africa, while Eswatini also borders Mozambique.",
     "sourceHint": "Encyclopaedia Britannica: Lesotho",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-11",
@@ -440,7 +440,7 @@
     "correctIndex": 2,
     "explanation": "Leonardo da Vinci began painting the Mona Lisa around 1503 and kept working on it for many years.",
     "sourceHint": "Musée du Louvre: Mona Lisa",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-02",
@@ -451,7 +451,7 @@
     "correctIndex": 0,
     "explanation": "William Shakespeare wrote Romeo and Juliet in the mid-1590s.",
     "sourceHint": "Folger Shakespeare Library: Romeo and Juliet",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-03",
@@ -462,7 +462,7 @@
     "correctIndex": 1,
     "explanation": "A standard violin has four strings, tuned G, D, A and E.",
     "sourceHint": "Encyclopaedia Britannica: Violin",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-04",
@@ -471,9 +471,9 @@
     "question": "Which composer wrote the Moonlight Sonata?",
     "options": ["Wolfgang Amadeus Mozart", "Johann Sebastian Bach", "Frédéric Chopin", "Ludwig van Beethoven"],
     "correctIndex": 3,
-    "explanation": "Beethoven composed his Piano Sonata No. 14 in 1801, and it was nicknamed the Moonlight Sonata only after his death.",
+    "explanation": "Beethoven composed his Piano Sonata No. 14 in 1801; the nickname Moonlight Sonata came from the critic Ludwig Rellstab, not from Beethoven.",
     "sourceHint": "Encyclopaedia Britannica: Moonlight Sonata",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-05",
@@ -484,7 +484,7 @@
     "correctIndex": 1,
     "explanation": "Vincent van Gogh painted The Starry Night while staying at an asylum in Saint-Rémy-de-Provence, France.",
     "sourceHint": "Museum of Modern Art (MoMA): The Starry Night",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-06",
@@ -495,7 +495,7 @@
     "correctIndex": 2,
     "explanation": "Origami comes from the Japanese words oru (to fold) and kami (paper).",
     "sourceHint": "Encyclopaedia Britannica: Origami",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-07",
@@ -506,7 +506,7 @@
     "correctIndex": 3,
     "explanation": "Jane Austen's Pride and Prejudice was first published in 1813.",
     "sourceHint": "Encyclopaedia Britannica: Pride and Prejudice",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-08",
@@ -517,7 +517,7 @@
     "correctIndex": 3,
     "explanation": "In Citizen Kane, a reporter tries to uncover the meaning of newspaper tycoon Charles Foster Kane's dying word, \"Rosebud\".",
     "sourceHint": "American Film Institute (AFI) Catalog: Citizen Kane",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-09",
@@ -528,7 +528,7 @@
     "correctIndex": 0,
     "explanation": "Eye doctor L. L. Zamenhof, working in Warsaw, published Esperanto in 1887 as an easy-to-learn international language.",
     "sourceHint": "Encyclopaedia Britannica: Esperanto",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-10",
@@ -539,7 +539,7 @@
     "correctIndex": 1,
     "explanation": "Alfred Hitchcock directed Psycho, famous for its shower scene and Bernard Herrmann's string score.",
     "sourceHint": "American Film Institute (AFI) Catalog: Psycho",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-11",
