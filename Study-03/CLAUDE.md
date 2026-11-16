@@ -13,6 +13,8 @@ Phases 1 to 3 are done, plus points and game modes: question content, core game,
 ```sh
 node scripts/validate-questions.mjs   # validate data/questions.json; exits 1 on errors
 node scripts/find-superlatives.mjs    # list "most", "first", "largest"... (guideline 2); /quiz-validate wraps it
+node scripts/list-questions.mjs [filter]          # questions with correct answers; /quiz-check uses it
+node scripts/backup-report.mjs <file> stats|leaderboard|audit   # /quiz-stats and /quiz-leaderboard use it
 node --test                           # unit tests in tests/
 python3 -m http.server 8000           # serve the folder, then open http://localhost:8000
 ```
@@ -34,6 +36,10 @@ ES modules and `fetch` need HTTP, so the page doesn't work from `file://`.
 - `js/theme.js`: light/dark switch in the top bar (`html[data-theme]`, stored as `quiz.theme`). `index.html` applies a stored choice before first paint.
 - `js/ui.js`: rendering and events only. Build DOM with `createElement`/`textContent`; never `innerHTML` with question data.
 - `data/questions.json`: the question bank. Schema and rules are in `README.md`.
+
+## Skills
+
+Project skills in `.claude/skills/`: `quiz-validate` (superlatives), `quiz-check` (fact-check answers; never edits questions or sets `verified`), `quiz-stats` and `quiz-leaderboard` (work on a backup file via `scripts/backup-report.mjs`, or guide code changes with a checklist). The scripts load backups through the game's own code, so keep them working when `js/data-manager.js` changes; `auditRuns()` must stay in line with `SCORING` and `RANK_TIERS`.
 
 ## Conventions
 

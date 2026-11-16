@@ -1,0 +1,2822 @@
+{
+  "app": "study-03-quiz",
+  "format": 1,
+  "exportedAt": "2026-11-14T10:32:32.712Z",
+  "runs": [
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-14T01:04:18.021Z",
+      "mode": "category",
+      "subject": "Science",
+      "difficulty": "mixed",
+      "points": 196,
+      "total": 10,
+      "maxScore": 10,
+      "byCategory": {
+        "Science": 10
+      },
+      "questionsByCategory": {
+        "Science": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 3,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 10,
+      "bonuses": {
+        "base": 150,
+        "time": 9,
+        "noHint": 20,
+        "streak": 17
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "",
+      "finishedAt": "2026-11-13T15:50:01.773Z",
+      "mode": "category",
+      "subject": "Science",
+      "difficulty": "mixed",
+      "points": 135,
+      "total": 7,
+      "maxScore": 10,
+      "byCategory": {
+        "Science": 7
+      },
+      "questionsByCategory": {
+        "Science": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 2,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 1,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 7,
+      "bonuses": {
+        "base": 105,
+        "time": 9,
+        "noHint": 14,
+        "streak": 7
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-12T19:49:09.417Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "hard",
+      "points": 271,
+      "total": 11,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 2
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 11,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 10,
+      "bonuses": {
+        "base": 220,
+        "time": 12,
+        "noHint": 22,
+        "streak": 17
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-11-12T09:31:10.477Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "mixed",
+      "points": 77,
+      "total": 4,
+      "maxScore": 10,
+      "byCategory": {
+        "Geography": 4
+      },
+      "questionsByCategory": {
+        "Geography": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 2,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 1,
+          "questions": 3
+        }
+      },
+      "skipped": 1,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 60,
+        "time": 9,
+        "noHint": 8,
+        "streak": 0
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "",
+      "finishedAt": "2026-11-11T05:41:01.190Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 460,
+      "total": 25,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 7,
+        "Science": 6,
+        "Geography": 6,
+        "Arts & Culture": 6
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 8,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 13,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 4,
+          "questions": 12
+        }
+      },
+      "skipped": 3,
+      "timedOut": 0,
+      "eliminated": 3,
+      "bestStreak": 8,
+      "bonuses": {
+        "base": 355,
+        "time": 48,
+        "noHint": 44,
+        "streak": 13
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-10T09:10:29.921Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "mixed",
+      "points": 195,
+      "total": 10,
+      "maxScore": 10,
+      "byCategory": {
+        "Geography": 10
+      },
+      "questionsByCategory": {
+        "Geography": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 3,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 2,
+      "bestStreak": 10,
+      "bonuses": {
+        "base": 150,
+        "time": 12,
+        "noHint": 16,
+        "streak": 17
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-09T10:22:10.298Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "medium",
+      "points": 227,
+      "total": 12,
+      "maxScore": 16,
+      "byCategory": {
+        "History": 3,
+        "Science": 4,
+        "Geography": 4,
+        "Arts & Culture": 1
+      },
+      "questionsByCategory": {
+        "History": 4,
+        "Science": 4,
+        "Geography": 4,
+        "Arts & Culture": 4
+      },
+      "byDifficulty": {
+        "medium": {
+          "correct": 12,
+          "questions": 16
+        }
+      },
+      "skipped": 1,
+      "timedOut": 1,
+      "eliminated": 2,
+      "bestStreak": 7,
+      "bonuses": {
+        "base": 180,
+        "time": 18,
+        "noHint": 20,
+        "streak": 9
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-11-08T14:28:23.127Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "hard",
+      "points": 250,
+      "total": 10,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 2,
+        "Science": 3,
+        "Geography": 2,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 10,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 4,
+      "bestStreak": 5,
+      "bonuses": {
+        "base": 200,
+        "time": 27,
+        "noHint": 14,
+        "streak": 9
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-11-07T19:41:59.621Z",
+      "mode": "category",
+      "subject": "History",
+      "difficulty": "easy",
+      "points": 38,
+      "total": 3,
+      "maxScore": 3,
+      "byCategory": {
+        "History": 3
+      },
+      "questionsByCategory": {
+        "History": 3
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 30,
+        "time": 0,
+        "noHint": 6,
+        "streak": 2
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "",
+      "finishedAt": "2026-11-07T07:50:03.316Z",
+      "mode": "category",
+      "subject": "Science",
+      "difficulty": "mixed",
+      "points": 92,
+      "total": 4,
+      "maxScore": 10,
+      "byCategory": {
+        "Science": 4
+      },
+      "questionsByCategory": {
+        "Science": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 0,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 2,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 2,
+      "timedOut": 0,
+      "eliminated": 1,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 70,
+        "time": 12,
+        "noHint": 8,
+        "streak": 2
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-11-06T17:40:17.427Z",
+      "mode": "category",
+      "subject": "Science",
+      "difficulty": "medium",
+      "points": 55,
+      "total": 3,
+      "maxScore": 4,
+      "byCategory": {
+        "Science": 3
+      },
+      "questionsByCategory": {
+        "Science": 4
+      },
+      "byDifficulty": {
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 1,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 45,
+        "time": 6,
+        "noHint": 4,
+        "streak": 0
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-06T02:30:39.027Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "medium",
+      "points": 54,
+      "total": 3,
+      "maxScore": 4,
+      "byCategory": {
+        "Geography": 3
+      },
+      "questionsByCategory": {
+        "Geography": 4
+      },
+      "byDifficulty": {
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 45,
+        "time": 3,
+        "noHint": 6,
+        "streak": 0
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "",
+      "finishedAt": "2026-11-05T12:46:43.047Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 490,
+      "total": 26,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 7,
+        "Science": 5,
+        "Geography": 7,
+        "Arts & Culture": 7
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 7,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 12,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 7,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 5,
+      "bestStreak": 6,
+      "bonuses": {
+        "base": 390,
+        "time": 39,
+        "noHint": 46,
+        "streak": 15
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-05T03:37:37.658Z",
+      "mode": "category",
+      "subject": "History",
+      "difficulty": "mixed",
+      "points": 178,
+      "total": 9,
+      "maxScore": 10,
+      "byCategory": {
+        "History": 9
+      },
+      "questionsByCategory": {
+        "History": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 3,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 7,
+      "bonuses": {
+        "base": 135,
+        "time": 18,
+        "noHint": 18,
+        "streak": 7
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-11-04T14:31:32.649Z",
+      "mode": "category",
+      "subject": "Science",
+      "difficulty": "hard",
+      "points": 50,
+      "total": 2,
+      "maxScore": 3,
+      "byCategory": {
+        "Science": 2
+      },
+      "questionsByCategory": {
+        "Science": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 40,
+        "time": 6,
+        "noHint": 4,
+        "streak": 0
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-11-04T05:29:24.528Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 561,
+      "total": 30,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 8,
+        "Science": 7,
+        "Geography": 8,
+        "Arts & Culture": 7
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 10,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 12,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 8,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 6,
+      "bestStreak": 12,
+      "bonuses": {
+        "base": 440,
+        "time": 45,
+        "noHint": 50,
+        "streak": 26
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-11-03T10:53:24.648Z",
+      "mode": "category",
+      "subject": "Arts & Culture",
+      "difficulty": "medium",
+      "points": 40,
+      "total": 2,
+      "maxScore": 4,
+      "byCategory": {
+        "Arts & Culture": 2
+      },
+      "questionsByCategory": {
+        "Arts & Culture": 4
+      },
+      "byDifficulty": {
+        "medium": {
+          "correct": 2,
+          "questions": 4
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 1,
+      "bonuses": {
+        "base": 30,
+        "time": 6,
+        "noHint": 4,
+        "streak": 0
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-11-02T15:26:46.348Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "hard",
+      "points": 42,
+      "total": 2,
+      "maxScore": 3,
+      "byCategory": {
+        "Geography": 2
+      },
+      "questionsByCategory": {
+        "Geography": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 1,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 40,
+        "time": 0,
+        "noHint": 2,
+        "streak": 0
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-11-01T13:36:31.744Z",
+      "mode": "category",
+      "subject": "History",
+      "difficulty": "mixed",
+      "points": 144,
+      "total": 8,
+      "maxScore": 10,
+      "byCategory": {
+        "History": 8
+      },
+      "questionsByCategory": {
+        "History": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 7,
+      "bonuses": {
+        "base": 115,
+        "time": 6,
+        "noHint": 16,
+        "streak": 7
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-31T18:23:06.283Z",
+      "mode": "category",
+      "subject": "History",
+      "difficulty": "mixed",
+      "points": 131,
+      "total": 7,
+      "maxScore": 10,
+      "byCategory": {
+        "History": 7
+      },
+      "questionsByCategory": {
+        "History": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 1,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 110,
+        "time": 3,
+        "noHint": 14,
+        "streak": 4
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "",
+      "finishedAt": "2026-10-30T22:59:51.617Z",
+      "mode": "category",
+      "subject": "History",
+      "difficulty": "mixed",
+      "points": 92,
+      "total": 4,
+      "maxScore": 10,
+      "byCategory": {
+        "History": 4
+      },
+      "questionsByCategory": {
+        "History": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 0,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 2,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 2,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 70,
+        "time": 12,
+        "noHint": 8,
+        "streak": 2
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-10-30T06:52:06.051Z",
+      "mode": "category",
+      "subject": "Arts & Culture",
+      "difficulty": "mixed",
+      "points": 170,
+      "total": 9,
+      "maxScore": 10,
+      "byCategory": {
+        "Arts & Culture": 9
+      },
+      "questionsByCategory": {
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 8,
+      "bonuses": {
+        "base": 130,
+        "time": 15,
+        "noHint": 18,
+        "streak": 7
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-10-29T15:23:01.335Z",
+      "mode": "category",
+      "subject": "Science",
+      "difficulty": "mixed",
+      "points": 142,
+      "total": 8,
+      "maxScore": 10,
+      "byCategory": {
+        "Science": 8
+      },
+      "questionsByCategory": {
+        "Science": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 2,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 3,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 3,
+      "bestStreak": 4,
+      "bonuses": {
+        "base": 125,
+        "time": 3,
+        "noHint": 10,
+        "streak": 4
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-10-28T22:35:21.174Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "hard",
+      "points": 72,
+      "total": 3,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 1,
+        "Science": 1,
+        "Geography": 0,
+        "Arts & Culture": 1
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 3,
+          "questions": 12
+        }
+      },
+      "skipped": 1,
+      "timedOut": 2,
+      "eliminated": 0,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 60,
+        "time": 6,
+        "noHint": 6,
+        "streak": 0
+      },
+      "tier": "Novice"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-28T04:18:33.688Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "hard",
+      "points": 183,
+      "total": 8,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 2,
+        "Science": 2,
+        "Geography": 3,
+        "Arts & Culture": 1
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 8,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 3,
+      "bestStreak": 4,
+      "bonuses": {
+        "base": 160,
+        "time": 9,
+        "noHint": 12,
+        "streak": 2
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-27T16:17:36.256Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 282,
+      "total": 15,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 3,
+        "Science": 4,
+        "Geography": 4,
+        "Arts & Culture": 4
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 5,
+          "questions": 5
+        },
+        "medium": {
+          "correct": 6,
+          "questions": 8
+        },
+        "hard": {
+          "correct": 4,
+          "questions": 7
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 7,
+      "bestStreak": 5,
+      "bonuses": {
+        "base": 220,
+        "time": 30,
+        "noHint": 18,
+        "streak": 14
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-26T18:45:09.103Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 517,
+      "total": 27,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 6,
+        "Science": 6,
+        "Geography": 9,
+        "Arts & Culture": 6
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 7,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 11,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 9,
+          "questions": 12
+        }
+      },
+      "skipped": 2,
+      "timedOut": 0,
+      "eliminated": 4,
+      "bestStreak": 5,
+      "bonuses": {
+        "base": 415,
+        "time": 39,
+        "noHint": 48,
+        "streak": 15
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-10-26T03:21:00.105Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "medium",
+      "points": 59,
+      "total": 3,
+      "maxScore": 4,
+      "byCategory": {
+        "Geography": 3
+      },
+      "questionsByCategory": {
+        "Geography": 4
+      },
+      "byDifficulty": {
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 45,
+        "time": 6,
+        "noHint": 6,
+        "streak": 2
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-10-25T07:46:40.852Z",
+      "mode": "category",
+      "subject": "History",
+      "difficulty": "mixed",
+      "points": 121,
+      "total": 6,
+      "maxScore": 10,
+      "byCategory": {
+        "History": 6
+      },
+      "questionsByCategory": {
+        "History": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 1,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 95,
+        "time": 12,
+        "noHint": 12,
+        "streak": 2
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-10-24T11:47:18.619Z",
+      "mode": "category",
+      "subject": "Arts & Culture",
+      "difficulty": "medium",
+      "points": 20,
+      "total": 1,
+      "maxScore": 4,
+      "byCategory": {
+        "Arts & Culture": 1
+      },
+      "questionsByCategory": {
+        "Arts & Culture": 4
+      },
+      "byDifficulty": {
+        "medium": {
+          "correct": 1,
+          "questions": 4
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 1,
+      "bonuses": {
+        "base": 15,
+        "time": 3,
+        "noHint": 2,
+        "streak": 0
+      },
+      "tier": "Novice"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-24T01:36:36.133Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 523,
+      "total": 28,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 9,
+        "Science": 7,
+        "Geography": 3,
+        "Arts & Culture": 9
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 8,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 11,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 9,
+          "questions": 12
+        }
+      },
+      "skipped": 1,
+      "timedOut": 0,
+      "eliminated": 6,
+      "bestStreak": 8,
+      "bonuses": {
+        "base": 425,
+        "time": 36,
+        "noHint": 44,
+        "streak": 18
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-22T22:01:35.505Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "hard",
+      "points": 195,
+      "total": 8,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 2,
+        "Science": 2,
+        "Geography": 1,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 8,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 1,
+      "eliminated": 1,
+      "bestStreak": 5,
+      "bonuses": {
+        "base": 160,
+        "time": 12,
+        "noHint": 16,
+        "streak": 7
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Ana",
+      "finishedAt": "2026-10-22T10:39:12.215Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "mixed",
+      "points": 178,
+      "total": 9,
+      "maxScore": 10,
+      "byCategory": {
+        "Geography": 9
+      },
+      "questionsByCategory": {
+        "Geography": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 2,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 3,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 2,
+      "bestStreak": 6,
+      "bonuses": {
+        "base": 140,
+        "time": 15,
+        "noHint": 14,
+        "streak": 9
+      },
+      "tier": "Grandmaster"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-21T20:11:24.856Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "hard",
+      "points": 216,
+      "total": 9,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 3,
+        "Science": 1,
+        "Geography": 2,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "hard": {
+          "correct": 9,
+          "questions": 12
+        }
+      },
+      "skipped": 1,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 5,
+      "bonuses": {
+        "base": 180,
+        "time": 9,
+        "noHint": 18,
+        "streak": 9
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Kim",
+      "finishedAt": "2026-10-21T11:53:36.122Z",
+      "mode": "category",
+      "subject": "Arts & Culture",
+      "difficulty": "easy",
+      "points": 12,
+      "total": 1,
+      "maxScore": 3,
+      "byCategory": {
+        "Arts & Culture": 1
+      },
+      "questionsByCategory": {
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 0,
+      "bestStreak": 1,
+      "bonuses": {
+        "base": 10,
+        "time": 0,
+        "noHint": 2,
+        "streak": 0
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Sam",
+      "finishedAt": "2026-10-20T18:01:47.570Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "easy",
+      "points": 64,
+      "total": 5,
+      "maxScore": 12,
+      "byCategory": {
+        "History": 1,
+        "Science": 0,
+        "Geography": 1,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 3,
+        "Science": 3,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 5,
+          "questions": 12
+        }
+      },
+      "skipped": 1,
+      "timedOut": 2,
+      "eliminated": 1,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 50,
+        "time": 6,
+        "noHint": 8,
+        "streak": 0
+      },
+      "tier": "Apprentice"
+    }
+  ],
+  "stats": {
+    "version": 2,
+    "gamesPlayed": 36,
+    "totalCorrect": 332,
+    "totalQuestions": 482,
+    "totalPoints": 6532,
+    "totalSkipped": 18,
+    "totalTimedOut": 6,
+    "totalHints": 52,
+    "bestStreak": 12,
+    "firstPlayedAt": "2026-10-20T18:01:47.570Z",
+    "lastPlayedAt": "2026-11-14T01:04:18.021Z",
+    "byMode": {
+      "full": {
+        "games": 8,
+        "points": 3221,
+        "correct": 164,
+        "questions": 236,
+        "bestPoints": 561
+      },
+      "category": {
+        "games": 22,
+        "points": 2221,
+        "correct": 115,
+        "questions": 162,
+        "bestPoints": 196
+      },
+      "speed": {
+        "games": 6,
+        "points": 1090,
+        "correct": 53,
+        "questions": 84,
+        "bestPoints": 282
+      }
+    },
+    "byCategory": {
+      "History": {
+        "correct": 94,
+        "questions": 133
+      },
+      "Science": {
+        "correct": 85,
+        "questions": 127
+      },
+      "Geography": {
+        "correct": 84,
+        "questions": 121
+      },
+      "Arts & Culture": {
+        "correct": 69,
+        "questions": 101
+      }
+    },
+    "byDifficulty": {
+      "easy": {
+        "correct": 78,
+        "questions": 122
+      },
+      "medium": {
+        "correct": 130,
+        "questions": 176
+      },
+      "hard": {
+        "correct": 124,
+        "questions": 184
+      }
+    },
+    "hallOfFame": {
+      "speed/easy": [
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-10-20T18:01:47.570Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "easy",
+          "points": 64,
+          "total": 5,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 1,
+            "Science": 0,
+            "Geography": 1,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 5,
+              "questions": 12
+            }
+          },
+          "skipped": 1,
+          "timedOut": 2,
+          "eliminated": 1,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 50,
+            "time": 6,
+            "noHint": 8,
+            "streak": 0
+          },
+          "tier": "Apprentice"
+        }
+      ],
+      "category/easy": [
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-11-07T19:41:59.621Z",
+          "mode": "category",
+          "subject": "History",
+          "difficulty": "easy",
+          "points": 38,
+          "total": 3,
+          "maxScore": 3,
+          "byCategory": {
+            "History": 3
+          },
+          "questionsByCategory": {
+            "History": 3
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 3,
+          "bonuses": {
+            "base": 30,
+            "time": 0,
+            "noHint": 6,
+            "streak": 2
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-21T11:53:36.122Z",
+          "mode": "category",
+          "subject": "Arts & Culture",
+          "difficulty": "easy",
+          "points": 12,
+          "total": 1,
+          "maxScore": 3,
+          "byCategory": {
+            "Arts & Culture": 1
+          },
+          "questionsByCategory": {
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 1,
+          "bonuses": {
+            "base": 10,
+            "time": 0,
+            "noHint": 2,
+            "streak": 0
+          },
+          "tier": "Apprentice"
+        }
+      ],
+      "full/hard": [
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-12T19:49:09.417Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "hard",
+          "points": 271,
+          "total": 11,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 2
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 11,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 10,
+          "bonuses": {
+            "base": 220,
+            "time": 12,
+            "noHint": 22,
+            "streak": 17
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-21T20:11:24.856Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "hard",
+          "points": 216,
+          "total": 9,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 3,
+            "Science": 1,
+            "Geography": 2,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 9,
+              "questions": 12
+            }
+          },
+          "skipped": 1,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 5,
+          "bonuses": {
+            "base": 180,
+            "time": 9,
+            "noHint": 18,
+            "streak": 9
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-28T04:18:33.688Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "hard",
+          "points": 183,
+          "total": 8,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 2,
+            "Science": 2,
+            "Geography": 3,
+            "Arts & Culture": 1
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 8,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 3,
+          "bestStreak": 4,
+          "bonuses": {
+            "base": 160,
+            "time": 9,
+            "noHint": 12,
+            "streak": 2
+          },
+          "tier": "Scholar"
+        }
+      ],
+      "category/mixed": [
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-14T01:04:18.021Z",
+          "mode": "category",
+          "subject": "Science",
+          "difficulty": "mixed",
+          "points": 196,
+          "total": 10,
+          "maxScore": 10,
+          "byCategory": {
+            "Science": 10
+          },
+          "questionsByCategory": {
+            "Science": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 3,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 10,
+          "bonuses": {
+            "base": 150,
+            "time": 9,
+            "noHint": 20,
+            "streak": 17
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-10T09:10:29.921Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "mixed",
+          "points": 195,
+          "total": 10,
+          "maxScore": 10,
+          "byCategory": {
+            "Geography": 10
+          },
+          "questionsByCategory": {
+            "Geography": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 3,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 2,
+          "bestStreak": 10,
+          "bonuses": {
+            "base": 150,
+            "time": 12,
+            "noHint": 16,
+            "streak": 17
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-05T03:37:37.658Z",
+          "mode": "category",
+          "subject": "History",
+          "difficulty": "mixed",
+          "points": 178,
+          "total": 9,
+          "maxScore": 10,
+          "byCategory": {
+            "History": 9
+          },
+          "questionsByCategory": {
+            "History": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 3,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 7,
+          "bonuses": {
+            "base": 135,
+            "time": 18,
+            "noHint": 18,
+            "streak": 7
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-10-22T10:39:12.215Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "mixed",
+          "points": 178,
+          "total": 9,
+          "maxScore": 10,
+          "byCategory": {
+            "Geography": 9
+          },
+          "questionsByCategory": {
+            "Geography": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 2,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 3,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 2,
+          "bestStreak": 6,
+          "bonuses": {
+            "base": 140,
+            "time": 15,
+            "noHint": 14,
+            "streak": 9
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-10-30T06:52:06.051Z",
+          "mode": "category",
+          "subject": "Arts & Culture",
+          "difficulty": "mixed",
+          "points": 170,
+          "total": 9,
+          "maxScore": 10,
+          "byCategory": {
+            "Arts & Culture": 9
+          },
+          "questionsByCategory": {
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 8,
+          "bonuses": {
+            "base": 130,
+            "time": 15,
+            "noHint": 18,
+            "streak": 7
+          },
+          "tier": "Grandmaster"
+        },
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-11-01T13:36:31.744Z",
+          "mode": "category",
+          "subject": "History",
+          "difficulty": "mixed",
+          "points": 144,
+          "total": 8,
+          "maxScore": 10,
+          "byCategory": {
+            "History": 8
+          },
+          "questionsByCategory": {
+            "History": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 7,
+          "bonuses": {
+            "base": 115,
+            "time": 6,
+            "noHint": 16,
+            "streak": 7
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-10-29T15:23:01.335Z",
+          "mode": "category",
+          "subject": "Science",
+          "difficulty": "mixed",
+          "points": 142,
+          "total": 8,
+          "maxScore": 10,
+          "byCategory": {
+            "Science": 8
+          },
+          "questionsByCategory": {
+            "Science": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 2,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 3,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 3,
+          "bestStreak": 4,
+          "bonuses": {
+            "base": 125,
+            "time": 3,
+            "noHint": 10,
+            "streak": 4
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "",
+          "finishedAt": "2026-11-13T15:50:01.773Z",
+          "mode": "category",
+          "subject": "Science",
+          "difficulty": "mixed",
+          "points": 135,
+          "total": 7,
+          "maxScore": 10,
+          "byCategory": {
+            "Science": 7
+          },
+          "questionsByCategory": {
+            "Science": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 2,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 1,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 7,
+          "bonuses": {
+            "base": 105,
+            "time": 9,
+            "noHint": 14,
+            "streak": 7
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-31T18:23:06.283Z",
+          "mode": "category",
+          "subject": "History",
+          "difficulty": "mixed",
+          "points": 131,
+          "total": 7,
+          "maxScore": 10,
+          "byCategory": {
+            "History": 7
+          },
+          "questionsByCategory": {
+            "History": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 1,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 3,
+          "bonuses": {
+            "base": 110,
+            "time": 3,
+            "noHint": 14,
+            "streak": 4
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-10-25T07:46:40.852Z",
+          "mode": "category",
+          "subject": "History",
+          "difficulty": "mixed",
+          "points": 121,
+          "total": 6,
+          "maxScore": 10,
+          "byCategory": {
+            "History": 6
+          },
+          "questionsByCategory": {
+            "History": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 1,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 3,
+          "bonuses": {
+            "base": 95,
+            "time": 12,
+            "noHint": 12,
+            "streak": 2
+          },
+          "tier": "Scholar"
+        }
+      ],
+      "speed/hard": [
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-11-08T14:28:23.127Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "hard",
+          "points": 250,
+          "total": 10,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 2,
+            "Science": 3,
+            "Geography": 2,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 10,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 4,
+          "bestStreak": 5,
+          "bonuses": {
+            "base": 200,
+            "time": 27,
+            "noHint": 14,
+            "streak": 9
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-22T22:01:35.505Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "hard",
+          "points": 195,
+          "total": 8,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 2,
+            "Science": 2,
+            "Geography": 1,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 8,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 1,
+          "eliminated": 1,
+          "bestStreak": 5,
+          "bonuses": {
+            "base": 160,
+            "time": 12,
+            "noHint": 16,
+            "streak": 7
+          },
+          "tier": "Scholar"
+        },
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-10-28T22:35:21.174Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "hard",
+          "points": 72,
+          "total": 3,
+          "maxScore": 12,
+          "byCategory": {
+            "History": 1,
+            "Science": 1,
+            "Geography": 0,
+            "Arts & Culture": 1
+          },
+          "questionsByCategory": {
+            "History": 3,
+            "Science": 3,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 3,
+              "questions": 12
+            }
+          },
+          "skipped": 1,
+          "timedOut": 2,
+          "eliminated": 0,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 60,
+            "time": 6,
+            "noHint": 6,
+            "streak": 0
+          },
+          "tier": "Novice"
+        }
+      ],
+      "full/mixed": [
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-11-04T05:29:24.528Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 561,
+          "total": 30,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 8,
+            "Science": 7,
+            "Geography": 8,
+            "Arts & Culture": 7
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 10,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 12,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 8,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 6,
+          "bestStreak": 12,
+          "bonuses": {
+            "base": 440,
+            "time": 45,
+            "noHint": 50,
+            "streak": 26
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-24T01:36:36.133Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 523,
+          "total": 28,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 9,
+            "Science": 7,
+            "Geography": 3,
+            "Arts & Culture": 9
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 8,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 11,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 9,
+              "questions": 12
+            }
+          },
+          "skipped": 1,
+          "timedOut": 0,
+          "eliminated": 6,
+          "bestStreak": 8,
+          "bonuses": {
+            "base": 425,
+            "time": 36,
+            "noHint": 44,
+            "streak": 18
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-26T18:45:09.103Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 517,
+          "total": 27,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 6,
+            "Science": 6,
+            "Geography": 9,
+            "Arts & Culture": 6
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 7,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 11,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 9,
+              "questions": 12
+            }
+          },
+          "skipped": 2,
+          "timedOut": 0,
+          "eliminated": 4,
+          "bestStreak": 5,
+          "bonuses": {
+            "base": 415,
+            "time": 39,
+            "noHint": 48,
+            "streak": 15
+          },
+          "tier": "Scholar"
+        },
+        {
+          "nickname": "",
+          "finishedAt": "2026-11-05T12:46:43.047Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 490,
+          "total": 26,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 7,
+            "Science": 5,
+            "Geography": 7,
+            "Arts & Culture": 7
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 7,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 12,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 7,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 5,
+          "bestStreak": 6,
+          "bonuses": {
+            "base": 390,
+            "time": 39,
+            "noHint": 46,
+            "streak": 15
+          },
+          "tier": "Scholar"
+        },
+        {
+          "nickname": "",
+          "finishedAt": "2026-11-11T05:41:01.190Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 460,
+          "total": 25,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 7,
+            "Science": 6,
+            "Geography": 6,
+            "Arts & Culture": 6
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 8,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 13,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 4,
+              "questions": 12
+            }
+          },
+          "skipped": 3,
+          "timedOut": 0,
+          "eliminated": 3,
+          "bestStreak": 8,
+          "bonuses": {
+            "base": 355,
+            "time": 48,
+            "noHint": 44,
+            "streak": 13
+          },
+          "tier": "Scholar"
+        }
+      ],
+      "category/medium": [
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-10-26T03:21:00.105Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "medium",
+          "points": 59,
+          "total": 3,
+          "maxScore": 4,
+          "byCategory": {
+            "Geography": 3
+          },
+          "questionsByCategory": {
+            "Geography": 4
+          },
+          "byDifficulty": {
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 3,
+          "bonuses": {
+            "base": 45,
+            "time": 6,
+            "noHint": 6,
+            "streak": 2
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-11-06T17:40:17.427Z",
+          "mode": "category",
+          "subject": "Science",
+          "difficulty": "medium",
+          "points": 55,
+          "total": 3,
+          "maxScore": 4,
+          "byCategory": {
+            "Science": 3
+          },
+          "questionsByCategory": {
+            "Science": 4
+          },
+          "byDifficulty": {
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 1,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 45,
+            "time": 6,
+            "noHint": 4,
+            "streak": 0
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-06T02:30:39.027Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "medium",
+          "points": 54,
+          "total": 3,
+          "maxScore": 4,
+          "byCategory": {
+            "Geography": 3
+          },
+          "questionsByCategory": {
+            "Geography": 4
+          },
+          "byDifficulty": {
+            "medium": {
+              "correct": 3,
+              "questions": 4
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 45,
+            "time": 3,
+            "noHint": 6,
+            "streak": 0
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-11-03T10:53:24.648Z",
+          "mode": "category",
+          "subject": "Arts & Culture",
+          "difficulty": "medium",
+          "points": 40,
+          "total": 2,
+          "maxScore": 4,
+          "byCategory": {
+            "Arts & Culture": 2
+          },
+          "questionsByCategory": {
+            "Arts & Culture": 4
+          },
+          "byDifficulty": {
+            "medium": {
+              "correct": 2,
+              "questions": 4
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 1,
+          "bonuses": {
+            "base": 30,
+            "time": 6,
+            "noHint": 4,
+            "streak": 0
+          },
+          "tier": "Scholar"
+        },
+        {
+          "nickname": "Sam",
+          "finishedAt": "2026-10-24T11:47:18.619Z",
+          "mode": "category",
+          "subject": "Arts & Culture",
+          "difficulty": "medium",
+          "points": 20,
+          "total": 1,
+          "maxScore": 4,
+          "byCategory": {
+            "Arts & Culture": 1
+          },
+          "questionsByCategory": {
+            "Arts & Culture": 4
+          },
+          "byDifficulty": {
+            "medium": {
+              "correct": 1,
+              "questions": 4
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 1,
+          "bonuses": {
+            "base": 15,
+            "time": 3,
+            "noHint": 2,
+            "streak": 0
+          },
+          "tier": "Novice"
+        }
+      ],
+      "speed/mixed": [
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-10-27T16:17:36.256Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 282,
+          "total": 15,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 3,
+            "Science": 4,
+            "Geography": 4,
+            "Arts & Culture": 4
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 5,
+              "questions": 5
+            },
+            "medium": {
+              "correct": 6,
+              "questions": 8
+            },
+            "hard": {
+              "correct": 4,
+              "questions": 7
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 7,
+          "bestStreak": 5,
+          "bonuses": {
+            "base": 220,
+            "time": 30,
+            "noHint": 18,
+            "streak": 14
+          },
+          "tier": "Expert"
+        }
+      ],
+      "category/hard": [
+        {
+          "nickname": "Kim",
+          "finishedAt": "2026-11-04T14:31:32.649Z",
+          "mode": "category",
+          "subject": "Science",
+          "difficulty": "hard",
+          "points": 50,
+          "total": 2,
+          "maxScore": 3,
+          "byCategory": {
+            "Science": 2
+          },
+          "questionsByCategory": {
+            "Science": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 0,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 40,
+            "time": 6,
+            "noHint": 4,
+            "streak": 0
+          },
+          "tier": "Scholar"
+        },
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-02T15:26:46.348Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "hard",
+          "points": 42,
+          "total": 2,
+          "maxScore": 3,
+          "byCategory": {
+            "Geography": 2
+          },
+          "questionsByCategory": {
+            "Geography": 3
+          },
+          "byDifficulty": {
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 1,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 40,
+            "time": 0,
+            "noHint": 2,
+            "streak": 0
+          },
+          "tier": "Scholar"
+        }
+      ],
+      "speed/medium": [
+        {
+          "nickname": "Ana",
+          "finishedAt": "2026-11-09T10:22:10.298Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "medium",
+          "points": 227,
+          "total": 12,
+          "maxScore": 16,
+          "byCategory": {
+            "History": 3,
+            "Science": 4,
+            "Geography": 4,
+            "Arts & Culture": 1
+          },
+          "questionsByCategory": {
+            "History": 4,
+            "Science": 4,
+            "Geography": 4,
+            "Arts & Culture": 4
+          },
+          "byDifficulty": {
+            "medium": {
+              "correct": 12,
+              "questions": 16
+            }
+          },
+          "skipped": 1,
+          "timedOut": 1,
+          "eliminated": 2,
+          "bestStreak": 7,
+          "bonuses": {
+            "base": 180,
+            "time": 18,
+            "noHint": 20,
+            "streak": 9
+          },
+          "tier": "Expert"
+        }
+      ]
+    }
+  }
+}

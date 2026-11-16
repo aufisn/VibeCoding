@@ -86,6 +86,26 @@ node scripts/find-superlatives.mjs --words primary,major   # extra words
 
 In Claude Code, the **`/quiz-validate`** skill (`.claude/skills/quiz-validate/`) runs this and shows a table that also says whether each question states its criterion (for example "by surface area"). It only reports; it never edits the questions. Add `explanations` or extra words after the command, for example `/quiz-validate explanations`.
 
+## Claude Code skills
+
+Four project skills live in `.claude/skills/`. Open a Claude Code session in this folder and type the command (or just ask in plain words):
+
+| Command | What it does |
+| --- | --- |
+| `/quiz-validate` | Lists superlatives ("most", "first", "largest"...) and whether each states its measure (guideline 2). |
+| `/quiz-check [History \| geo-03 \| sci] [unverified]` | Fact-checks answers, wrong options and explanations against two reliable sources each, following the Cross-Verification Guidelines, and writes `reports/quiz-check-YYYY-MM-DD.md`. Never edits questions or sets `verified`. |
+| `/quiz-stats <backup.json \| sample>` | Statistics from a backup file (Statistics → Download backup): overview, by mode, category and difficulty, trends, practice tips. `/quiz-stats change: ...` guides code changes to what the game tracks. |
+| `/quiz-leaderboard <backup.json \| sample> [overall \| week \| today] [full \| category \| speed] [difficulty]` | Leaderboards from a backup; `audit <file>` flags impossible scores; `change: ...` guides changes to rank tiers, sorting and periods. |
+
+`sample` means `examples/sample-backup.json`: 36 simulated games, made with the game's own engine. The scripts behind the skills also work on their own:
+
+```sh
+node scripts/list-questions.mjs History                    # questions with their correct answers
+node scripts/backup-report.mjs examples/sample-backup.json stats
+node scripts/backup-report.mjs examples/sample-backup.json leaderboard --period week --mode speed
+node scripts/backup-report.mjs examples/sample-backup.json audit
+```
+
 ## Running the tests
 
 ```sh
@@ -119,7 +139,10 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `data/questions.json` | The 40 questions |
 | `scripts/validate-questions.mjs` | Command-line validator |
 | `scripts/find-superlatives.mjs` | Lists superlative and ranking words in the questions (used by `/quiz-validate`) |
-| `.claude/skills/quiz-validate/` | The `/quiz-validate` Claude Code skill |
+| `scripts/list-questions.mjs` | Prints questions with their correct answers (used by `/quiz-check`) |
+| `scripts/backup-report.mjs` | Statistics, leaderboards and an audit from a backup file (used by `/quiz-stats` and `/quiz-leaderboard`) |
+| `examples/sample-backup.json` | A sample backup of 36 simulated games, for trying the skills |
+| `.claude/skills/` | The Claude Code skills: `quiz-validate`, `quiz-check`, `quiz-stats`, `quiz-leaderboard` |
 | `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, score manager, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
 
