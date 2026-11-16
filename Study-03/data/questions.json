@@ -118,7 +118,7 @@
     "correctIndex": 1,
     "explanation": "The Mayflower sailed from Plymouth, England, in 1620 and reached Cape Cod in present-day Massachusetts.",
     "sourceHint": "Encyclopaedia Britannica: Mayflower",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-12",
@@ -129,7 +129,7 @@
     "correctIndex": 3,
     "explanation": "Napoleon Bonaparte placed the crown on his own head at his coronation in Notre-Dame Cathedral on 2 December 1804.",
     "sourceHint": "Encyclopaedia Britannica: Napoleon I",
-    "verified": false
+    "verified": true
   },
   {
     "id": "hist-13",
@@ -140,7 +140,7 @@
     "correctIndex": 0,
     "explanation": "Constantine I refounded Byzantium as Constantinople and dedicated it as the empire's new capital in 330 CE.",
     "sourceHint": "Encyclopaedia Britannica: Constantine I",
-    "verified": false
+    "verified": true
   },
 
   {
@@ -262,7 +262,7 @@
     "correctIndex": 3,
     "explanation": "At standard atmospheric pressure (sea level), pure water boils at 100 °C, which is 212 °F.",
     "sourceHint": "Encyclopaedia Britannica: boiling point",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-12",
@@ -273,7 +273,7 @@
     "correctIndex": 3,
     "explanation": "Beta cells in the pancreas's islets of Langerhans produce insulin, which helps control blood sugar.",
     "sourceHint": "NIDDK (US National Institutes of Health): insulin and the pancreas",
-    "verified": false
+    "verified": true
   },
   {
     "id": "sci-13",
@@ -284,7 +284,7 @@
     "correctIndex": 2,
     "explanation": "Diamond defines 10 on the Mohs scale; corundum is 9, topaz 8 and quartz 7.",
     "sourceHint": "Encyclopaedia Britannica: Mohs hardness",
-    "verified": false
+    "verified": true
   },
 
   {
@@ -406,7 +406,7 @@
     "correctIndex": 0,
     "explanation": "The Sahara covers much of North Africa, stretching from the Atlantic Ocean to the Red Sea.",
     "sourceHint": "Encyclopaedia Britannica: Sahara",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-12",
@@ -417,7 +417,7 @@
     "correctIndex": 2,
     "explanation": "Russia covers about 17.1 million square kilometres, much larger than second-placed Canada.",
     "sourceHint": "Encyclopaedia Britannica: Russia",
-    "verified": false
+    "verified": true
   },
   {
     "id": "geo-13",
@@ -428,7 +428,7 @@
     "correctIndex": 1,
     "explanation": "The Strait of Gibraltar links the Atlantic Ocean and the Mediterranean Sea between Spain and Morocco.",
     "sourceHint": "Encyclopaedia Britannica: Strait of Gibraltar",
-    "verified": false
+    "verified": true
   },
 
   {
@@ -550,7 +550,7 @@
     "correctIndex": 0,
     "explanation": "A standard modern piano has 88 keys: 52 white and 36 black.",
     "sourceHint": "Encyclopaedia Britannica: piano",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-12",
@@ -561,7 +561,7 @@
     "correctIndex": 2,
     "explanation": "George Orwell's dystopian novel Nineteen Eighty-Four was published in 1949.",
     "sourceHint": "Encyclopaedia Britannica: Nineteen Eighty-four",
-    "verified": false
+    "verified": true
   },
   {
     "id": "art-13",
@@ -572,6 +572,6 @@
     "correctIndex": 1,
     "explanation": "Sophocles wrote Oedipus Rex (Oedipus the King), first performed in Athens in the 5th century BCE.",
     "sourceHint": "Encyclopaedia Britannica: Oedipus Rex",
-    "verified": false
+    "verified": true
   }
 ]

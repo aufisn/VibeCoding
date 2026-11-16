@@ -87,3 +87,5 @@ Checked with the `/quiz-check` workflow: the 12 questions added in `reports/quiz
 ## Ready for you to mark verified
 
 All 12 look ready: hist-11, hist-12, hist-13, sci-11, sci-12, sci-13, geo-11, geo-12, geo-13, art-11, art-12, art-13. Set `"verified": true` on each in `data/questions.json` once you're satisfied, then bump `CACHE_VERSION` in `sw.js`.
+
+**Update, 16 November 2026:** at your request, all 12 were marked `"verified": true` in `data/questions.json` (`CACHE_VERSION` bumped to v7). The other 40 questions remain unverified.
