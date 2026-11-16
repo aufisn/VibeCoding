@@ -16,12 +16,14 @@ import {
 } from "./config.js";
 import { SCREENS } from "./state.js";
 import { mapKey } from "./keys.js";
-import { runMode, topRuns } from "./storage.js";
+import { runMode } from "./storage.js";
+import { PERIODS } from "./data-manager.js";
 
 const LETTERS = ["A", "B", "C", "D"];
 const LEADERBOARD_SIZE = 10;
 const TICK_MS = 200; // Speed Quiz countdown refresh
 const WARN_SECONDS = 5; // countdown turns urgent (and is announced) here
+const PERIOD_LABELS = { [PERIODS.ALL]: "Overall", [PERIODS.WEEK]: "This week", [PERIODS.DAY]: "Today" };
 const MODE_LABELS = { [MODES.FULL]: "Full Challenge", [MODES.CATEGORY]: "By Category", [MODES.SPEED]: "Speed Quiz" };
 const DIFFICULTY_LABELS = { easy: "easy", medium: "medium", hard: "hard" };
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -46,6 +48,7 @@ const LINE_ICON_PATHS = {
   star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z",
   flame: "M12 22c4 0 7-2.7 7-6.6 0-3.1-2-5.6-3.6-7.4-.3 1.9-1.2 3.2-2.4 3.7.2-3.4-1.2-6.4-4-8.7 0 3.4-4 6.2-4 11.6C5 19 8 22 12 22z",
   timer: "M12 8v5l3 2M9 2h6M12 4a9 9 0 1 0 0 18a9 9 0 1 0 0-18",
+  chart: "M4 20h16M7 16v-5M12 16V6M17 16v-8",
 };
 
 /* ---------- DOM helpers ---------- */
@@ -133,19 +136,16 @@ const sameRun = (a, b) =>
  *   screen renders and returns the record it saved, if any (the state hands
  *   each run out once, so nothing is saved twice). Used for the leaderboard
  *   highlight.
- * @param {() => object[]} [hooks.getRuns] saved runs (never throws)
- * @param {() => boolean} [hooks.clearRuns] remove the saved runs
+ * @param {import("./data-manager.js").LocalDataManager} [hooks.data] saved games,
+ *   statistics and leaderboards
  */
-export function createUI(
-  container,
-  game,
-  { onResults = () => null, getRuns = () => [], clearRuns = () => false } = {}
-) {
+export function createUI(container, game, { onResults = () => null, data } = {}) {
   let justFinished = null; // the record saved for the run that just ended
   let offlineReady = false;
   let questionView = null; // { choose(i), next() } while a question is showing
   let countdown = null; // Speed Quiz interval id
   let leaderboardMode = MODES.FULL; // which mode the leaderboard shows
+  let leaderboardPeriod = PERIODS.ALL; // Overall, This week or Today
 
   const exitDialog = buildConfirmDialog({
     id: "exit",
@@ -160,11 +160,11 @@ export function createUI(
   const clearDialog = buildConfirmDialog({
     id: "clear",
     title: "Clear history?",
-    description: "This deletes every saved run on this device, in all modes. It can't be undone.",
+    description: "This deletes every saved game and your statistics on this device, in all modes. It can't be undone.",
     cancelText: "Cancel",
     confirmText: "Clear history",
     onConfirm() {
-      clearRuns();
+      data?.clear();
       justFinished = null;
       render();
     },
@@ -192,6 +192,7 @@ export function createUI(
       [SCREENS.RESULTS]: renderResults,
       [SCREENS.REVIEW]: renderReview,
       [SCREENS.LEADERBOARD]: renderLeaderboard,
+      [SCREENS.STATS]: renderStats,
     }[state.screen](state);
 
     container.replaceChildren(screen);
@@ -333,9 +334,11 @@ export function createUI(
           iconKind: "trophy",
           onClick() {
             leaderboardMode = MODES.FULL;
+            leaderboardPeriod = PERIODS.ALL;
             if (game.openLeaderboard()) render();
           },
         }),
+        statsButton(),
       ]),
       el("div", { className: "how-to card" }, [
         el("h2", { className: "how-to-title", text: "How it works" }),
@@ -764,9 +767,11 @@ export function createUI(
             iconKind: "trophy",
             onClick() {
               leaderboardMode = state.mode;
+              leaderboardPeriod = PERIODS.ALL;
               if (game.openLeaderboard()) render();
             },
           }),
+          statsButton(),
         ]),
         el("div", { className: "actions" }, [
           button("Play again", {
@@ -847,23 +852,11 @@ export function createUI(
 
   function renderLeaderboard(state) {
     const fromResults = state.leaderboardFrom === SCREENS.RESULTS;
-    let runs = [];
-    try {
-      runs = topRuns(getRuns(), LEADERBOARD_SIZE, leaderboardMode);
-    } catch {
-      runs = []; // corrupt or blocked storage: show the empty state
-    }
-    let anyRuns = runs.length > 0;
-    if (!anyRuns) {
-      try {
-        anyRuns = topRuns(getRuns(), 1).length > 0;
-      } catch {
-        anyRuns = false;
-      }
-    }
+    const runs = safe(() => data.getLeaderboard({ period: leaderboardPeriod, mode: leaderboardMode, limit: LEADERBOARD_SIZE }), []);
+    const anyRuns = safe(() => data.hasGames(), false);
     const highlight = fromResults ? justFinished : null;
     const highlightShown = runs.some((r) => sameRun(r, highlight));
-    const highlightInMode = highlight && runMode(highlight) === leaderboardMode;
+    const highlightInView = highlight && runMode(highlight) === leaderboardMode;
 
     const back = button(fromResults ? "Back to results" : "Back", {
       className: "btn btn-quiet",
@@ -873,35 +866,47 @@ export function createUI(
       },
     });
 
-    // Mode filter: one leaderboard per mode, since 20, 10 and 40-question
-    // runs can't be compared fairly.
-    const tabs = el(
-      "div",
-      { className: "mode-tabs", attrs: { role: "group", "aria-label": "Show runs for" } },
-      [MODES.FULL, MODES.CATEGORY, MODES.SPEED].map((mode) =>
-        el("button", {
-          type: "button",
-          className: "mode-tab",
-          text: MODE_LABELS[mode],
-          attrs: { "aria-pressed": String(mode === leaderboardMode), "data-mode": mode },
-          on: {
-            click() {
-              if (leaderboardMode === mode) return;
-              leaderboardMode = mode;
-              render({ focus: false });
-              container.querySelector(`.mode-tab[data-mode="${mode}"]`)?.focus();
+    /** A row of toggle buttons; re-renders and keeps focus on the pressed one. */
+    function tabs(label, options, current, set) {
+      return el(
+        "div",
+        { className: "mode-tabs", attrs: { role: "group", "aria-label": label } },
+        options.map(([value, text]) =>
+          el("button", {
+            type: "button",
+            className: "mode-tab",
+            text,
+            attrs: { "aria-pressed": String(value === current), "data-value": value },
+            on: {
+              click() {
+                if (value === current) return;
+                set(value);
+                render({ focus: false });
+                container.querySelector(`.mode-tab[data-value="${value}"]`)?.focus();
+              },
             },
-          },
-        })
-      )
+          })
+        )
+      );
+    }
+
+    const periodTabs = tabs("Time period", Object.entries(PERIOD_LABELS), leaderboardPeriod, (v) => (leaderboardPeriod = v));
+    // One board per mode: 40, 10 and 20-question runs can't be compared fairly.
+    const modeTabs = tabs(
+      "Game mode",
+      [MODES.FULL, MODES.CATEGORY, MODES.SPEED].map((m) => [m, MODE_LABELS[m]]),
+      leaderboardMode,
+      (v) => (leaderboardMode = v)
     );
+
+    const periodText = { [PERIODS.ALL]: "", [PERIODS.WEEK]: " this week", [PERIODS.DAY]: " today" }[leaderboardPeriod];
 
     let body;
     if (runs.length === 0) {
       body = el("p", {
         className: "empty-state card",
         text: anyRuns
-          ? `No ${MODE_LABELS[leaderboardMode]} runs yet. Finish one to appear here.`
+          ? `No ${MODE_LABELS[leaderboardMode]} runs${periodText} yet. Finish one to appear here.`
           : "No saved runs yet. Finish a game to appear here.",
       });
     } else {
@@ -928,7 +933,10 @@ export function createUI(
       });
       body = el("div", { className: "table-scroll" }, [
         el("table", { className: "leaderboard-table" }, [
-          el("caption", { className: "visually-hidden", text: `Top ${LEADERBOARD_SIZE} ${MODE_LABELS[leaderboardMode]} runs` }),
+          el("caption", {
+            className: "visually-hidden",
+            text: `Top ${LEADERBOARD_SIZE} ${MODE_LABELS[leaderboardMode]} runs, ${PERIOD_LABELS[leaderboardPeriod].toLowerCase()}`,
+          }),
           el("thead", {}, [
             el(
               "tr",
@@ -940,10 +948,7 @@ export function createUI(
                 ["Correct and rank", "Correct"],
                 ["Date", "Date"],
               ].map(([full, short]) =>
-                el("th", { scope: "col" }, [
-                  el("span", { text: short, attrs: { "aria-hidden": "true" } }),
-                  srOnly(full),
-                ])
+                el("th", { scope: "col" }, [el("span", { text: short, attrs: { "aria-hidden": "true" } }), srOnly(full)])
               )
             ),
           ]),
@@ -955,24 +960,149 @@ export function createUI(
     return el("section", { className: "screen screen-leaderboard" }, [
       el("div", { className: "screen-head" }, [back]),
       focusHeading("h2", "Leaderboard"),
-      el("p", { className: "app-tagline", text: `Your top ${LEADERBOARD_SIZE} runs on this device, by points.` }),
-      tabs,
-      highlightInMode && !highlightShown && runs.length > 0
+      el("p", {
+        className: "app-tagline",
+        text: `Your top ${LEADERBOARD_SIZE} runs on this device, by points. "This week" starts on Monday.`,
+      }),
+      periodTabs,
+      modeTabs,
+      highlightInView && !highlightShown && runs.length > 0
         ? el("p", {
             className: "hint",
-            text: `Your latest run (${highlight.points} points) isn't in your top ${LEADERBOARD_SIZE}.`,
+            text: `Your latest run (${highlight.points} points) isn't in this top ${LEADERBOARD_SIZE}.`,
           })
         : null,
       body,
-      anyRuns
-        ? el("div", { className: "actions" }, [
-            button("Clear history", {
-              className: "btn btn-danger-outline",
-              onClick: (event) => clearDialog.open(event.currentTarget),
-            }),
-          ])
-        : null,
+      anyRuns ? el("div", { className: "actions" }, [clearButton()]) : null,
     ]);
+  }
+
+  function clearButton() {
+    return button("Clear history", {
+      className: "btn btn-danger-outline",
+      onClick: (event) => clearDialog.open(event.currentTarget),
+    });
+  }
+
+  /* ----- Statistics ----- */
+
+  function renderStats(state) {
+    const back = button(state.statsFrom === SCREENS.RESULTS ? "Back to results" : "Back", {
+      className: "btn btn-quiet",
+      iconKind: "back",
+      onClick() {
+        if (game.closeStats()) render();
+      },
+    });
+    const stats = safe(() => data.getStats(), null);
+    const head = [el("div", { className: "screen-head" }, [back]), focusHeading("h2", "Statistics")];
+
+    if (!stats || stats.gamesPlayed === 0) {
+      return el("section", { className: "screen screen-stats" }, [
+        ...head,
+        el("p", { className: "empty-state card", text: "No games played yet. Finish a game to see your statistics." }),
+      ]);
+    }
+
+    const pct = (correct, questions) => (questions > 0 ? `${Math.round((correct / questions) * 100)}%` : "–");
+    const tile = (label, value, detail) =>
+      el("div", { className: "stat-tile" }, [
+        el("p", { className: "stat-tile-value", text: value }),
+        el("p", { className: "stat-tile-label", text: label }),
+        detail ? el("p", { className: "stat-tile-detail", text: detail }) : null,
+      ]);
+
+    const tiles = el("div", { className: "stat-tiles" }, [
+      tile("Games played", String(stats.gamesPlayed), stats.lastPlayedAt ? `Last: ${formatDate(stats.lastPlayedAt)}` : null),
+      tile("Accuracy", pct(stats.totalCorrect, stats.totalQuestions), `${stats.totalCorrect} of ${stats.totalQuestions} correct`),
+      tile("Total points", String(stats.totalPoints), `Average ${Math.round(stats.totalPoints / stats.gamesPlayed)} per game`),
+      tile("Best streak", String(stats.bestStreak), "correct in a row"),
+    ]);
+
+    // By category: text first, the bar only illustrates it.
+    const categories = safe(() => data.getCategoryStats(), []);
+    const played = categories.filter((c) => c.questions > 0);
+    const categoryList = el(
+      "ul",
+      { className: "category-stats" },
+      categories.map((c) => {
+        const share = c.accuracy === null ? 0 : c.accuracy;
+        return el("li", { className: "category-stat", attrs: { "data-category": categorySlug(c.category) } }, [
+          el("div", { className: "category-stat-head" }, [
+            el("span", { className: "category-stat-name" }, [lineIcon(categorySlug(c.category)), el("span", { text: c.category })]),
+            el("span", {
+              className: "category-stat-value",
+              text: c.questions > 0 ? `${pct(c.correct, c.questions)} · ${c.correct} / ${c.questions}` : "Not played yet",
+            }),
+          ]),
+          el("div", { className: "category-stat-track", attrs: { "aria-hidden": "true" } }, [
+            el("div", { className: "category-stat-fill", style: `width: ${share * 100}%` }),
+          ]),
+        ]);
+      })
+    );
+    let note = null;
+    if (played.length >= 2) {
+      const sorted = [...played].sort((a, b) => b.accuracy - a.accuracy);
+      const [top, low] = [sorted[0], sorted[sorted.length - 1]];
+      if (top.accuracy !== low.accuracy) {
+        note = el("p", {
+          className: "hint",
+          text: `Strongest: ${top.category} (${pct(top.correct, top.questions)}). Most room to grow: ${low.category} (${pct(low.correct, low.questions)}).`,
+        });
+      }
+    }
+
+    const modeRows = [MODES.FULL, MODES.CATEGORY, MODES.SPEED].map((mode) => {
+      const m = stats.byMode[mode] ?? { games: 0, points: 0, correct: 0, questions: 0, bestPoints: 0 };
+      return el("tr", {}, [
+        el("th", { scope: "row", text: MODE_LABELS[mode] }),
+        el("td", { text: String(m.games) }),
+        el("td", { text: m.games ? String(m.bestPoints) : "–" }),
+        el("td", { text: m.games ? String(Math.round(m.points / m.games)) : "–" }),
+        el("td", { text: pct(m.correct, m.questions) }),
+      ]);
+    });
+
+    return el("section", { className: "screen screen-stats" }, [
+      ...head,
+      el("p", { className: "app-tagline", text: "Across all your games on this device." }),
+      tiles,
+      el("h3", { className: "section-title", text: "By category" }),
+      categoryList,
+      note,
+      el("h3", { className: "section-title", text: "By mode" }),
+      el("div", { className: "table-scroll" }, [
+        el("table", { className: "leaderboard-table mode-stats-table" }, [
+          el("caption", { className: "visually-hidden", text: "Statistics by game mode" }),
+          el("thead", {}, [
+            el("tr", {}, ["Mode", "Games", "Best", "Avg pts", "Accuracy"].map((h) => el("th", { scope: "col", text: h }))),
+          ]),
+          el("tbody", {}, modeRows),
+        ]),
+      ]),
+      el("p", { className: "hint", text: `Statistics count every game you've finished. The leaderboard keeps your latest ${data.maxGames ?? 100} games plus each mode's all-time top ${LEADERBOARD_SIZE}.` }),
+      el("div", { className: "actions" }, [clearButton()]),
+    ]);
+  }
+
+  function statsButton() {
+    return button("Statistics", {
+      className: "btn btn-secondary",
+      iconKind: "chart",
+      onClick() {
+        if (game.openStats()) render();
+      },
+    });
+  }
+
+  /** Run `fn`; on any error return `fallback` (storage must never break a screen). */
+  function safe(fn, fallback) {
+    try {
+      return fn() ?? fallback;
+    } catch {
+      return fallback;
+    }
   }
 
   /* ----- Confirmation dialogs (native <dialog>) ----- */

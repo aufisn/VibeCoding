@@ -1477,6 +1477,103 @@ p {
   color: var(--color-success-text);
 }
 
+/* ---------- Statistics ---------- */
+
+.section-title {
+  margin: var(--space-3) 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-tile {
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.stat-tile p {
+  margin: 0;
+}
+
+.stat-tile-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-tile-label {
+  font-weight: 700;
+}
+
+.stat-tile-detail {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.category-stats {
+  display: grid;
+  gap: 0.875rem;
+  margin: 0 0 var(--space-1);
+  padding: var(--space-2);
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.category-stat-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.375rem;
+}
+
+.category-stat-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.category-stat-name .icon-line {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.category-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.category-stat-track {
+  height: 0.625rem;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.category-stat-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+
+.mode-stats-table td {
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* ---------- Larger screens ---------- */
 
 @media (min-width: 48rem) {
@@ -1502,6 +1599,10 @@ p {
 
   .mode-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .start-links,

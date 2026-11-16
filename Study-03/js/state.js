@@ -17,6 +17,7 @@
 //
 //   results ⇄ review       (openReview / closeReview; only with mistakes)
 //   start or results ⇄ leaderboard  (openLeaderboard / closeLeaderboard)
+//   start or results ⇄ stats        (openStats / closeStats)
 
 import {
   ALL_SUBJECTS,
@@ -41,6 +42,7 @@ export const SCREENS = Object.freeze({
   RESULTS: "results",
   REVIEW: "review",
   LEADERBOARD: "leaderboard",
+  STATS: "stats",
 });
 
 /** Trim and cap a nickname. */
@@ -85,6 +87,7 @@ export function createGame(
   let score = 0;
   let resultToSave = null;
   let leaderboardFrom = SCREENS.START;
+  let statsFrom = SCREENS.START;
 
   function resetRun() {
     run = [];
@@ -133,6 +136,9 @@ export function createGame(
       total,
       maxScore: run.length,
       byCategory,
+      questionsByCategory: Object.fromEntries(
+        playCategories.map((c) => [c, run.filter((q) => q.category === c).length])
+      ),
       skipped: answers.filter((a) => a && a.skipped).length,
       timedOut: answers.filter((a) => a && a.timedOut).length,
       eliminated: countEliminations(),
@@ -348,6 +354,20 @@ export function createGame(
     return true;
   }
 
+  /** Start or Results -> statistics; closeStats() goes back there. */
+  function openStats() {
+    if (screen !== SCREENS.START && screen !== SCREENS.RESULTS) return false;
+    statsFrom = screen;
+    screen = SCREENS.STATS;
+    return true;
+  }
+
+  function closeStats() {
+    if (screen !== SCREENS.STATS) return false;
+    screen = statsFrom;
+    return true;
+  }
+
   /**
    * The finished-run record, returned once per run and null after that,
    * so re-rendering Results can never save twice.
@@ -407,6 +427,7 @@ export function createGame(
       tier: tierFor(total, tiers, run.length || undefined),
       mistakes: Object.freeze(mistakes().map((m) => Object.freeze({ ...m }))),
       leaderboardFrom,
+      statsFrom,
       categoryTotals,
       timedOutCount: answers.filter((a) => a && a.timedOut).length,
       // Points (ScoreManager)
@@ -433,6 +454,8 @@ export function createGame(
     closeReview,
     openLeaderboard,
     closeLeaderboard,
+    openStats,
+    closeStats,
     takeResultToSave,
     getState,
   };

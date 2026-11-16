@@ -139,6 +139,7 @@ test("the finished-run record is handed out exactly once", () => {
     total: 40,
     maxScore: 40,
     byCategory: { History: 10, Science: 10, Geography: 10, "Arts & Culture": 10 },
+    questionsByCategory: { History: 10, Science: 10, Geography: 10, "Arts & Culture": 10 },
     skipped: 0,
     timedOut: 0,
     eliminated: 0,

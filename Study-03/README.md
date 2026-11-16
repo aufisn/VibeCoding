@@ -37,7 +37,9 @@ You get one try per question: the first answer you pick locks, and you see right
 At the end you see your points, how many you got right, your rank (see [Rank tiers](#rank-tiers); it's based on correct answers), your best streak, and a breakdown of where the points came from. From there:
 
 - **Review mistakes** lists every question you got wrong or skipped, grouped by category, with your answer, the correct answer and the explanation. It's kept in memory for the current run only. A perfect run shows "Perfect score, nothing to review" instead.
-- **Leaderboard** (also on the Start screen) shows your 10 best saved runs on this device, with a tab per mode (Full Challenge, By Category, Speed Quiz), since 40, 10 and 20-question runs can't be compared fairly. Runs are ranked by points, then correct answers, then newest. The run you just finished is marked "This run". Runs saved before points existed show "–" and rank last. **Clear history** deletes the saved runs of all modes after a confirmation.
+- **Leaderboard** (also on the Start screen) shows your top 10 runs on this device. Choose a period (**Overall**, **This week** from Monday 00:00, or **Today** from midnight, in your local time) and a mode (Full Challenge, By Category, Speed Quiz; 40, 10 and 20-question runs can't be compared fairly). Runs are ranked by points, then correct answers, then newest. The run you just finished is marked "This run". Runs saved before points existed show "–" and rank last.
+- **Statistics** (also on the Start screen) covers every game you've finished: games played, accuracy, total and average points, best streak, accuracy per category (with your strongest and weakest category), and games, best and average points per mode.
+- **Clear history** (on both screens) deletes the saved games and statistics after a confirmation. Your theme choice is kept.
 
 **Keyboard:** on a question, press A to D (or 1 to 4) to answer, then Enter or Space for the next question. Everything else works with Tab, Enter and Escape. Focus moves to each screen's heading, and results are announced to screen readers.
 
@@ -108,6 +110,7 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `manifest.webmanifest`, `icons/` | Install and home-screen metadata; placeholder icons |
 | `scripts/make-icons.mjs` | Regenerates the placeholder icons (no dependencies) |
 | `DEPLOY.md` | How to publish, plus the launch checklist |
+| `js/data-manager.js` | `LocalDataManager` class: automatic saving, statistics, the latest 100 games, Overall / Weekly / Daily leaderboards (never throws) |
 | `js/storage.js` | `saveRun`, `loadRuns`, `clearRuns` for the `quiz.runs` history in localStorage (never throw), and pure `topRuns(runs, n, mode)` and `runMode(run)` for the leaderboard |
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
 | `data/questions.json` | The 40 questions |
@@ -156,7 +159,12 @@ Players who are online get corrected questions on their next load even without t
 
 ## Saved results
 
-Each finished run is saved in the browser's localStorage under `quiz.runs`, newest first, at most 100 entries:
+Saving is automatic and handled by the `LocalDataManager` class (`js/data-manager.js`). It keeps two localStorage entries:
+
+- `quiz.runs`: the latest 100 finished games, newest first.
+- `quiz.stats`: running statistics, updated after every game: totals, per mode, per category, and each mode's all-time top 10. Because it keeps counting, statistics include games older than the latest 100, and a best score stays on the Overall leaderboard after it drops out of them. If it's missing or corrupt, it's rebuilt from `quiz.runs`.
+
+A saved game looks like this:
 
 ```json
 { "nickname": "Sam", "finishedAt": "2026-11-15T12:00:00.000Z",
@@ -166,7 +174,7 @@ Each finished run is saved in the browser's localStorage under `quiz.runs`, newe
   "bonuses": { "base": 450, "time": 75, "noHint": 50, "streak": 37 }, "tier": "Expert" }
 ```
 
-`mode` is `"full"`, `"category"` or `"speed"`. `subject` is `"All"`, a category name, or `"Speed"`. For a category run `maxScore` is 10 and `byCategory` has only that category; for a Speed Quiz it's 20. Exiting mid-run saves nothing. If storage is blocked, full or corrupt, the game still plays and just doesn't save. `nickname` is `""` when none was entered.
+`questionsByCategory` (how many questions of each category the game had) is also saved, for the category statistics. `mode` is `"full"`, `"category"` or `"speed"`. `subject` is `"All"`, a category name, or `"Speed"`. For a category run `maxScore` is 10 and `byCategory` has only that category; for a Speed Quiz it's 20. Exiting mid-run saves nothing. If storage is blocked, full or corrupt, the game still plays and just doesn't save. `nickname` is `""` when none was entered.
 
 ## Rank tiers
 

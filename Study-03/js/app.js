@@ -4,7 +4,7 @@
 import { validateQuestions } from "./validate.js";
 import { createGame } from "./state.js";
 import { createUI } from "./ui.js";
-import { saveRun, loadRuns, clearRuns } from "./storage.js";
+import { LocalDataManager } from "./data-manager.js";
 import { bindThemeToggle } from "./theme.js";
 
 const QUESTIONS_URL = "data/questions.json";
@@ -72,15 +72,15 @@ async function init() {
   }
 
   const game = createGame(questions);
+  const data = new LocalDataManager();
   const ui = createUI(document.getElementById("app"), game, {
     onResults() {
-      // takeResultToSave() hands out each finished run once, so a
-      // re-rendered Results screen can't save it twice.
+      // Automatic saving. takeResultToSave() hands out each finished run
+      // once, so a re-rendered Results screen can't save it twice.
       const record = game.takeResultToSave();
-      return record && saveRun(record) ? record : null;
+      return record && data.saveGame(record) ? record : null;
     },
-    getRuns: () => loadRuns(),
-    clearRuns: () => clearRuns(),
+    data,
   });
   ui.render({ focus: false });
   registerServiceWorker(() => ui.setOfflineReady());
