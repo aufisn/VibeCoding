@@ -29,7 +29,7 @@ function label(q, index) {
 }
 
 /** Errors for a single question object (bank-level checks live elsewhere). */
-function checkQuestion(q, index) {
+export function checkQuestion(q, index) {
   const errors = [];
   const name = label(q, index);
 
@@ -105,8 +105,9 @@ export function validateQuestions(list) {
     return { errors: ["Question data is not an array"], warnings };
   }
 
-  if (list.length !== TOTAL_QUESTIONS) {
-    errors.push(`Expected ${TOTAL_QUESTIONS} questions in total, found ${list.length}`);
+  // The bank may grow (see /quiz-expand); a game picks from it. These are minimums.
+  if (list.length < TOTAL_QUESTIONS) {
+    errors.push(`Expected at least ${TOTAL_QUESTIONS} questions in total, found ${list.length}`);
   }
 
   // Per-question checks, duplicate ids and unverified warnings.
@@ -120,18 +121,18 @@ export function validateQuestions(list) {
     if (!q || q.verified !== true) warnings.push(`${label(q, i)}: not verified`);
   });
 
-  // Per-category count and difficulty mix.
+  // Per-category minimums: enough for one full round with the 3/4/3 mix.
   for (const category of CATEGORIES) {
     const inCategory = list.filter((q) => q && q.category === category);
-    if (inCategory.length !== QUESTIONS_PER_CATEGORY) {
+    if (inCategory.length < QUESTIONS_PER_CATEGORY) {
       errors.push(
-        `${category}: has ${inCategory.length} questions (need exactly ${QUESTIONS_PER_CATEGORY})`
+        `${category}: has ${inCategory.length} questions (need at least ${QUESTIONS_PER_CATEGORY})`
       );
     }
     for (const [level, needed] of Object.entries(DIFFICULTY_MIX)) {
       const found = inCategory.filter((q) => q.difficulty === level).length;
-      if (found !== needed) {
-        errors.push(`${category}: has ${found} ${level} questions (need exactly ${needed})`);
+      if (found < needed) {
+        errors.push(`${category}: has ${found} ${level} questions (need at least ${needed})`);
       }
     }
   }

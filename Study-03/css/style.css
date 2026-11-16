@@ -1708,6 +1708,67 @@ p {
   margin-top: 0.125rem;
 }
 
+/* ---------- Question bank check (Start screen) ---------- */
+
+.bank-check {
+  margin-top: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.bank-check summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tap-min);
+  padding: 0.5rem var(--space-2);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.bank-check summary .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.bank-check.is-ok summary .icon {
+  color: var(--color-success-text);
+}
+
+.bank-check.is-warning summary .icon,
+.bank-check.is-error summary .icon {
+  color: var(--color-error-text);
+}
+
+.bank-body {
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.bank-table td {
+  white-space: nowrap;
+}
+
+.bank-list {
+  margin-top: 0.75rem;
+}
+
+.bank-list-title {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+}
+
+.bank-list ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.bank-list.is-error .bank-list-title {
+  color: var(--color-error-text);
+}
+
 /* ---------- Larger screens ---------- */
 
 @media (min-width: 48rem) {

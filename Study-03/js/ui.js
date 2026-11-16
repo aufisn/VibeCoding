@@ -20,6 +20,7 @@ import { SCREENS } from "./state.js";
 import { mapKey } from "./keys.js";
 import { runMode } from "./storage.js";
 import { BACKUP_MAX_BYTES, PERIODS, parseBackup, runDifficulty } from "./data-manager.js";
+import { summarizeAnalysis } from "./bank-analysis.js";
 
 const LETTERS = ["A", "B", "C", "D"];
 const LEADERBOARD_SIZE = 10;
@@ -149,8 +150,10 @@ const sameRun = (a, b) =>
  *   highlight.
  * @param {import("./data-manager.js").LocalDataManager} [hooks.data] saved games,
  *   statistics and leaderboards
+ * @param {() => object} [hooks.checkBank] analyses the question bank
+ *   (bank-analysis.js); run at load and every time a game starts
  */
-export function createUI(container, game, { onResults = () => null, data } = {}) {
+export function createUI(container, game, { onResults = () => null, data, checkBank = null } = {}) {
   let justFinished = null; // the record saved for the run that just ended
   let offlineReady = false;
   let questionView = null; // { choose(i), next() } while a question is showing
@@ -160,6 +163,29 @@ export function createUI(container, game, { onResults = () => null, data } = {})
   let leaderboardDifficulty = MIXED;
   let statsMessage = null; // { text, isError } shown once on the Statistics screen
   let pendingRestore = null; // a parsed backup waiting for confirmation
+  let bankCheck = null; // { analysis, at: Date, ms } from the latest question bank check
+
+  /**
+   * Analyse the question bank (structure, counts, missing categories,
+   * duplicates). Never throws; logs a collapsible report to the console.
+   */
+  function runBankCheck(reason) {
+    if (!checkBank) return null;
+    try {
+      const t0 = performance.now();
+      const analysis = checkBank();
+      bankCheck = { analysis, at: new Date(), ms: performance.now() - t0 };
+      const log = analysis.status === "error" ? console.warn : console.info;
+      console.groupCollapsed?.(`Question bank check (${reason}): ${summarizeAnalysis(analysis)}`);
+      log("Per category", analysis.perCategory);
+      for (const line of [...analysis.errors, ...analysis.cautions, ...analysis.notes]) log(line);
+      console.groupEnd?.();
+    } catch (err) {
+      console.warn("Question bank check failed", err);
+    }
+    return bankCheck;
+  }
+  runBankCheck("page load");
 
   const exitDialog = buildConfirmDialog({
     id: "exit",
@@ -280,6 +306,9 @@ export function createUI(container, game, { onResults = () => null, data } = {})
     });
 
     function startWith(subject) {
+      // Every new game starts with a check of the question bank. It reports
+      // and never blocks: the bank was already validated when it loaded.
+      runBankCheck("new game");
       // The picker updates the game's difficulty directly; read it now, not
       // from `state`, which is the snapshot from when this screen was drawn.
       if (game.start(input.value, subject, game.getState().difficulty)) render();
@@ -447,9 +476,84 @@ export function createUI(container, game, { onResults = () => null, data } = {})
           ]),
         ]),
       ]),
+      bankCheckPanel(),
       el("p", { className: "offline-note", hidden: !offlineReady, attrs: { role: "status" } }, [
         icon("check"),
         el("span", { text: "Offline ready: you can play without a connection." }),
+      ]),
+    ]);
+  }
+
+  /** The latest question bank check, as a collapsible report. */
+  function bankCheckPanel() {
+    if (!bankCheck) return null;
+    const { analysis: a, at, ms } = bankCheck;
+    const statusIcon = a.status === "ok" ? icon("check") : icon("cross");
+    const time = at.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+    const rows = a.perCategory.map((c) =>
+      el("tr", { attrs: { "data-category": categorySlug(c.category) } }, [
+        el("th", { scope: "row", text: c.category }),
+        el("td", { text: String(c.total) }),
+        el("td", { text: `${c.easy} / ${c.medium} / ${c.hard}` }),
+        el("td", { text: `${c.verified} / ${c.total}` }),
+      ])
+    );
+    const list = (title, items, className) =>
+      items.length
+        ? el("div", { className: `bank-list ${className}` }, [
+            el("p", { className: "bank-list-title", text: title }),
+            el("ul", {}, items.map((text) => el("li", { text }))),
+          ])
+        : null;
+
+    return el("details", { className: `bank-check is-${a.status}` }, [
+      el("summary", {}, [
+        statusIcon,
+        el("span", { text: `Question bank: ${summarizeAnalysis(a)}` }),
+      ]),
+      el("div", { className: "bank-body" }, [
+        el("p", {
+          className: "hint",
+          text: `Checked at ${time} (${Math.max(1, Math.round(ms))} ms), and again every time a game starts. Details are also in the browser console.`,
+        }),
+        el("div", { className: "table-scroll" }, [
+          el("table", { className: "leaderboard-table bank-table" }, [
+            el("caption", { className: "visually-hidden", text: "Questions per category" }),
+            el("thead", {}, [
+              el(
+                "tr",
+                {},
+                [
+                  ["Category", "Category"],
+                  ["Total", "Questions"],
+                  ["E / M / H", "Easy, medium and hard"],
+                  ["Checked", "Verified"],
+                ].map(([short, full]) =>
+                  el("th", { scope: "col" }, [el("span", { text: short, attrs: { "aria-hidden": "true" } }), srOnly(full)])
+                )
+              ),
+            ]),
+            el("tbody", {}, rows),
+          ]),
+        ]),
+        list("Missing categories", a.missingCategories.map((c) => `${c}: no questions`), "is-error"),
+        list(
+          "Categories short of a full round",
+          a.shortCategories.map((c) => `${c.category}: needs ${Object.entries(c.missing).map(([l, n]) => `${n} more ${l}`).join(", ")}`),
+          "is-error"
+        ),
+        list("Unknown categories", a.unknownCategories.map((c) => `${c.category} (${c.ids.join(", ")})`), "is-error"),
+        list("Problems", a.errors, "is-error"),
+        list("To look at", a.cautions, "is-warning"),
+        list("Notes", a.notes, ""),
+        el("p", {
+          className: "hint",
+          text:
+            a.unverifiedCount > 0
+              ? `${a.unverifiedCount} of ${a.total} questions are still waiting to be fact-checked (verified: false).`
+              : "Every question is marked verified.",
+        }),
       ]),
     ]);
   }

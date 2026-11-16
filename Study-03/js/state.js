@@ -23,7 +23,9 @@ import {
   ALL_SUBJECTS,
   CATEGORIES,
   DIFFICULTY_CHOICES,
+  DIFFICULTY_MIX,
   MIXED,
+  QUESTIONS_PER_CATEGORY,
   ELIMINATE_PER_QUESTION,
   MODES,
   NICKNAME_MAX,
@@ -240,7 +242,7 @@ export function createGame(
     run =
       mode === MODES.SPEED
         ? buildSpeedRun(pool, rng, SPEED_PER_CATEGORY, categories)
-        : buildRun(pool, rng, playCategories);
+        : buildRun(pool, rng, playCategories, { mix: difficulty === MIXED ? DIFFICULTY_MIX : null });
     screen = SCREENS.QUESTION;
     showQuestion();
     return true;
@@ -258,7 +260,8 @@ export function createGame(
    */
   function questionCount(chosen, level = difficulty) {
     const pool = poolFor(level);
-    const inCategory = (c) => pool.filter((q) => q.category === c).length;
+    // A round takes at most QUESTIONS_PER_CATEGORY from each category.
+    const inCategory = (c) => Math.min(QUESTIONS_PER_CATEGORY, pool.filter((q) => q.category === c).length);
     if (chosen === SPEED_SUBJECT) return categories.reduce((n, c) => n + Math.min(SPEED_PER_CATEGORY, inCategory(c)), 0);
     if (chosen === ALL_SUBJECTS) return categories.reduce((n, c) => n + inCategory(c), 0);
     return inCategory(chosen);

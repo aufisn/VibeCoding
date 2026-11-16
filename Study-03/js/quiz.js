@@ -1,6 +1,6 @@
 // Pure run-building functions. No DOM, no I/O.
 
-import { CATEGORIES } from "./config.js";
+import { CATEGORIES, DIFFICULTY_MIX, QUESTIONS_PER_CATEGORY } from "./config.js";
 
 /**
  * Fisher-Yates shuffle. Returns a new array; the input is not modified.
@@ -53,18 +53,42 @@ export function shuffleOptions(question, rng = Math.random) {
 }
 
 /**
- * Build one run: every category in play order, questions shuffled within
- * each category, options shuffled within each question.
- * @param {object[]} questions validated question bank
+ * Pick one category's questions for a run from a pool that may be larger
+ * than a round. With `mix` (a Mixed-difficulty game) it takes that many of
+ * each difficulty (3 easy, 4 medium, 3 hard), topping up from the rest if a
+ * difficulty runs short; otherwise up to `perCategory` at random.
+ * @returns {object[]} in random order
+ */
+export function pickQuestions(pool, rng = Math.random, { perCategory = QUESTIONS_PER_CATEGORY, mix = null } = {}) {
+  if (!mix) return shuffle(pool, rng).slice(0, perCategory);
+  const picked = Object.entries(mix).flatMap(([level, n]) =>
+    shuffle(pool.filter((q) => q.difficulty === level), rng).slice(0, n)
+  );
+  const rest = shuffle(pool.filter((q) => !picked.includes(q)), rng);
+  return shuffle([...picked, ...rest.slice(0, Math.max(0, perCategory - picked.length))], rng);
+}
+
+/**
+ * Build one run: every category in play order, `perCategory` questions
+ * picked from each (see pickQuestions) in random order, options shuffled.
+ * @param {object[]} questions validated question bank (may hold more than one run)
  * @param {() => number} [rng]
  * @param {readonly string[]} [categories] play order
+ * @param {{ perCategory?: number, mix?: Record<string, number> | null }} [options]
+ *   mix defaults to DIFFICULTY_MIX; pass null for a single-difficulty pool
  * @returns {object[]} new question objects (the bank is not modified)
  */
-export function buildRun(questions, rng = Math.random, categories = CATEGORIES) {
+export function buildRun(
+  questions,
+  rng = Math.random,
+  categories = CATEGORIES,
+  { perCategory = QUESTIONS_PER_CATEGORY, mix = DIFFICULTY_MIX } = {}
+) {
   return categories.flatMap((category) =>
-    shuffle(
+    pickQuestions(
       questions.filter((q) => q.category === category),
-      rng
+      rng,
+      { perCategory, mix }
     ).map((q) => shuffleOptions(q, rng))
   );
 }

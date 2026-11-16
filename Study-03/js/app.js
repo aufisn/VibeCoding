@@ -5,6 +5,7 @@ import { validateQuestions } from "./validate.js";
 import { createGame } from "./state.js";
 import { createUI } from "./ui.js";
 import { LocalDataManager } from "./data-manager.js";
+import { analyzeBank } from "./bank-analysis.js";
 import { bindThemeToggle } from "./theme.js";
 
 const QUESTIONS_URL = "data/questions.json";
@@ -81,6 +82,7 @@ async function init() {
       return record && data.saveGame(record) ? record : null;
     },
     data,
+    checkBank: () => analyzeBank(questions),
   });
   ui.render({ focus: false });
   registerServiceWorker(() => ui.setOfflineReady());

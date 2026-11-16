@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Single-player general knowledge quiz: 4-option multiple choice, 10 questions in each of four categories (History, Science, Geography, Arts & Culture), 40 in total. Static web app in plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no npm dependencies (`package.json` only sets `"type": "module"`). Mobile-first.
+Single-player general knowledge quiz: 4-option multiple choice in four categories (History, Science, Geography, Arts & Culture). The bank holds at least 10 questions per category (40 today); a game picks 10 per category. Static web app in plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no npm dependencies (`package.json` only sets `"type": "module"`). Mobile-first.
 
 Phases 1 to 3 are done, plus points and game modes: question content, core game, three modes (Full Challenge 40, By Category 10, Speed Quiz 20 with 15 s per question), ScoreManager points (difficulty multiplier, time, no-hint and streak bonuses), Eliminate (removes one wrong option per question), Skip (scores 0), a light/dark switch, Review mistakes, a personal leaderboard, keyboard and screen-reader support, and offline play (service worker). Publishing steps and the launch checklist are in `DEPLOY.md`.
 
@@ -29,6 +29,7 @@ ES modules and `fetch` need HTTP, so the page doesn't work from `file://`.
 - `js/score-manager.js`: pure ScoreManager. Rules live in `SCORING` in config.js; state.js passes in the answer time (from the injected `now`) and whether Eliminate was used.
 - `js/quiz.js`, `js/scoring.js`: pure functions. `buildSpeedRun` picks 5 per category and mixes them. `buildRun(questions, rng)` shuffles questions within each category and options within each question, tracking the correct option by identity and storing its new `correctIndex`.
 - `js/state.js`: `createGame()` state machine (screens: start, question, summary, results, review, leaderboard, stats). The only place game rules live, including `eliminate()`, `skip()`, the review and leaderboard screens, and the mistake list (`getState().mistakes`, in memory only, never saved). A one-subject run goes from its last question straight to results. Difficulty (`start(name, subject, level)`, `setDifficulty`, `questionCount`) filters the question pool before the run is built. `takeResultToSave()` returns the finished run once, which is what stops double-saving.
+- `js/bank-analysis.js`: pure question bank analysis (`analyzeBank`, `findDuplicates`, `checkNewQuestions`, `nextId`). ui.js runs it at load and every time a game starts (Start screen panel plus console); it reports and never blocks or writes. Scripts `analyze-bank.mjs`, `backup-questions.mjs` and `add-questions.mjs` (with `bank-tools.mjs`, which writes the file in its hand-written layout) use the same code; `/quiz-expand` drives them.
 - `js/data-manager.js`: `LocalDataManager` class, the only thing app.js and ui.js use for saved data: `saveGame`, `getGames`, `getStats`, `getCategoryStats`, `getLeaderboard({ period, mode, limit })`, `hasGames`, `clear`. Keeps `quiz.runs` (latest 100, via storage.js) and `quiz.stats` (running totals plus each mode's all-time top 10; rebuilt from the runs if missing or corrupt). Periods use local time; weeks start on Monday. Hall of fame is keyed by mode and difficulty (`"full/hard"`). Backups: `exportBackup()`, `parseBackup(text)` (validates and sanitizes untrusted files; rebuilds stats that don't match), `restoreBackup()` (replaces). Bump `STATS_VERSION` when the stats shape changes: older stats are rebuilt automatically. Pure helpers (`applyGame`, `rebuildStats`, `periodStart`, `filterByPeriod`, `sanitizeRun`, `parseBackup`) are exported for tests.
 - `js/storage.js`: `saveRun`/`loadRuns`/`clearRuns` for `quiz.runs`, plus pure `topRuns(runs, n)`. Every storage access is in try/catch and must never throw.
 - `js/keys.js`: pure `mapKey(key, context)` for the Question screen shortcuts. ui.js gathers the context and calls `preventDefault()` on handled keys so a focused button never also clicks.
@@ -39,7 +40,7 @@ ES modules and `fetch` need HTTP, so the page doesn't work from `file://`.
 
 ## Skills
 
-Project skills in `.claude/skills/`: `quiz-validate` (superlatives), `quiz-check` (fact-check answers; never edits questions or sets `verified`), `quiz-stats` and `quiz-leaderboard` (work on a backup file via `scripts/backup-report.mjs`, or guide code changes with a checklist). The scripts load backups through the game's own code, so keep them working when `js/data-manager.js` changes; `auditRuns()` must stay in line with `SCORING` and `RANK_TIERS`.
+Project skills in `.claude/skills/`: `quiz-expand` (analyse, back up and grow the bank), `quiz-validate` (superlatives), `quiz-check` (fact-check answers; never edits questions or sets `verified`), `quiz-stats` and `quiz-leaderboard` (work on a backup file via `scripts/backup-report.mjs`, or guide code changes with a checklist). The scripts load backups through the game's own code, so keep them working when `js/data-manager.js` changes; `auditRuns()` must stay in line with `SCORING` and `RANK_TIERS`.
 
 ## Conventions
 
@@ -52,7 +53,8 @@ Project skills in `.claude/skills/`: `quiz-validate` (superlatives), `quiz-check
 
 ## Question rules
 
-- Each category has exactly 3 easy, 4 medium and 3 hard questions. Ids are `hist-NN`, `sci-NN`, `geo-NN`, `art-NN`.
+- Each category has at least 3 easy, 4 medium and 3 hard questions (10 or more). `buildRun` picks 10 per category: a 3/4/3 mix for Mixed games, up to 10 of one difficulty otherwise. Ids are `hist-NN`, `sci-NN`, `geo-NN`, `art-NN`.
+- Add questions with `scripts/add-questions.mjs` (via `/quiz-expand`), not by hand: it checks rules and duplicates and backs up the bank first.
 - Questions are at most 25 words and options at most 8. No "all/none of the above".
 - No more than 2 questions on the same sub-topic in a category. Vary the position of the correct answer.
 - Never set `"verified": true`. The user fact-checks each question and sets it themselves.

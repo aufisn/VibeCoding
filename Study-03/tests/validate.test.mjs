@@ -57,7 +57,7 @@ test("non-array input is an error", () => {
 test("wrong total count is an error", () => {
   const list = makeValidSet().slice(0, 39);
   const result = validateQuestions(list);
-  assertHasError(result, "Expected 40 questions");
+  assertHasError(result, "Expected at least 40 questions");
   assertHasError(result, "Arts & Culture: has 9 questions");
 });
 
@@ -90,12 +90,18 @@ test("bad correctIndex is an error", () => {
   }
 });
 
-test("wrong difficulty mix is an error", () => {
+test("too few of a difficulty is an error; extra is fine", () => {
   const list = makeValidSet();
   list[0].difficulty = "medium"; // History now has 2 easy, 5 medium
   const result = validateQuestions(list);
-  assertHasError(result, "History: has 2 easy questions");
-  assertHasError(result, "History: has 5 medium questions");
+  assertHasError(result, "History: has 2 easy questions (need at least 3)");
+  assert.ok(!result.errors.some((e) => e.includes("medium")), "5 medium is more than enough");
+});
+
+test("a larger bank is valid (games pick from it)", () => {
+  const list = makeValidSet();
+  list.push({ ...list[0], id: "hist-11", question: "An extra history question?" });
+  assert.deepEqual(validateQuestions(list), { errors: [], warnings: [] });
 });
 
 test("invalid difficulty value is an error", () => {

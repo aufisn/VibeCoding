@@ -88,7 +88,7 @@ In Claude Code, the **`/quiz-validate`** skill (`.claude/skills/quiz-validate/`)
 
 ## Claude Code skills
 
-Four project skills live in `.claude/skills/`. Open a Claude Code session in this folder and type the command (or just ask in plain words):
+Five project skills live in `.claude/skills/`. Open a Claude Code session in this folder and type the command (or just ask in plain words):
 
 | Command | What it does |
 | --- | --- |
@@ -96,6 +96,7 @@ Four project skills live in `.claude/skills/`. Open a Claude Code session in thi
 | `/quiz-check [History \| geo-03 \| sci] [unverified]` | Fact-checks answers, wrong options and explanations against two reliable sources each, following the Cross-Verification Guidelines, and writes `reports/quiz-check-YYYY-MM-DD.md`. Never edits questions or sets `verified`. |
 | `/quiz-stats <backup.json \| sample>` | Statistics from a backup file (Statistics → Download backup): overview, by mode, category and difficulty, trends, practice tips. `/quiz-stats change: ...` guides code changes to what the game tracks. |
 | `/quiz-leaderboard <backup.json \| sample> [overall \| week \| today] [full \| category \| speed] [difficulty]` | Leaderboards from a backup; `audit <file>` flags impossible scores; `change: ...` guides changes to rank tiers, sorting and periods. |
+| `/quiz-expand [analyze \| category] [difficulty] [count]` | Analyses the bank, backs it up, drafts and checks new questions for the gaps, adds them unverified, writes a report. See "Growing the bank". |
 
 `sample` means `examples/sample-backup.json`: 36 simulated games, made with the game's own engine. The scripts behind the skills also work on their own:
 
@@ -133,6 +134,8 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `manifest.webmanifest`, `icons/` | Install and home-screen metadata; placeholder icons |
 | `scripts/make-icons.mjs` | Regenerates the placeholder icons (no dependencies) |
 | `DEPLOY.md` | How to publish, plus the launch checklist |
+| `js/bank-analysis.js` | Pure question bank analysis (structure, counts, missing categories, duplicates, gaps) run at every game start; `checkNewQuestions` for additions |
+| `scripts/analyze-bank.mjs`, `backup-questions.mjs`, `add-questions.mjs`, `bank-tools.mjs` | Analyse, back up and safely grow the question bank (used by `/quiz-expand`) |
 | `js/data-manager.js` | `LocalDataManager` class: automatic saving, statistics, the latest 100 games, Overall / Weekly / Daily leaderboards, backup export and restore (never throws) |
 | `js/storage.js` | `saveRun`, `loadRuns`, `clearRuns` for the `quiz.runs` history in localStorage (never throw), and pure `topRuns(runs, n, mode)` and `runMode(run)` for the leaderboard |
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
@@ -145,6 +148,35 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `.claude/skills/` | The Claude Code skills: `quiz-validate`, `quiz-check`, `quiz-stats`, `quiz-leaderboard` |
 | `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, score manager, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
+
+## Question bank check
+
+Every time a game starts (and when the page loads), the game analyses the question bank with `js/bank-analysis.js`:
+
+- **Structure**: every question has the right fields and follows the format rules (the validator's checks).
+- **Counts and distribution**: questions per category and per difficulty, how many are verified, and how many different full rounds each category can supply.
+- **Missing categories**: categories with no questions, too few for a round (at least 3 easy, 4 medium and 3 hard), or unknown ones.
+- **Duplicates**: the same id, the same question (ignoring case, punctuation, and "Two" vs "II"), questions with very similar wording, and the same correct answer twice in a category.
+
+The result is the **Question bank** panel at the bottom of the Start screen (open it for the details), and a collapsible report in the browser console. The check only reports; it never stops a game (the bank was validated when it loaded) and it never changes questions. The same analysis runs from the command line:
+
+```sh
+node scripts/analyze-bank.mjs     # add --json for machine-readable output
+```
+
+## Growing the bank
+
+The bank can hold more than 40 questions. A game picks from it: a Full Challenge still has 10 per category in a 3 easy / 4 medium / 3 hard mix (so scores stay comparable), and Easy, Medium and Hard rounds use up to 10 per category, so they get longer as the bank grows. The validator requires at least 10 per category with that mix.
+
+New questions are made with the **`/quiz-expand`** Claude Code skill, never by the game itself: it analyses the bank, plans what to add for the gaps, drafts questions following the rules and guidelines in `CLAUDE.md`, checks them, **backs up** `data/questions.json` to `backups/questions-<timestamp>.json`, adds them as `"verified": false`, and writes a report to `reports/`. Fact-check the new questions (`/quiz-check <ids>`) before marking them verified. The scripts it uses:
+
+```sh
+node scripts/backup-questions.mjs                     # back up the bank
+node scripts/add-questions.mjs drafts.json --dry-run  # check drafts: format, rules, duplicates
+node scripts/add-questions.mjs drafts.json            # back up, then add (ids assigned)
+```
+
+`backups/` stays on your computer (it's in `.gitignore`; git history keeps every version too).
 
 ## How to edit questions
 
@@ -180,7 +212,7 @@ Players who are online get corrected questions on their next load even without t
 ```
 
 - Ids: `hist-01`…`hist-10`, `sci-01`…`sci-10`, `geo-01`…`geo-10`, `art-01`…`art-10`.
-- Each category needs exactly 3 easy, 4 medium and 3 hard questions.
+- Each category needs at least 10 questions: at least 3 easy, 4 medium and 3 hard. A game picks 10 per category from them.
 - `options` must be exactly 4 unique, non-empty strings. `correctIndex` is the 0-based position of the right answer.
 
 ## Saved results
