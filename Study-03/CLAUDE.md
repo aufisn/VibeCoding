@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Single-player general knowledge quiz: 4-option multiple choice in four categories (History, Science, Geography, Arts & Culture). The bank holds at least 10 questions per category (40 today); a game picks 10 per category. Static web app in plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no npm dependencies (`package.json` only sets `"type": "module"`). Mobile-first.
+Single-player general knowledge quiz: 4-option multiple choice in four categories (History, Science, Geography, Arts & Culture). The bank holds at least 10 questions per category (52 today: 13 per category, 4/5/4); a game picks 10 per category. Static web app in plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no npm dependencies (`package.json` only sets `"type": "module"`). Mobile-first.
 
 Phases 1 to 3 are done, plus points and game modes: question content, core game, three modes (Full Challenge 40, By Category 10, Speed Quiz 20 with 15 s per question), ScoreManager points (difficulty multiplier, time, no-hint and streak bonuses), Eliminate (removes one wrong option per question), Skip (scores 0), a light/dark switch, Review mistakes, a personal leaderboard, keyboard and screen-reader support, and offline play (service worker). Publishing steps and the launch checklist are in `DEPLOY.md`.
 
@@ -45,6 +45,7 @@ Project skills in `.claude/skills/`: `quiz-expand` (analyse, back up and grow th
 ## Conventions
 
 - Keep game logic out of the DOM so it stays testable in Node. Inject `rng`, `now` and storage in tests (see `tests/helpers.mjs`).
+- Tests that depend on exact counts or ids use `loadFixedBank()` (the original 40 in `tests/fixtures/`), not the real bank, which grows. Tests of the real bank check rules, not sizes.
 - Feedback is applied synchronously in the click handler: no setTimeout or animation before locking. The Speed Quiz countdown (setInterval in ui.js) only displays time; `timeOut()` in state.js decides, refuses early calls, and late answers count as timed out. Clear the interval on every render (`stopCountdown`). Never signal right/wrong by colour alone; always an icon plus text.
 - Dialog buttons act in their own click handlers (and Escape in the "cancel" event), never in the async "close" event, which can arrive after the dialog has reopened.
 - Every screen change focuses that screen's heading (`data-autofocus`). Locked options use `aria-disabled`, not `disabled`, so they stay readable. Dialogs come from `buildConfirmDialog` in ui.js (focus trap, focus returns to the opener on cancel).

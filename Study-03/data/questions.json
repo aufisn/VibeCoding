@@ -109,6 +109,39 @@
     "sourceHint": "Encyclopaedia Britannica: Qin Shi Huang",
     "verified": false
   },
+  {
+    "id": "hist-11",
+    "category": "History",
+    "difficulty": "easy",
+    "question": "Which ship carried the Pilgrims from England to North America in 1620?",
+    "options": ["Santa Maria", "Mayflower", "Endeavour", "Beagle"],
+    "correctIndex": 1,
+    "explanation": "The Mayflower sailed from Plymouth, England, in 1620 and reached Cape Cod in present-day Massachusetts.",
+    "sourceHint": "Encyclopaedia Britannica: Mayflower",
+    "verified": false
+  },
+  {
+    "id": "hist-12",
+    "category": "History",
+    "difficulty": "medium",
+    "question": "Who crowned himself Emperor of the French at Notre-Dame in Paris in 1804?",
+    "options": ["Louis XIV", "Charles de Gaulle", "Cardinal Richelieu", "Napoleon Bonaparte"],
+    "correctIndex": 3,
+    "explanation": "Napoleon Bonaparte placed the crown on his own head at his coronation in Notre-Dame Cathedral on 2 December 1804.",
+    "sourceHint": "Encyclopaedia Britannica: Napoleon I",
+    "verified": false
+  },
+  {
+    "id": "hist-13",
+    "category": "History",
+    "difficulty": "hard",
+    "question": "Which Roman emperor dedicated Constantinople, the former Byzantium, as his new capital in 330 CE?",
+    "options": ["Constantine the Great", "Augustus", "Justinian I", "Hadrian"],
+    "correctIndex": 0,
+    "explanation": "Constantine I refounded Byzantium as Constantinople and dedicated it as the empire's new capital in 330 CE.",
+    "sourceHint": "Encyclopaedia Britannica: Constantine I",
+    "verified": false
+  },
 
   {
     "id": "sci-01",
@@ -218,6 +251,39 @@
     "correctIndex": 0,
     "explanation": "Jupiter's moon Ganymede is about 5,270 km across, wider than any other moon and even wider than the planet Mercury.",
     "sourceHint": "NASA Science: Ganymede",
+    "verified": false
+  },
+  {
+    "id": "sci-11",
+    "category": "Science",
+    "difficulty": "easy",
+    "question": "At sea level, at what temperature in degrees Celsius does pure water boil?",
+    "options": ["90", "120", "212", "100"],
+    "correctIndex": 3,
+    "explanation": "At standard atmospheric pressure (sea level), pure water boils at 100 °C, which is 212 °F.",
+    "sourceHint": "Encyclopaedia Britannica: boiling point",
+    "verified": false
+  },
+  {
+    "id": "sci-12",
+    "category": "Science",
+    "difficulty": "medium",
+    "question": "Which organ in the human body produces the hormone insulin?",
+    "options": ["Liver", "Kidney", "Spleen", "Pancreas"],
+    "correctIndex": 3,
+    "explanation": "Beta cells in the pancreas's islets of Langerhans produce insulin, which helps control blood sugar.",
+    "sourceHint": "NIDDK (US National Institutes of Health): insulin and the pancreas",
+    "verified": false
+  },
+  {
+    "id": "sci-13",
+    "category": "Science",
+    "difficulty": "hard",
+    "question": "Which mineral is rated 10, the highest hardness, on the Mohs scale?",
+    "options": ["Quartz", "Topaz", "Diamond", "Corundum"],
+    "correctIndex": 2,
+    "explanation": "Diamond defines 10 on the Mohs scale; corundum is 9, topaz 8 and quartz 7.",
+    "sourceHint": "Encyclopaedia Britannica: Mohs hardness",
     "verified": false
   },
 
@@ -331,6 +397,39 @@
     "sourceHint": "Encyclopaedia Britannica: Lesotho",
     "verified": false
   },
+  {
+    "id": "geo-11",
+    "category": "Geography",
+    "difficulty": "easy",
+    "question": "On which continent is the Sahara Desert?",
+    "options": ["Africa", "Asia", "Australia", "South America"],
+    "correctIndex": 0,
+    "explanation": "The Sahara covers much of North Africa, stretching from the Atlantic Ocean to the Red Sea.",
+    "sourceHint": "Encyclopaedia Britannica: Sahara",
+    "verified": false
+  },
+  {
+    "id": "geo-12",
+    "category": "Geography",
+    "difficulty": "medium",
+    "question": "Which country is the largest in the world by total area?",
+    "options": ["Canada", "China", "Russia", "United States"],
+    "correctIndex": 2,
+    "explanation": "Russia covers about 17.1 million square kilometres, much larger than second-placed Canada.",
+    "sourceHint": "Encyclopaedia Britannica: Russia",
+    "verified": false
+  },
+  {
+    "id": "geo-13",
+    "category": "Geography",
+    "difficulty": "hard",
+    "question": "Which strait separates Spain in Europe from Morocco in Africa?",
+    "options": ["Bosporus", "Strait of Gibraltar", "Strait of Hormuz", "Strait of Messina"],
+    "correctIndex": 1,
+    "explanation": "The Strait of Gibraltar links the Atlantic Ocean and the Mediterranean Sea between Spain and Morocco.",
+    "sourceHint": "Encyclopaedia Britannica: Strait of Gibraltar",
+    "verified": false
+  },
 
   {
     "id": "art-01",
@@ -440,6 +539,39 @@
     "correctIndex": 1,
     "explanation": "Alfred Hitchcock directed Psycho, famous for its shower scene and Bernard Herrmann's string score.",
     "sourceHint": "American Film Institute (AFI) Catalog: Psycho",
+    "verified": false
+  },
+  {
+    "id": "art-11",
+    "category": "Arts & Culture",
+    "difficulty": "easy",
+    "question": "Which instrument has 88 keys in its standard modern form?",
+    "options": ["Piano", "Organ", "Harpsichord", "Accordion"],
+    "correctIndex": 0,
+    "explanation": "A standard modern piano has 88 keys: 52 white and 36 black.",
+    "sourceHint": "Encyclopaedia Britannica: piano",
+    "verified": false
+  },
+  {
+    "id": "art-12",
+    "category": "Arts & Culture",
+    "difficulty": "medium",
+    "question": "Which author wrote the novel Nineteen Eighty-Four?",
+    "options": ["Aldous Huxley", "Ray Bradbury", "George Orwell", "H. G. Wells"],
+    "correctIndex": 2,
+    "explanation": "George Orwell's dystopian novel Nineteen Eighty-Four was published in 1949.",
+    "sourceHint": "Encyclopaedia Britannica: Nineteen Eighty-four",
+    "verified": false
+  },
+  {
+    "id": "art-13",
+    "category": "Arts & Culture",
+    "difficulty": "hard",
+    "question": "Which ancient Greek playwright wrote the tragedy Oedipus Rex?",
+    "options": ["Euripides", "Sophocles", "Aeschylus", "Aristophanes"],
+    "correctIndex": 1,
+    "explanation": "Sophocles wrote Oedipus Rex (Oedipus the King), first performed in Athens in the 5th century BCE.",
+    "sourceHint": "Encyclopaedia Britannica: Oedipus Rex",
     "verified": false
   }
 ]

@@ -15,9 +15,10 @@ import { buildRun, buildSpeedRun, pickQuestions, seededRng } from "../js/quiz.js
 import { createGame } from "../js/state.js";
 import { CATEGORIES, SPEED_SUBJECT } from "../js/config.js";
 import { formatQuestions } from "../scripts/bank-tools.mjs";
-import { loadBank } from "./helpers.mjs";
+import { loadBank, loadFixedBank } from "./helpers.mjs";
 
-const bank = await loadBank();
+// Fixed 40-question copy: these tests expect its exact counts and ids.
+const bank = await loadFixedBank();
 
 /** A new, valid draft question (no id). */
 const draft = (over = {}) => ({
@@ -46,6 +47,16 @@ function biggerBank(n = 2) {
 }
 
 /* ---------- Analysis ---------- */
+
+test("the real bank, whatever its size, passes every check with no duplicates", async () => {
+  const real = await loadBank();
+  const a = analyzeBank(real);
+  assert.equal(a.status, "ok", [...a.errors, ...a.cautions].join("\n"));
+  assert.ok(a.total >= 40);
+  assert.deepEqual(a.missingCategories, []);
+  assert.deepEqual(a.shortCategories, []);
+  assert.ok(real.every((q) => q.verified === false || q.verified === true));
+});
 
 test("the real bank: 40 questions, 4 categories, 3/4/3 each, no problems", () => {
   const a = analyzeBank(bank);

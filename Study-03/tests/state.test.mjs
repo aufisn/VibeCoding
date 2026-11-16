@@ -4,9 +4,10 @@ import assert from "node:assert/strict";
 import { createGame, SCREENS, cleanNickname } from "../js/state.js";
 import { seededRng } from "../js/quiz.js";
 import { ALL_SUBJECTS, CATEGORIES } from "../js/config.js";
-import { loadBank } from "./helpers.mjs";
+import { loadFixedBank } from "./helpers.mjs";
 
-const bank = await loadBank();
+// Fixed 40-question copy: these tests expect its exact counts and ids.
+const bank = await loadFixedBank();
 const FIXED_NOW = new Date("2026-11-15T12:00:00.000Z");
 
 function newGame(seed = 1) {

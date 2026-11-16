@@ -7,9 +7,10 @@ import { LocalDataManager } from "../js/data-manager.js";
 import { createGame, SCREENS } from "../js/state.js";
 import { seededRng } from "../js/quiz.js";
 import { SPEED_SUBJECT } from "../js/config.js";
-import { fakeStorage, loadBank } from "./helpers.mjs";
+import { fakeStorage, loadFixedBank } from "./helpers.mjs";
 
-const bank = await loadBank();
+// Fixed 40-question copy: these tests expect its exact counts and ids.
+const bank = await loadFixedBank();
 
 /**
  * Play real games through the game engine (seeded, fake clock) and save them

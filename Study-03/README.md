@@ -1,6 +1,6 @@
 # Quiz Game
 
-A single-player general knowledge quiz: 4-option multiple choice, 10 questions in each of four categories (History, Science, Geography, Arts & Culture), 40 in total. Plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no dependencies.
+A single-player general knowledge quiz: 4-option multiple choice in four categories (History, Science, Geography, Arts & Culture). A full game has 40 questions, 10 per category, picked from a bank of 52 (13 per category) that can keep growing. Plain HTML, CSS and vanilla JavaScript (ES modules). No frameworks, no build step, no backend, no dependencies.
 
 **Status: Phase 3 (polish and launch) done.** Subject choice, Eliminate, Skip, review of mistakes, a personal leaderboard, keyboard and screen-reader support, a light/dark switch, and offline play. See [DEPLOY.md](DEPLOY.md) to publish it.
 
@@ -14,7 +14,7 @@ Enter an optional nickname, then pick a game mode:
 | **By Category** | 10 | All the questions of the category you pick. |
 | **Speed Quiz** | 20 | 5 random questions from each category, mixed. **15 seconds per question**; when time runs out the question scores 0 and the answer is shown. |
 
-Above the modes, pick a **difficulty**: **Mixed** (every question, the default), **Easy**, **Medium** or **Hard**. Easy, Medium and Hard play only questions of that difficulty, so rounds are shorter: with the current bank, a Full Challenge has 12, 16 or 12 questions, a category round 3, 4 or 3, and a Speed Quiz 12, 16 or 12. The cards show the count for the chosen difficulty. Your choice is kept for the next game.
+Above the modes, pick a **difficulty**: **Mixed** (every question, the default), **Easy**, **Medium** or **Hard**. Easy, Medium and Hard play only questions of that difficulty, so rounds are shorter: with the current bank (4 easy, 5 medium and 4 hard per category), a Full Challenge has 16, 20 or 16 questions, a category round 4, 5 or 4, and a Speed Quiz 16, 20 or 16. Rounds grow as questions are added, up to 10 per category. The cards show the count for the chosen difficulty. Your choice is kept for the next game.
 
 Question and answer order are reshuffled every run.
 
@@ -139,7 +139,8 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `js/data-manager.js` | `LocalDataManager` class: automatic saving, statistics, the latest 100 games, Overall / Weekly / Daily leaderboards, backup export and restore (never throws) |
 | `js/storage.js` | `saveRun`, `loadRuns`, `clearRuns` for the `quiz.runs` history in localStorage (never throw), and pure `topRuns(runs, n, mode)` and `runMode(run)` for the leaderboard |
 | `js/ui.js` | Renders one screen at a time and handles events. No game rules |
-| `data/questions.json` | The 40 questions |
+| `data/questions.json` | The question bank (52 questions) |
+| `tests/fixtures/questions-40.json` | A fixed copy of the original 40-question bank, for tests that depend on exact counts |
 | `scripts/validate-questions.mjs` | Command-line validator |
 | `scripts/find-superlatives.mjs` | Lists superlative and ranking words in the questions (used by `/quiz-validate`) |
 | `scripts/list-questions.mjs` | Prints questions with their correct answers (used by `/quiz-check`) |
