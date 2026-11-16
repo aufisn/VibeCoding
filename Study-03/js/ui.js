@@ -5,6 +5,8 @@
 import {
   ALL_SUBJECTS,
   CATEGORIES,
+  DIFFICULTY_CHOICES,
+  MIXED,
   MODES,
   NICKNAME_MAX,
   QUESTIONS_PER_CATEGORY,
@@ -17,7 +19,7 @@ import {
 import { SCREENS } from "./state.js";
 import { mapKey } from "./keys.js";
 import { runMode } from "./storage.js";
-import { PERIODS } from "./data-manager.js";
+import { BACKUP_MAX_BYTES, PERIODS, parseBackup, runDifficulty } from "./data-manager.js";
 
 const LETTERS = ["A", "B", "C", "D"];
 const LEADERBOARD_SIZE = 10;
@@ -26,6 +28,7 @@ const WARN_SECONDS = 5; // countdown turns urgent (and is announced) here
 const PERIOD_LABELS = { [PERIODS.ALL]: "Overall", [PERIODS.WEEK]: "This week", [PERIODS.DAY]: "Today" };
 const MODE_LABELS = { [MODES.FULL]: "Full Challenge", [MODES.CATEGORY]: "By Category", [MODES.SPEED]: "Speed Quiz" };
 const DIFFICULTY_LABELS = { easy: "easy", medium: "medium", hard: "hard" };
+const LEVEL_LABELS = { mixed: "Mixed", easy: "Easy", medium: "Medium", hard: "Hard" };
 const SVG_NS = "http://www.w3.org/2000/svg";
 const ICON_PATHS = {
   check: "M5 12.5l4.5 4.5L19 7.5",
@@ -49,6 +52,8 @@ const LINE_ICON_PATHS = {
   flame: "M12 22c4 0 7-2.7 7-6.6 0-3.1-2-5.6-3.6-7.4-.3 1.9-1.2 3.2-2.4 3.7.2-3.4-1.2-6.4-4-8.7 0 3.4-4 6.2-4 11.6C5 19 8 22 12 22z",
   timer: "M12 8v5l3 2M9 2h6M12 4a9 9 0 1 0 0 18a9 9 0 1 0 0-18",
   chart: "M4 20h16M7 16v-5M12 16V6M17 16v-8",
+  download: "M12 4v11M7 10l5 5 5-5M5 20h14",
+  upload: "M12 20V9M7 14l5-5 5 5M5 4h14",
 };
 
 /* ---------- DOM helpers ---------- */
@@ -123,6 +128,12 @@ const capitalize = (text) => String(text).charAt(0).toUpperCase() + String(text)
 /** Base points for a correct answer at this difficulty. */
 const pointsFor = (difficulty) => Math.round(SCORING.base * (SCORING.multipliers[difficulty] ?? 1));
 
+const plural = (n, word) => (n === 1 ? word : `${word}s`);
+
+/** "2026-11-16" in the player's local time, for file names. */
+const localDateStamp = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
 const sameRun = (a, b) =>
   Boolean(a && b) && a.finishedAt === b.finishedAt && a.total === b.total && a.nickname === b.nickname;
 
@@ -146,6 +157,9 @@ export function createUI(container, game, { onResults = () => null, data } = {})
   let countdown = null; // Speed Quiz interval id
   let leaderboardMode = MODES.FULL; // which mode the leaderboard shows
   let leaderboardPeriod = PERIODS.ALL; // Overall, This week or Today
+  let leaderboardDifficulty = MIXED;
+  let statsMessage = null; // { text, isError } shown once on the Statistics screen
+  let pendingRestore = null; // a parsed backup waiting for confirmation
 
   const exitDialog = buildConfirmDialog({
     id: "exit",
@@ -169,7 +183,27 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       render();
     },
   });
-  document.body.append(exitDialog.dialog, clearDialog.dialog);
+  const restoreDialog = buildConfirmDialog({
+    id: "restore",
+    title: "Restore this backup?",
+    description: "",
+    cancelText: "Cancel",
+    confirmText: "Replace my data",
+    onConfirm() {
+      const backup = pendingRestore;
+      pendingRestore = null;
+      const ok = Boolean(backup) && data.restoreBackup(backup);
+      statsMessage = ok
+        ? { text: `Restored ${backup.runs.length} saved ${plural(backup.runs.length, "game")} and your statistics from the backup.` }
+        : { text: "The backup couldn't be restored: this browser isn't letting the game save data.", isError: true };
+      justFinished = null;
+      render();
+    },
+    onCancel() {
+      pendingRestore = null;
+    },
+  });
+  document.body.append(exitDialog.dialog, clearDialog.dialog, restoreDialog.dialog);
   document.addEventListener("keydown", onKeydown);
 
   function stopCountdown() {
@@ -246,7 +280,9 @@ export function createUI(container, game, { onResults = () => null, data } = {})
     });
 
     function startWith(subject) {
-      if (game.start(input.value, subject)) render();
+      // The picker updates the game's difficulty directly; read it now, not
+      // from `state`, which is the snapshot from when this screen was drawn.
+      if (game.start(input.value, subject, game.getState().difficulty)) render();
     }
 
     // Enter in the nickname box plays every subject (the form's implicit
@@ -258,7 +294,15 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       }
     });
 
-    function card(subject, { slug, name, detail, className = "" }) {
+    /** Card text for the chosen difficulty (fewer questions when filtered). */
+    function detailFor(subject, level) {
+      const n = game.questionCount(subject, level);
+      if (subject === ALL_SUBJECTS) return level === MIXED ? `All ${n} questions, category by category` : `${n} questions, category by category`;
+      if (subject === SPEED_SUBJECT) return `${n} mixed questions, ${SPEED_SECONDS} seconds each`;
+      return `${n} questions`;
+    }
+
+    function card(subject, { slug, name, className = "" }) {
       return el(
         "button",
         {
@@ -272,7 +316,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
           el("span", { className: "subject-icon" }, [lineIcon(slug)]),
           el("span", { className: "subject-text" }, [
             el("span", { className: "subject-name", text: name }),
-            el("span", { className: "subject-count", text: detail }),
+            el("span", { className: "subject-count", text: detailFor(subject, state.difficulty) }),
           ]),
         ]
       );
@@ -282,19 +326,56 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       card(ALL_SUBJECTS, {
         slug: "all",
         name: "Full Challenge",
-        detail: `All ${TOTAL_QUESTIONS} questions, category by category`,
         className: "mode-card subject-all",
       }),
       card(SPEED_SUBJECT, {
         slug: "speed",
         name: "Speed Quiz",
-        detail: `${SPEED_PER_CATEGORY * CATEGORIES.length} mixed questions, ${SPEED_SECONDS} seconds each`,
         className: "mode-card subject-speed",
       }),
     ];
     const categoryCards = CATEGORIES.map((category) =>
-      card(category, { slug: categorySlug(category), name: category, detail: `${QUESTIONS_PER_CATEGORY} questions` })
+      card(category, { slug: categorySlug(category), name: category })
     );
+
+    // Difficulty: native radio buttons (arrow keys move between them),
+    // styled as a segmented control. Changing it updates the cards' counts.
+    const difficultyHint = el("p", { id: "difficulty-hint", className: "hint" });
+    const setHint = (level) => {
+      difficultyHint.textContent =
+        level === MIXED
+          ? "Every difficulty, scored by its multiplier."
+          : `Only ${level} questions, so each round is shorter.`;
+    };
+    setHint(state.difficulty);
+    const difficultyPicker = el("fieldset", { className: "difficulty-picker", attrs: { "aria-describedby": "difficulty-hint" } }, [
+      el("legend", { text: "Difficulty" }),
+      el(
+        "div",
+        { className: "segmented" },
+        DIFFICULTY_CHOICES.map((level) =>
+          el("label", { className: "segment" }, [
+            el("input", {
+              type: "radio",
+              name: "difficulty",
+              value: level,
+              checked: level === state.difficulty,
+              on: {
+                change() {
+                  if (!game.setDifficulty(level)) return;
+                  setHint(level);
+                  for (const b of [...modeCards, ...categoryCards]) {
+                    b.querySelector(".subject-count").textContent = detailFor(b.value, level);
+                  }
+                },
+              },
+            }),
+            el("span", { text: LEVEL_LABELS[level] }),
+          ])
+        )
+      ),
+      difficultyHint,
+    ]);
 
     const form = el(
       "form",
@@ -313,6 +394,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
           input,
           el("p", { id: "nickname-hint", className: "hint", text: `Up to ${NICKNAME_MAX} characters.` }),
         ]),
+        difficultyPicker,
         el("fieldset", { className: "subjects" }, [
           el("legend", { text: "Choose a game mode" }),
           el("div", { className: "mode-grid" }, modeCards),
@@ -335,6 +417,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
           onClick() {
             leaderboardMode = MODES.FULL;
             leaderboardPeriod = PERIODS.ALL;
+            leaderboardDifficulty = state.difficulty;
             if (game.openLeaderboard()) render();
           },
         }),
@@ -696,6 +779,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
     );
     const stats = [
       isCategory ? `${MODE_LABELS[state.mode]}: ${state.subject}` : MODE_LABELS[state.mode],
+      `Difficulty: ${LEVEL_LABELS[state.difficulty]}`,
       `Best streak: ${state.bestStreak}`,
       `Hints used: ${state.eliminationsUsed}`,
       `Skipped: ${state.skippedCount}`,
@@ -768,6 +852,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
             onClick() {
               leaderboardMode = state.mode;
               leaderboardPeriod = PERIODS.ALL;
+              leaderboardDifficulty = state.difficulty;
               if (game.openLeaderboard()) render();
             },
           }),
@@ -852,11 +937,17 @@ export function createUI(container, game, { onResults = () => null, data } = {})
 
   function renderLeaderboard(state) {
     const fromResults = state.leaderboardFrom === SCREENS.RESULTS;
-    const runs = safe(() => data.getLeaderboard({ period: leaderboardPeriod, mode: leaderboardMode, limit: LEADERBOARD_SIZE }), []);
+    const runs = safe(() => data.getLeaderboard({
+        period: leaderboardPeriod,
+        mode: leaderboardMode,
+        difficulty: leaderboardDifficulty,
+        limit: LEADERBOARD_SIZE,
+      }), []);
     const anyRuns = safe(() => data.hasGames(), false);
     const highlight = fromResults ? justFinished : null;
     const highlightShown = runs.some((r) => sameRun(r, highlight));
-    const highlightInView = highlight && runMode(highlight) === leaderboardMode;
+    const highlightInView =
+      highlight && runMode(highlight) === leaderboardMode && runDifficulty(highlight) === leaderboardDifficulty;
 
     const back = button(fromResults ? "Back to results" : "Back", {
       className: "btn btn-quiet",
@@ -899,6 +990,28 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       (v) => (leaderboardMode = v)
     );
 
+    // Difficulty: a select keeps the screen compact (a third row of tabs).
+    const difficultySelect = el(
+      "select",
+      {
+        id: "lb-difficulty",
+        on: {
+          change(event) {
+            leaderboardDifficulty = event.target.value;
+            render({ focus: false });
+            container.querySelector("#lb-difficulty")?.focus();
+          },
+        },
+      },
+      DIFFICULTY_CHOICES.map((level) =>
+        el("option", { value: level, text: LEVEL_LABELS[level], selected: level === leaderboardDifficulty })
+      )
+    );
+    const difficultyFilter = el("div", { className: "select-field" }, [
+      el("label", { htmlFor: "lb-difficulty", text: "Difficulty" }),
+      difficultySelect,
+    ]);
+
     const periodText = { [PERIODS.ALL]: "", [PERIODS.WEEK]: " this week", [PERIODS.DAY]: " today" }[leaderboardPeriod];
 
     let body;
@@ -906,7 +1019,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       body = el("p", {
         className: "empty-state card",
         text: anyRuns
-          ? `No ${MODE_LABELS[leaderboardMode]} runs${periodText} yet. Finish one to appear here.`
+          ? `No ${MODE_LABELS[leaderboardMode]} runs at ${LEVEL_LABELS[leaderboardDifficulty]} difficulty${periodText} yet. Finish one to appear here.`
           : "No saved runs yet. Finish a game to appear here.",
       });
     } else {
@@ -966,6 +1079,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       }),
       periodTabs,
       modeTabs,
+      difficultyFilter,
       highlightInView && !highlightShown && runs.length > 0
         ? el("p", {
             className: "hint",
@@ -1001,6 +1115,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       return el("section", { className: "screen screen-stats" }, [
         ...head,
         el("p", { className: "empty-state card", text: "No games played yet. Finish a game to see your statistics." }),
+        backupSection(false),
       ]);
     }
 
@@ -1053,6 +1168,29 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       }
     }
 
+    // By difficulty (games saved before difficulty tracking aren't included).
+    const levels = safe(() => data.getDifficultyStats(), []);
+    const difficultyList = levels.some((d) => d.questions > 0)
+      ? el(
+          "ul",
+          { className: "category-stats" },
+          levels.map((d) =>
+            el("li", { className: "category-stat", attrs: { "data-category": "all" } }, [
+              el("div", { className: "category-stat-head" }, [
+                el("span", { className: "category-stat-name", text: LEVEL_LABELS[d.difficulty] }),
+                el("span", {
+                  className: "category-stat-value",
+                  text: d.questions > 0 ? `${pct(d.correct, d.questions)} · ${d.correct} / ${d.questions}` : "Not played yet",
+                }),
+              ]),
+              el("div", { className: "category-stat-track", attrs: { "aria-hidden": "true" } }, [
+                el("div", { className: "category-stat-fill", style: `width: ${(d.accuracy ?? 0) * 100}%` }),
+              ]),
+            ])
+          )
+        )
+      : el("p", { className: "hint", text: "Play a game to see your accuracy on easy, medium and hard questions." });
+
     const modeRows = [MODES.FULL, MODES.CATEGORY, MODES.SPEED].map((mode) => {
       const m = stats.byMode[mode] ?? { games: 0, points: 0, correct: 0, questions: 0, bestPoints: 0 };
       return el("tr", {}, [
@@ -1071,6 +1209,8 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       el("h3", { className: "section-title", text: "By category" }),
       categoryList,
       note,
+      el("h3", { className: "section-title", text: "By difficulty" }),
+      difficultyList,
       el("h3", { className: "section-title", text: "By mode" }),
       el("div", { className: "table-scroll" }, [
         el("table", { className: "leaderboard-table mode-stats-table" }, [
@@ -1082,8 +1222,110 @@ export function createUI(container, game, { onResults = () => null, data } = {})
         ]),
       ]),
       el("p", { className: "hint", text: `Statistics count every game you've finished. The leaderboard keeps your latest ${data.maxGames ?? 100} games plus each mode's all-time top ${LEADERBOARD_SIZE}.` }),
+      backupSection(true),
       el("div", { className: "actions" }, [clearButton()]),
     ]);
+  }
+
+  /* ----- Backup and restore ----- */
+
+  /**
+   * Download a backup file, or restore one. Restoring replaces the saved
+   * games and statistics, after a confirmation dialog.
+   * @param {boolean} hasData whether there is anything to back up
+   */
+  function backupSection(hasData) {
+    // Filled one frame after insertion so screen readers announce it.
+    const message = el("p", { className: "stats-message", attrs: { role: "status" } });
+    if (statsMessage) {
+      const { text, isError } = statsMessage;
+      statsMessage = null;
+      requestAnimationFrame(() => {
+        message.classList.toggle("is-error", Boolean(isError));
+        message.replaceChildren(icon(isError ? "cross" : "check"), el("span", { text }));
+      });
+    }
+
+    const fileInput = el("input", {
+      type: "file",
+      accept: ".json,application/json",
+      className: "visually-hidden",
+      tabIndex: -1,
+      attrs: { "aria-hidden": "true" },
+      on: { change: () => readBackupFile(fileInput, restoreButton) },
+    });
+    const restoreButton = button("Restore from file", {
+      className: "btn btn-secondary",
+      iconKind: "upload",
+      onClick: () => fileInput.click(),
+    });
+    const downloadButton = hasData
+      ? button("Download backup", {
+          className: "btn btn-secondary",
+          iconKind: "download",
+          onClick: downloadBackup,
+        })
+      : null;
+
+    return el("section", { className: "backup card", attrs: { "aria-labelledby": "backup-title" } }, [
+      el("h3", { id: "backup-title", className: "section-title", text: "Backup and restore" }),
+      el("p", {
+        className: "hint",
+        text: hasData
+          ? "Your games are stored only in this browser. Download a backup file to keep them safe or move them to another device, then restore it there."
+          : "Have a backup file from another device or browser? Restore it here.",
+      }),
+      el("div", { className: "backup-actions" }, [downloadButton, restoreButton]),
+      fileInput,
+      message,
+    ]);
+  }
+
+  function downloadBackup() {
+    const backup = data.exportBackup();
+    const name = `quiz-backup-${localDateStamp(new Date())}.json`;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+    const link = el("a", { href: url, download: name });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    statsMessage = {
+      text: `Backup saved as ${name} (${backup.runs.length} ${plural(backup.runs.length, "game")}). Keep it somewhere safe, such as your cloud drive.`,
+    };
+    render({ focus: false });
+    [...container.querySelectorAll(".backup-actions button")][0]?.focus();
+  }
+
+  async function readBackupFile(input, opener) {
+    const file = input.files?.[0];
+    input.value = ""; // so choosing the same file again still fires "change"
+    if (!file) return;
+    let parsed;
+    if (file.size > BACKUP_MAX_BYTES) {
+      parsed = { ok: false, error: "That file is too large to be a Quiz Game backup." };
+    } else {
+      try {
+        parsed = parseBackup(await file.text());
+      } catch {
+        parsed = { ok: false, error: "That file couldn't be read." };
+      }
+    }
+    if (!parsed.ok) {
+      statsMessage = { text: parsed.error, isError: true };
+      render({ focus: false });
+      container.querySelector(".backup-actions button:last-child")?.focus();
+      return;
+    }
+    pendingRestore = parsed;
+    container.querySelector(".stats-message")?.replaceChildren(); // an earlier error no longer applies
+    const current = safe(() => data.getGames().length, 0);
+    restoreDialog.open(opener, {
+      description:
+        `The backup has ${parsed.runs.length} saved ${plural(parsed.runs.length, "game")} ` +
+        `(${parsed.stats.gamesPlayed} counted in its statistics). It will replace the ` +
+        `${current} ${plural(current, "game")} and statistics on this device. This can't be undone.`,
+    });
   }
 
   function statsButton() {
@@ -1107,7 +1349,7 @@ export function createUI(container, game, { onResults = () => null, data } = {})
 
   /* ----- Confirmation dialogs (native <dialog>) ----- */
 
-  function buildConfirmDialog({ id, title, description, cancelText, confirmText, onConfirm }) {
+  function buildConfirmDialog({ id, title, description, cancelText, confirmText, onConfirm, onCancel = () => {} }) {
     const cancel = el("button", { type: "button", className: "btn btn-secondary", text: cancelText });
     const confirm = el("button", { type: "button", className: "btn btn-danger", text: confirmText });
     const dialog = el(
@@ -1115,25 +1357,32 @@ export function createUI(container, game, { onResults = () => null, data } = {})
       { className: "dialog", attrs: { "aria-labelledby": `${id}-title`, "aria-describedby": `${id}-desc` } },
       [
         el("h2", { id: `${id}-title`, text: title }),
-        el("p", { id: `${id}-desc`, text: description }),
+        el("p", { id: `${id}-desc`, className: "dialog-desc", text: description }),
         el("div", { className: "dialog-actions" }, [cancel, confirm]),
       ]
     );
 
     let trigger = null;
-    let confirmed = false;
 
-    cancel.addEventListener("click", () => dialog.close());
-    confirm.addEventListener("click", () => {
-      confirmed = true;
+    // Each choice acts at once, in its own handler. (Acting later in the
+    // "close" event let a late event from an earlier opening be mistaken
+    // for this one.)
+    function cancelled() {
+      onCancel();
+      trigger?.focus(); // back to the button that opened it
+    }
+    cancel.addEventListener("click", () => {
       dialog.close();
+      cancelled();
     });
-    // Escape fires "cancel" and closes natively; "close" covers every path.
-    dialog.addEventListener("close", () => {
-      const wasConfirmed = confirmed;
-      confirmed = false;
-      if (wasConfirmed) onConfirm(); // re-renders and focuses the new heading
-      else trigger?.focus(); // back to the button that opened it
+    confirm.addEventListener("click", () => {
+      dialog.close();
+      onConfirm(); // re-renders and focuses the new heading
+    });
+    // Escape: the browser fires "cancel", then closes the dialog itself.
+    dialog.addEventListener("cancel", () => {
+      onCancel();
+      dialog.addEventListener("close", () => trigger?.focus(), { once: true });
     });
     // Keep Tab inside the dialog.
     dialog.addEventListener("keydown", (event) => {
@@ -1147,9 +1396,10 @@ export function createUI(container, game, { onResults = () => null, data } = {})
 
     return {
       dialog,
-      open(from) {
+      /** @param {Element} [from] gets focus back on cancel; options.description replaces the text */
+      open(from, { description: text } = {}) {
         trigger = from ?? null;
-        confirmed = false;
+        dialog.querySelector(".dialog-desc").textContent = text ?? description;
         dialog.showModal();
         cancel.focus(); // safe default: the non-destructive choice
       },

@@ -222,3 +222,141 @@ test("clear removes games and statistics only", () => {
   assert.equal(store.getItem("quiz.theme"), "dark");
   assert.equal(dm.hasGames(), false);
 });
+
+/* ---------- Difficulty ---------- */
+
+import { parseBackup, sanitizeRun, BACKUP_APP, BACKUP_FORMAT } from "../js/data-manager.js";
+
+test("leaderboards can be filtered by difficulty; old runs count as mixed", () => {
+  const dm = manager();
+  dm.saveGame({ ...game({ points: 300 }), difficulty: "hard" });
+  dm.saveGame({ ...game({ points: 200 }), difficulty: "easy" });
+  const old = game({ points: 100 });
+  delete old.difficulty;
+  dm.saveGame(old);
+  assert.deepEqual(dm.getLeaderboard({ mode: "full", difficulty: "hard" }).map((r) => r.points), [300]);
+  assert.deepEqual(dm.getLeaderboard({ mode: "full", difficulty: "mixed" }).map((r) => r.points), [100]);
+  assert.deepEqual(dm.getLeaderboard({ mode: "full" }).map((r) => r.points), [300, 200, 100]);
+  assert.deepEqual(dm.getLeaderboard({ period: PERIODS.DAY, mode: "full", difficulty: "easy" }).map((r) => r.points), [200]);
+});
+
+test("statistics track accuracy per difficulty", () => {
+  const dm = manager();
+  dm.saveGame({ ...game(), byDifficulty: { easy: { correct: 10, questions: 12 }, hard: { correct: 3, questions: 12 } } });
+  dm.saveGame({ ...game(), byDifficulty: { easy: { correct: 2, questions: 3 } } });
+  const levels = dm.getDifficultyStats();
+  assert.deepEqual(levels.map((d) => [d.difficulty, d.correct, d.questions]), [
+    ["easy", 12, 15],
+    ["medium", 0, 0],
+    ["hard", 3, 12],
+  ]);
+  assert.equal(levels[1].accuracy, null);
+});
+
+test("stats saved by an older version are rebuilt automatically", () => {
+  const store = fakeStorage();
+  const dm = manager(store);
+  dm.saveGame(game({ points: 70 }));
+  const v1 = { ...JSON.parse(store.getItem(STATS_KEY)), version: 1 };
+  store.setItem(STATS_KEY, JSON.stringify(v1));
+  assert.equal(dm.getStats().version, 2);
+  assert.equal(dm.getStats().totalPoints, 70);
+});
+
+/* ---------- Backup and restore ---------- */
+
+test("backup round trip: export, parse, restore on another device", () => {
+  const phone = manager();
+  phone.saveGame(game({ points: 400, nickname: "Kim" }));
+  phone.saveGame({ ...game({ points: 250, mode: "speed" }), difficulty: "easy" });
+  const text = JSON.stringify(phone.exportBackup());
+
+  const parsed = parseBackup(text);
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.runs.length, 2);
+
+  const laptop = manager(fakeStorage({ "quiz.theme": "dark" }));
+  laptop.saveGame(game({ points: 5 })); // replaced by the restore
+  assert.equal(laptop.restoreBackup(parsed), true);
+  assert.deepEqual(laptop.getGames().map((r) => r.points).sort((a, b) => a - b), [250, 400], "the laptop's own game is gone");
+  assert.equal(laptop.getStats().gamesPlayed, 2);
+  assert.equal(laptop.getStats().totalPoints, 650);
+  assert.deepEqual(laptop.getLeaderboard({ mode: "full" }).map((r) => r.nickname), ["Kim"]);
+  assert.deepEqual(laptop.getLeaderboard({ mode: "speed", difficulty: "easy" }).map((r) => r.points), [250]);
+});
+
+test("the export includes app, format, date, games and statistics", () => {
+  const dm = manager();
+  dm.saveGame(game());
+  const backup = dm.exportBackup();
+  assert.equal(backup.app, BACKUP_APP);
+  assert.equal(backup.format, BACKUP_FORMAT);
+  assert.equal(backup.exportedAt, WEDNESDAY_NOON.toISOString());
+  assert.equal(backup.runs.length, 1);
+  assert.equal(backup.stats.gamesPlayed, 1);
+});
+
+test("parseBackup rejects files that aren't backups", () => {
+  assert.equal(parseBackup("not json").ok, false);
+  assert.equal(parseBackup("{}").ok, false);
+  assert.equal(parseBackup(JSON.stringify({ app: "other", format: 1, runs: [] })).ok, false);
+  assert.match(parseBackup(JSON.stringify({ app: BACKUP_APP, format: 99, runs: [] })).error, /different version/);
+  assert.equal(parseBackup("x".repeat(2_000_001)).ok, false);
+  assert.equal(parseBackup(null).ok, false);
+});
+
+test("parseBackup cleans untrusted data", () => {
+  const runs = [
+    { ...game({ points: 10 }), nickname: "A".repeat(500), extra: "<script>", subject: "S".repeat(100) },
+    { total: 5 }, // no date: dropped
+    { finishedAt: "not a date", total: 1 }, // bad date: dropped
+    { finishedAt: new Date().toISOString(), total: -3 }, // negative: dropped
+    "junk",
+  ];
+  const parsed = parseBackup(JSON.stringify({ app: BACKUP_APP, format: BACKUP_FORMAT, runs, stats: { version: 2, nonsense: true } }));
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.runs.length, 1);
+  const [r] = parsed.runs;
+  assert.equal(r.nickname.length, 20);
+  assert.equal(r.subject.length, 40);
+  assert.equal("extra" in r, false);
+  assert.equal(parsed.stats.gamesPlayed, 1, "invalid stats are rebuilt from the games");
+});
+
+test("parseBackup keeps at most 100 games, newest first, and rebuilds stats that don't match", () => {
+  const runs = Array.from({ length: 120 }, (_, i) => game({ points: i, at: new Date(local(1).getTime() + i * 60_000) }));
+  const fakeStats = { ...emptyStats(), version: 2, gamesPlayed: 3 }; // fewer than the games: inconsistent
+  const parsed = parseBackup(JSON.stringify({ app: BACKUP_APP, format: BACKUP_FORMAT, runs, stats: fakeStats }));
+  assert.equal(parsed.runs.length, 100);
+  assert.equal(parsed.runs[0].points, 119);
+  assert.equal(parsed.stats.gamesPlayed, 100);
+});
+
+test("valid statistics in a backup are kept (they may count more than 100 games)", () => {
+  const dm = manager();
+  for (let i = 0; i < 105; i++) dm.saveGame(game({ points: 1, at: new Date(local(1).getTime() + i * 60_000) }));
+  const parsed = parseBackup(JSON.stringify(dm.exportBackup()));
+  assert.equal(parsed.runs.length, 100);
+  assert.equal(parsed.stats.gamesPlayed, 105);
+  assert.equal(parsed.stats.totalPoints, 105);
+});
+
+test("sanitizeRun keeps known fields with the right types", () => {
+  const clean = sanitizeRun({ ...game(), points: "999", difficulty: "insane", mode: "weird" });
+  assert.equal("points" in clean, false, "a string is not a number");
+  assert.equal("difficulty" in clean, false);
+  assert.equal("mode" in clean, false);
+  assert.equal(sanitizeRun(null), null);
+});
+
+test("restore on blocked storage fails without throwing", () => {
+  const parsed = parseBackup(JSON.stringify({ app: BACKUP_APP, format: BACKUP_FORMAT, runs: [game()] }));
+  assert.equal(manager(throwingStorage()).restoreBackup(parsed), false);
+});
+
+test("category and difficulty statistics never count more correct than asked", () => {
+  const bad = { ...game({ mode: "speed" }), byCategory: { History: 9 }, questionsByCategory: { History: 5 }, byDifficulty: { easy: { correct: 9, questions: 3 } } };
+  const s = applyGame(emptyStats(), bad);
+  assert.deepEqual(s.byCategory.History, { correct: 5, questions: 5 });
+  assert.deepEqual(s.byDifficulty.easy, { correct: 3, questions: 3 });
+});

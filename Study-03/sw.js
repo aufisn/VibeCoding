@@ -8,7 +8,7 @@
 // - data/questions.json: network first, falling back to the cache when
 //   offline, so corrected questions reach players on their next online load.
 
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `quiz-${CACHE_VERSION}`;
 const QUESTIONS_PATH = "data/questions.json";
 

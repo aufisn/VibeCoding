@@ -135,11 +135,17 @@ test("the finished-run record is handed out exactly once", () => {
     finishedAt: FIXED_NOW.toISOString(),
     mode: "full",
     subject: "All",
+    difficulty: "mixed",
     points: 847,
     total: 40,
     maxScore: 40,
     byCategory: { History: 10, Science: 10, Geography: 10, "Arts & Culture": 10 },
     questionsByCategory: { History: 10, Science: 10, Geography: 10, "Arts & Culture": 10 },
+    byDifficulty: {
+      easy: { correct: 12, questions: 12 },
+      medium: { correct: 16, questions: 16 },
+      hard: { correct: 12, questions: 12 },
+    },
     skipped: 0,
     timedOut: 0,
     eliminated: 0,
@@ -511,4 +517,55 @@ test("untimed modes have no time limit and no timeOut", () => {
   assert.equal(game.timeOut(), false);
   assert.equal(game.answer(game.getState().question.correctIndex), true);
   assert.equal(game.getState().answer.correct, true);
+});
+
+/* ---------- Difficulty choice ---------- */
+
+test("difficulty filters every mode's questions", () => {
+  const cases = [
+    ["easy", "All", 12],
+    ["medium", "All", 16],
+    ["hard", "All", 12],
+    ["easy", "Science", 3],
+    ["medium", "History", 4],
+    ["easy", SPEED_SUBJECT, 12], // only 3 easy per category, fewer than 5
+    ["medium", SPEED_SUBJECT, 16],
+    ["mixed", SPEED_SUBJECT, 20],
+  ];
+  for (const [level, subject, expected] of cases) {
+    const game = newGame(2);
+    assert.equal(game.questionCount(subject, level), expected, `count ${level} ${subject}`);
+    assert.equal(game.start("", subject, level), true);
+    const s = game.getState();
+    assert.equal(s.totalQuestions, expected, `${level} ${subject}`);
+    assert.equal(s.difficulty, level);
+    if (level !== "mixed") assert.equal(s.question.difficulty, level);
+  }
+});
+
+test("a difficulty run plays only that difficulty and saves it", () => {
+  const game = newGame(5);
+  game.start("Ana", "All", "hard");
+  while (game.getState().screen !== SCREENS.RESULTS) {
+    const s = game.getState();
+    if (s.screen === SCREENS.QUESTION) {
+      assert.equal(s.question.difficulty, "hard");
+      answerAndNext(game);
+    } else game.next();
+  }
+  const record = game.takeResultToSave();
+  assert.equal(record.difficulty, "hard");
+  assert.equal(record.maxScore, 12);
+  assert.deepEqual(record.byDifficulty, { hard: { correct: 12, questions: 12 } });
+  assert.equal(record.tier, "Grandmaster", "rank scales to 12 questions");
+});
+
+test("the difficulty is kept for the next run; unknown levels are refused", () => {
+  const game = newGame();
+  assert.equal(game.start("", "History", "expert"), false);
+  assert.equal(game.setDifficulty("easy"), true);
+  assert.equal(game.setDifficulty("expert"), false);
+  game.start("", "History"); // no level: uses the last one chosen
+  assert.equal(game.getState().difficulty, "easy");
+  assert.equal(game.getState().totalQuestions, 3);
 });

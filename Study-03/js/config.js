@@ -50,6 +50,13 @@ export const NICKNAME_MAX = 20;
 export const DIFFICULTY_MIX = Object.freeze({ easy: 3, medium: 4, hard: 3 });
 
 /**
+ * Difficulty choices on the Start screen. "mixed" plays every difficulty;
+ * the others play only questions of that difficulty (fewer questions).
+ */
+export const DIFFICULTY_CHOICES = Object.freeze(["mixed", "easy", "medium", "hard"]);
+export const MIXED = "mixed";
+
+/**
  * Rank tiers by final score. `min` is inclusive, so a score of 12 is
  * "Apprentice". Ordered lowest to highest. The minimums are out of
  * TOTAL_QUESTIONS; shorter runs (one subject) scale them, see tierFor().

@@ -70,8 +70,9 @@ export function buildRun(questions, rng = Math.random, categories = CATEGORIES) 
 }
 
 /**
- * Build a Speed Quiz run: `perCategory` random questions from each category,
- * mixed together in random order, options shuffled.
+ * Build a Speed Quiz run: `perCategory` random questions from each category
+ * (fewer if the category has fewer, e.g. after a difficulty filter), mixed
+ * together in random order, options shuffled.
  * @param {object[]} questions validated question bank
  * @param {() => number} [rng]
  * @param {number} [perCategory]

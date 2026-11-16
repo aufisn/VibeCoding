@@ -10,20 +10,43 @@
 // never throws, the game keeps working, and statistics are rebuilt from the
 // saved games if quiz.stats is missing or unreadable.
 //
+// Backups: exportBackup() returns everything as one JSON-ready object (the UI
+// downloads it as a file); parseBackup() checks and cleans a file's text, and
+// restoreBackup() replaces the saved data with it.
+//
 // The pure helpers (emptyStats, applyGame, rebuildStats, periodStart,
-// filterByPeriod) are exported for tests.
+// filterByPeriod, sanitizeRun, parseBackup) are exported for tests.
 
-import { CATEGORIES, MODES, QUESTIONS_PER_CATEGORY, SPEED_PER_CATEGORY } from "./config.js";
+import {
+  CATEGORIES,
+  DIFFICULTY_CHOICES,
+  MIXED,
+  MODES,
+  NICKNAME_MAX,
+  QUESTIONS_PER_CATEGORY,
+  SPEED_PER_CATEGORY,
+} from "./config.js";
 import { MAX_RUNS, RUNS_KEY, loadRuns, runMode, saveRun, topRuns } from "./storage.js";
 
 export const STATS_KEY = "quiz.stats";
-export const STATS_VERSION = 1;
+// v2: hall of fame per mode and difficulty, statistics per difficulty.
+// Older stats fail the version check and are rebuilt from the saved games.
+export const STATS_VERSION = 2;
 export const HALL_OF_FAME_SIZE = 10;
 
 /** Leaderboard periods. */
 export const PERIODS = Object.freeze({ ALL: "all", WEEK: "week", DAY: "day" });
 
 const MODE_LIST = [MODES.FULL, MODES.CATEGORY, MODES.SPEED];
+const LEVELS = ["easy", "medium", "hard"];
+
+/** The difficulty a saved run was played at; older runs were all "mixed". */
+export function runDifficulty(run) {
+  return run && DIFFICULTY_CHOICES.includes(run.difficulty) ? run.difficulty : MIXED;
+}
+
+/** Hall-of-fame key: one all-time top 10 per mode and difficulty. */
+const fameKey = (mode, difficulty) => `${mode}/${difficulty}`;
 
 /* ---------- Pure helpers ---------- */
 
@@ -45,7 +68,8 @@ export function emptyStats(categories = CATEGORIES) {
       MODE_LIST.map((mode) => [mode, { games: 0, points: 0, correct: 0, questions: 0, bestPoints: 0 }])
     ),
     byCategory: Object.fromEntries(categories.map((c) => [c, { correct: 0, questions: 0 }])),
-    hallOfFame: Object.fromEntries(MODE_LIST.map((mode) => [mode, []])),
+    byDifficulty: Object.fromEntries(LEVELS.map((d) => [d, { correct: 0, questions: 0 }])),
+    hallOfFame: {},
   };
 }
 
@@ -94,14 +118,23 @@ export function applyGame(stats, record) {
   m.bestPoints = Math.max(m.bestPoints, points);
 
   const asked = questionsByCategory(record);
+  // Correct answers can't exceed questions asked (guards against edited backups).
   for (const [category, correct] of Object.entries(record.byCategory ?? {})) {
     const c = (next.byCategory[category] ??= { correct: 0, questions: 0 });
-    c.correct += num(correct);
-    c.questions += num(asked[category]);
+    const questions = num(asked[category]);
+    c.correct += Math.min(num(correct), questions);
+    c.questions += questions;
   }
 
-  const fame = next.hallOfFame[mode] ?? [];
-  next.hallOfFame[mode] = topRuns([...fame, record], HALL_OF_FAME_SIZE);
+  for (const [level, v] of Object.entries(record.byDifficulty ?? {})) {
+    if (!LEVELS.includes(level) || !v) continue;
+    const d = (next.byDifficulty[level] ??= { correct: 0, questions: 0 });
+    d.correct += Math.min(num(v.correct), num(v.questions));
+    d.questions += num(v.questions);
+  }
+
+  const key = fameKey(mode, runDifficulty(record));
+  next.hallOfFame[key] = topRuns([...(next.hallOfFame[key] ?? []), record], HALL_OF_FAME_SIZE);
   return next;
 }
 
@@ -118,6 +151,7 @@ function isStats(value) {
     typeof value.gamesPlayed === "number" &&
     value.byMode && typeof value.byMode === "object" &&
     value.byCategory && typeof value.byCategory === "object" &&
+    value.byDifficulty && typeof value.byDifficulty === "object" &&
     value.hallOfFame && typeof value.hallOfFame === "object"
   );
 }
@@ -152,6 +186,115 @@ export function filterByPeriod(runs, period, now) {
 }
 
 const sameRun = (a, b) => a.finishedAt === b.finishedAt && a.total === b.total && a.nickname === b.nickname;
+
+/* ---------- Backups ---------- */
+
+export const BACKUP_APP = "study-03-quiz";
+export const BACKUP_FORMAT = 1;
+/** Larger files are refused before reading (a full backup is about 100 KB). */
+export const BACKUP_MAX_BYTES = 2_000_000;
+
+const str = (value, max) => (typeof value === "string" ? value.slice(0, max) : undefined);
+const count = (value) => (typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value) : undefined);
+const counts = (obj, keys) =>
+  obj && typeof obj === "object"
+    ? Object.fromEntries(keys.filter((k) => count(obj[k]) !== undefined).map((k) => [k, count(obj[k])]))
+    : undefined;
+
+/**
+ * A clean copy of a saved run from an untrusted source (a backup file):
+ * only known fields, the right types, strings capped. null if unusable.
+ */
+export function sanitizeRun(run, categories = CATEGORIES) {
+  if (!run || typeof run !== "object") return null;
+  const t = Date.parse(run.finishedAt);
+  if (typeof run.finishedAt !== "string" || Number.isNaN(t) || count(run.total) === undefined) return null;
+  const clean = {
+    nickname: str(run.nickname, NICKNAME_MAX) ?? "",
+    finishedAt: new Date(t).toISOString(),
+    mode: MODE_LIST.includes(run.mode) ? run.mode : undefined,
+    subject: str(run.subject, 40),
+    difficulty: DIFFICULTY_CHOICES.includes(run.difficulty) ? run.difficulty : undefined,
+    points: count(run.points),
+    total: count(run.total),
+    maxScore: count(run.maxScore),
+    byCategory: counts(run.byCategory, categories) ?? {},
+    questionsByCategory: counts(run.questionsByCategory, categories),
+    byDifficulty:
+      run.byDifficulty && typeof run.byDifficulty === "object"
+        ? Object.fromEntries(
+            LEVELS.filter((d) => run.byDifficulty[d]).map((d) => [d, counts(run.byDifficulty[d], ["correct", "questions"])])
+          )
+        : undefined,
+    skipped: count(run.skipped),
+    timedOut: count(run.timedOut),
+    eliminated: count(run.eliminated),
+    bestStreak: count(run.bestStreak),
+    bonuses: counts(run.bonuses, ["base", "time", "noHint", "streak"]),
+    tier: str(run.tier, 20),
+  };
+  for (const key of Object.keys(clean)) if (clean[key] === undefined) delete clean[key];
+  return clean;
+}
+
+/** A clean copy of statistics from a backup, or null to rebuild instead. */
+function sanitizeStats(stats, categories) {
+  if (!isStats(stats)) return null;
+  const clean = emptyStats(categories);
+  for (const key of ["gamesPlayed", "totalCorrect", "totalQuestions", "totalPoints", "totalSkipped", "totalTimedOut", "totalHints", "bestStreak"]) {
+    clean[key] = count(stats[key]) ?? 0;
+  }
+  for (const key of ["firstPlayedAt", "lastPlayedAt"]) {
+    const t = Date.parse(stats[key]);
+    clean[key] = Number.isNaN(t) ? null : new Date(t).toISOString();
+  }
+  for (const mode of MODE_LIST) {
+    clean.byMode[mode] = { ...clean.byMode[mode], ...counts(stats.byMode[mode], ["games", "points", "correct", "questions", "bestPoints"]) };
+  }
+  for (const c of categories) clean.byCategory[c] = { ...clean.byCategory[c], ...counts(stats.byCategory[c], ["correct", "questions"]) };
+  for (const d of LEVELS) clean.byDifficulty[d] = { ...clean.byDifficulty[d], ...counts(stats.byDifficulty[d], ["correct", "questions"]) };
+  for (const mode of MODE_LIST) {
+    for (const level of DIFFICULTY_CHOICES) {
+      const list = stats.hallOfFame[fameKey(mode, level)];
+      if (!Array.isArray(list)) continue;
+      const runs = list.map((r) => sanitizeRun(r, categories)).filter(Boolean);
+      if (runs.length) clean.hallOfFame[fameKey(mode, level)] = topRuns(runs, HALL_OF_FAME_SIZE);
+    }
+  }
+  return clean;
+}
+
+/**
+ * Check and clean the text of a backup file. Pure.
+ * @param {string} text
+ * @returns {{ ok: true, runs: object[], stats: object } | { ok: false, error: string }}
+ */
+export function parseBackup(text, categories = CATEGORIES) {
+  if (typeof text !== "string" || text.length > BACKUP_MAX_BYTES) {
+    return { ok: false, error: "That file is too large to be a Quiz Game backup." };
+  }
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return { ok: false, error: "That file isn't a Quiz Game backup (it isn't valid JSON)." };
+  }
+  if (!data || data.app !== BACKUP_APP || !Array.isArray(data.runs)) {
+    return { ok: false, error: "That file isn't a Quiz Game backup." };
+  }
+  if (data.format !== BACKUP_FORMAT) {
+    return { ok: false, error: "This backup was made by a different version of the game and can't be read." };
+  }
+  const runs = data.runs
+    .map((r) => sanitizeRun(r, categories))
+    .filter(Boolean)
+    .sort((a, b) => Date.parse(b.finishedAt) - Date.parse(a.finishedAt))
+    .slice(0, MAX_RUNS);
+  let stats = sanitizeStats(data.stats, categories);
+  // Statistics count at least every saved game; if not, they don't belong together.
+  if (!stats || stats.gamesPlayed < runs.length) stats = rebuildStats(runs, categories);
+  return { ok: true, runs, stats };
+}
 
 /* ---------- The class ---------- */
 
@@ -242,18 +385,66 @@ export class LocalDataManager {
    * @param {string} [options.mode] one of MODES; all modes if omitted
    * @param {number} [options.limit]
    */
-  getLeaderboard({ period = PERIODS.ALL, mode, limit = 10 } = {}) {
+  getLeaderboard({ period = PERIODS.ALL, mode, difficulty, limit = 10 } = {}) {
     try {
       let runs = this.getGames();
       if (period === PERIODS.ALL) {
-        const fame = mode ? this.getStats().hallOfFame[mode] ?? [] : Object.values(this.getStats().hallOfFame).flat();
+        const fame = Object.entries(this.getStats().hallOfFame)
+          .filter(([key]) => (!mode || key.startsWith(`${mode}/`)) && (!difficulty || key.endsWith(`/${difficulty}`)))
+          .flatMap(([, list]) => list);
         for (const run of fame) if (!runs.some((r) => sameRun(r, run))) runs = [...runs, run];
       } else {
         runs = filterByPeriod(runs, period, this.now());
       }
+      if (difficulty) runs = runs.filter((r) => runDifficulty(r) === difficulty);
       return topRuns(runs, limit, mode);
     } catch {
       return [];
+    }
+  }
+
+  /**
+   * Accuracy per difficulty across every game (games saved before
+   * difficulty tracking aren't included).
+   * @returns {{ difficulty: string, correct: number, questions: number, accuracy: number | null }[]}
+   */
+  getDifficultyStats() {
+    const { byDifficulty = {} } = this.getStats();
+    return LEVELS.map((difficulty) => {
+      const { correct = 0, questions = 0 } = byDifficulty[difficulty] ?? {};
+      return { difficulty, correct, questions, accuracy: questions > 0 ? correct / questions : null };
+    });
+  }
+
+  /** Everything saved, as one object ready for JSON.stringify (a backup file). */
+  exportBackup() {
+    return {
+      app: BACKUP_APP,
+      format: BACKUP_FORMAT,
+      exportedAt: this.now().toISOString(),
+      runs: this.getGames(),
+      stats: this.getStats(),
+    };
+  }
+
+  /**
+   * Replace the saved games and statistics with a parsed backup
+   * (from parseBackup). Never throws.
+   * @returns {boolean} true if it was written
+   */
+  restoreBackup({ runs, stats }) {
+    const store = this.#resolve();
+    try {
+      if (!store) return false;
+      store.setItem(RUNS_KEY, JSON.stringify(runs));
+      try {
+        store.setItem(STATS_KEY, JSON.stringify(stats));
+      } catch {
+        store.removeItem(STATS_KEY); // never leave old stats next to new games; rebuilt on read
+      }
+      return true;
+    } catch {
+      return false;
     }
   }
 

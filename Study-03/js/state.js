@@ -22,6 +22,8 @@
 import {
   ALL_SUBJECTS,
   CATEGORIES,
+  DIFFICULTY_CHOICES,
+  MIXED,
   ELIMINATE_PER_QUESTION,
   MODES,
   NICKNAME_MAX,
@@ -77,6 +79,7 @@ export function createGame(
   let nickname = "";
   let subject = ALL_SUBJECTS;
   let mode = MODES.FULL;
+  let difficulty = MIXED; // kept between runs, like the nickname
   let playCategories = categories;
   let scores = createScoreManager(scoring);
   let questionShownAt = 0; // ms, from now(), when the current question appeared
@@ -132,12 +135,24 @@ export function createGame(
       finishedAt: now().toISOString(),
       mode,
       subject,
+      difficulty,
       points,
       total,
       maxScore: run.length,
       byCategory,
       questionsByCategory: Object.fromEntries(
         playCategories.map((c) => [c, run.filter((q) => q.category === c).length])
+      ),
+      byDifficulty: Object.fromEntries(
+        ["easy", "medium", "hard"]
+          .map((d) => [
+            d,
+            {
+              correct: answers.filter((a) => a && a.difficulty === d && a.correct).length,
+              questions: run.filter((q) => q.difficulty === d).length,
+            },
+          ])
+          .filter(([, v]) => v.questions > 0)
       ),
       skipped: answers.filter((a) => a && a.skipped).length,
       timedOut: answers.filter((a) => a && a.timedOut).length,
@@ -170,6 +185,7 @@ export function createGame(
     return {
       questionId: question.id,
       category: question.category,
+      difficulty: question.difficulty,
       question: question.question,
       chosenIndex,
       correctIndex: question.correctIndex,
@@ -208,21 +224,50 @@ export function createGame(
    * @param {string} [name]
    * @param {string} [chosen] ALL_SUBJECTS (Full Challenge), a category name
    *   (By Category) or SPEED_SUBJECT (Speed Quiz)
+   * @param {string} [level] one of DIFFICULTY_CHOICES; defaults to the last one used
    */
-  function start(name = nickname, chosen = ALL_SUBJECTS) {
+  function start(name = nickname, chosen = ALL_SUBJECTS, level = difficulty) {
     if (screen !== SCREENS.START && screen !== SCREENS.RESULTS) return false;
     if (chosen !== ALL_SUBJECTS && chosen !== SPEED_SUBJECT && !categories.includes(chosen)) return false;
+    if (!DIFFICULTY_CHOICES.includes(level)) return false;
     nickname = cleanNickname(name);
     subject = chosen;
+    difficulty = level;
     mode = chosen === ALL_SUBJECTS ? MODES.FULL : chosen === SPEED_SUBJECT ? MODES.SPEED : MODES.CATEGORY;
     playCategories = mode === MODES.CATEGORY ? [chosen] : categories;
     resetRun();
+    const pool = poolFor(difficulty);
     run =
       mode === MODES.SPEED
-        ? buildSpeedRun(questions, rng, SPEED_PER_CATEGORY, categories)
-        : buildRun(questions, rng, playCategories);
+        ? buildSpeedRun(pool, rng, SPEED_PER_CATEGORY, categories)
+        : buildRun(pool, rng, playCategories);
     screen = SCREENS.QUESTION;
     showQuestion();
+    return true;
+  }
+
+  /** The questions a difficulty choice plays from. */
+  function poolFor(level) {
+    return level === MIXED ? questions : questions.filter((q) => q.difficulty === level);
+  }
+
+  /**
+   * How many questions a run would have, for the Start screen's cards.
+   * @param {string} chosen as for start()
+   * @param {string} [level]
+   */
+  function questionCount(chosen, level = difficulty) {
+    const pool = poolFor(level);
+    const inCategory = (c) => pool.filter((q) => q.category === c).length;
+    if (chosen === SPEED_SUBJECT) return categories.reduce((n, c) => n + Math.min(SPEED_PER_CATEGORY, inCategory(c)), 0);
+    if (chosen === ALL_SUBJECTS) return categories.reduce((n, c) => n + inCategory(c), 0);
+    return inCategory(chosen);
+  }
+
+  /** Change the difficulty for the next run (Start screen). */
+  function setDifficulty(level) {
+    if (!DIFFICULTY_CHOICES.includes(level)) return false;
+    difficulty = level;
     return true;
   }
 
@@ -400,6 +445,7 @@ export function createGame(
       nickname,
       subject,
       mode,
+      difficulty,
       playCategories,
       totalQuestions: run.length,
       maxScore: run.length,
@@ -456,6 +502,8 @@ export function createGame(
     closeLeaderboard,
     openStats,
     closeStats,
+    setDifficulty,
+    questionCount,
     takeResultToSave,
     getState,
   };
