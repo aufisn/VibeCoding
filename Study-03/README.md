@@ -117,9 +117,10 @@ Teacher mode compares many players at a glance. Each player's results stay in th
 | `/teacher-overview [folder \| sample] [since date] [mode]` | One table of every player, ranked by accuracy. It shows games, best Full and Speed scores, streak, rank, strongest and weakest category, trend and last played. |
 | `/teacher-compare [folder \| sample] Ana, Ben` | Chosen players (or everyone) side by side: general measures, each category, each difficulty and best score per mode, with the leader of each row. |
 | `/teacher-insights [folder \| sample] [threshold 60] [inactive 7]` | What to act on: the class's weakest category, who needs support, the most improved, top performers, inactive players, and habits such as heavy Eliminate use, skipping and running out of time. |
-| `/teacher-mode [folder \| sample] [players] [since date] [mode]` | **All of the above in order.** It saves `reports/teacher-YYYY-MM-DD.md` with a short teacher's summary. |
+| `/teacher-csv [report.md \| latest]` | Reads a saved teacher report and writes it as CSV files for Excel, Numbers or Google Sheets (one per table, plus `…-lists.csv` for the insights) in `reports/teacher-YYYY-MM-DD-csv/`. |
+| `/teacher-mode [folder \| sample] [players] [since date] [mode]` | **All of the above in order.** It saves `reports/teacher-YYYY-MM-DD.md` with a short teacher's summary, plus its CSV folder. |
 
-These are custom commands in `.claude/commands/` (Claude Code treats them like skills). `sample` means `examples/class/`, a pretend class of 7 players. It covers a shared library computer, one pupil on two devices, a backup handed in twice, and an edited score the audit catches; `scripts/make-sample-class.mjs` rebuilds it. A sample report is in `reports/teacher-2026-11-18.md`.
+These are custom commands in `.claude/commands/` (Claude Code treats them like skills). `sample` means `examples/class/`, a pretend class of 7 players. It covers a shared library computer, one pupil on two devices, a backup handed in twice, and an edited score the audit catches; `scripts/make-sample-class.mjs` rebuilds it. A sample report is in `reports/teacher-2026-11-18.md`, with its CSV files in `reports/teacher-2026-11-18-csv/`.
 
 Fair comparison:
 - Players are ranked by **accuracy**, because points depend on mode and run length. Points are only compared within one mode.
@@ -132,6 +133,7 @@ The script also works on its own:
 node scripts/teacher-report.mjs class all --out reports/teacher-$(date +%F).md
 node scripts/teacher-report.mjs examples/class compare --players "Ana,Ben" --now 2026-11-18T12:00
 node scripts/teacher-report.mjs class insights --since 2026-11-01 --threshold 50 --json
+node scripts/report-to-csv.mjs reports/teacher-2026-11-18.md     # → reports/teacher-2026-11-18-csv/
 ```
 
 ## Running the tests
@@ -174,9 +176,10 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `scripts/backup-report.mjs` | Statistics, leaderboards and an audit from a backup file (used by `/quiz-stats` and `/quiz-leaderboard`) |
 | `examples/sample-backup.json` | A sample backup of 36 simulated games, for trying the skills |
 | `scripts/teacher-report.mjs` | Teacher mode: merges many players' backups and prints collect, overview, compare and insights reports (used by the `/teacher-*` commands) |
+| `scripts/report-to-csv.mjs` | Turns a teacher report into CSV files, one per table plus the lists; defuses spreadsheet formulas in nicknames (used by `/teacher-csv`) |
 | `scripts/make-sample-class.mjs`, `examples/class/` | Builds, and is, the pretend class used by `sample` in teacher mode |
 | `.claude/skills/` | The Claude Code skills: `quiz-validate`, `quiz-check`, `quiz-stats`, `quiz-leaderboard`, `quiz-expand` |
-| `.claude/commands/` | The teacher-mode commands: `teacher-collect`, `teacher-overview`, `teacher-compare`, `teacher-insights`, and `teacher-mode`, which runs them all |
+| `.claude/commands/` | The teacher-mode commands: `teacher-collect`, `teacher-overview`, `teacher-compare`, `teacher-insights`, `teacher-csv`, and `teacher-mode`, which runs them all |
 | `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, score manager, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
 
