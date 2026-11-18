@@ -1,0 +1,353 @@
+{
+  "app": "study-03-quiz",
+  "format": 1,
+  "exportedAt": "2026-11-05T09:03:34.000Z",
+  "runs": [
+    {
+      "nickname": "Ben",
+      "finishedAt": "2026-11-05T09:03:34.000Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 141,
+      "total": 7,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 1,
+        "Science": 0,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 8
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 6
+        },
+        "hard": {
+          "correct": 3,
+          "questions": 6
+        }
+      },
+      "skipped": 0,
+      "timedOut": 4,
+      "eliminated": 2,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 115,
+        "time": 12,
+        "noHint": 12,
+        "streak": 2
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Ben",
+      "finishedAt": "2026-11-03T09:01:18.000Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "mixed",
+      "points": 102,
+      "total": 5,
+      "maxScore": 10,
+      "byCategory": {
+        "Geography": 5
+      },
+      "questionsByCategory": {
+        "Geography": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 2,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 1,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 80,
+        "time": 12,
+        "noHint": 10,
+        "streak": 0
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Ben",
+      "finishedAt": "2026-11-02T09:04:34.000Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 271,
+      "total": 14,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 4,
+        "Science": 4,
+        "Geography": 3,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 3,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 6,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 5,
+          "questions": 12
+        }
+      },
+      "skipped": 5,
+      "timedOut": 0,
+      "eliminated": 2,
+      "bestStreak": 4,
+      "bonuses": {
+        "base": 220,
+        "time": 21,
+        "noHint": 28,
+        "streak": 2
+      },
+      "tier": "Apprentice"
+    }
+  ],
+  "stats": {
+    "version": 2,
+    "gamesPlayed": 3,
+    "totalCorrect": 26,
+    "totalQuestions": 70,
+    "totalPoints": 514,
+    "totalSkipped": 5,
+    "totalTimedOut": 4,
+    "totalHints": 5,
+    "bestStreak": 4,
+    "firstPlayedAt": "2026-11-02T09:04:34.000Z",
+    "lastPlayedAt": "2026-11-05T09:03:34.000Z",
+    "byMode": {
+      "full": {
+        "games": 1,
+        "points": 271,
+        "correct": 14,
+        "questions": 40,
+        "bestPoints": 271
+      },
+      "category": {
+        "games": 1,
+        "points": 102,
+        "correct": 5,
+        "questions": 10,
+        "bestPoints": 102
+      },
+      "speed": {
+        "games": 1,
+        "points": 141,
+        "correct": 7,
+        "questions": 20,
+        "bestPoints": 141
+      }
+    },
+    "byCategory": {
+      "History": {
+        "correct": 5,
+        "questions": 15
+      },
+      "Science": {
+        "correct": 4,
+        "questions": 15
+      },
+      "Geography": {
+        "correct": 11,
+        "questions": 25
+      },
+      "Arts & Culture": {
+        "correct": 6,
+        "questions": 15
+      }
+    },
+    "byDifficulty": {
+      "easy": {
+        "correct": 5,
+        "questions": 23
+      },
+      "medium": {
+        "correct": 11,
+        "questions": 26
+      },
+      "hard": {
+        "correct": 10,
+        "questions": 21
+      }
+    },
+    "hallOfFame": {
+      "full/mixed": [
+        {
+          "nickname": "Ben",
+          "finishedAt": "2026-11-02T09:04:34.000Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 271,
+          "total": 14,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 4,
+            "Science": 4,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 3,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 6,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 5,
+              "questions": 12
+            }
+          },
+          "skipped": 5,
+          "timedOut": 0,
+          "eliminated": 2,
+          "bestStreak": 4,
+          "bonuses": {
+            "base": 220,
+            "time": 21,
+            "noHint": 28,
+            "streak": 2
+          },
+          "tier": "Apprentice"
+        }
+      ],
+      "category/mixed": [
+        {
+          "nickname": "Ben",
+          "finishedAt": "2026-11-03T09:01:18.000Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "mixed",
+          "points": 102,
+          "total": 5,
+          "maxScore": 10,
+          "byCategory": {
+            "Geography": 5
+          },
+          "questionsByCategory": {
+            "Geography": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 2,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 1,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 80,
+            "time": 12,
+            "noHint": 10,
+            "streak": 0
+          },
+          "tier": "Scholar"
+        }
+      ],
+      "speed/mixed": [
+        {
+          "nickname": "Ben",
+          "finishedAt": "2026-11-05T09:03:34.000Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 141,
+          "total": 7,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 1,
+            "Science": 0,
+            "Geography": 3,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 8
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 6
+            },
+            "hard": {
+              "correct": 3,
+              "questions": 6
+            }
+          },
+          "skipped": 0,
+          "timedOut": 4,
+          "eliminated": 2,
+          "bestStreak": 3,
+          "bonuses": {
+            "base": 115,
+            "time": 12,
+            "noHint": 12,
+            "streak": 2
+          },
+          "tier": "Apprentice"
+        }
+      ]
+    }
+  }
+}

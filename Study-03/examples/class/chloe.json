@@ -1,0 +1,623 @@
+{
+  "app": "study-03-quiz",
+  "format": 1,
+  "exportedAt": "2026-11-18T09:02:22.000Z",
+  "runs": [
+    {
+      "nickname": "Chloe",
+      "finishedAt": "2026-11-18T09:02:22.000Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 236,
+      "total": 13,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 4,
+        "Science": 5,
+        "Geography": 2,
+        "Arts & Culture": 2
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 4,
+          "questions": 5
+        },
+        "medium": {
+          "correct": 5,
+          "questions": 9
+        },
+        "hard": {
+          "correct": 4,
+          "questions": 6
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 12,
+      "bestStreak": 6,
+      "bonuses": {
+        "base": 195,
+        "time": 24,
+        "noHint": 8,
+        "streak": 9
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Chloe",
+      "finishedAt": "2026-11-15T09:01:39.000Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "mixed",
+      "points": 0,
+      "total": 0,
+      "maxScore": 10,
+      "byCategory": {
+        "Geography": 0
+      },
+      "questionsByCategory": {
+        "Geography": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 0,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 0,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 0,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 6,
+      "bestStreak": 0,
+      "bonuses": {
+        "base": 0,
+        "time": 0,
+        "noHint": 0,
+        "streak": 0
+      },
+      "tier": "Novice"
+    },
+    {
+      "nickname": "Chloe",
+      "finishedAt": "2026-11-12T09:05:33.000Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 387,
+      "total": 22,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 7,
+        "Science": 8,
+        "Geography": 2,
+        "Arts & Culture": 5
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 7,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 9,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 6,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 22,
+      "bestStreak": 7,
+      "bonuses": {
+        "base": 325,
+        "time": 30,
+        "noHint": 16,
+        "streak": 16
+      },
+      "tier": "Scholar"
+    },
+    {
+      "nickname": "Chloe",
+      "finishedAt": "2026-11-08T09:02:36.000Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 243,
+      "total": 14,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 4,
+        "Science": 5,
+        "Geography": 2,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 5,
+          "questions": 7
+        },
+        "medium": {
+          "correct": 5,
+          "questions": 7
+        },
+        "hard": {
+          "correct": 4,
+          "questions": 6
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 13,
+      "bestStreak": 6,
+      "bonuses": {
+        "base": 205,
+        "time": 21,
+        "noHint": 8,
+        "streak": 9
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Chloe",
+      "finishedAt": "2026-11-05T09:01:46.000Z",
+      "mode": "category",
+      "subject": "Geography",
+      "difficulty": "mixed",
+      "points": 34,
+      "total": 2,
+      "maxScore": 10,
+      "byCategory": {
+        "Geography": 2
+      },
+      "questionsByCategory": {
+        "Geography": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 0,
+          "questions": 4
+        },
+        "hard": {
+          "correct": 1,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 3,
+      "bestStreak": 1,
+      "bonuses": {
+        "base": 30,
+        "time": 0,
+        "noHint": 4,
+        "streak": 0
+      },
+      "tier": "Novice"
+    },
+    {
+      "nickname": "Chloe",
+      "finishedAt": "2026-11-03T09:05:19.000Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 435,
+      "total": 24,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 6,
+        "Science": 8,
+        "Geography": 4,
+        "Arts & Culture": 6
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 8,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 9,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 7,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 22,
+      "bestStreak": 6,
+      "bonuses": {
+        "base": 355,
+        "time": 45,
+        "noHint": 22,
+        "streak": 13
+      },
+      "tier": "Scholar"
+    }
+  ],
+  "stats": {
+    "version": 2,
+    "gamesPlayed": 6,
+    "totalCorrect": 75,
+    "totalQuestions": 140,
+    "totalPoints": 1335,
+    "totalSkipped": 0,
+    "totalTimedOut": 0,
+    "totalHints": 78,
+    "bestStreak": 7,
+    "firstPlayedAt": "2026-11-03T09:05:19.000Z",
+    "lastPlayedAt": "2026-11-18T09:02:22.000Z",
+    "byMode": {
+      "full": {
+        "games": 2,
+        "points": 822,
+        "correct": 46,
+        "questions": 80,
+        "bestPoints": 435
+      },
+      "category": {
+        "games": 2,
+        "points": 34,
+        "correct": 2,
+        "questions": 20,
+        "bestPoints": 34
+      },
+      "speed": {
+        "games": 2,
+        "points": 479,
+        "correct": 27,
+        "questions": 40,
+        "bestPoints": 243
+      }
+    },
+    "byCategory": {
+      "History": {
+        "correct": 21,
+        "questions": 30
+      },
+      "Science": {
+        "correct": 26,
+        "questions": 30
+      },
+      "Geography": {
+        "correct": 12,
+        "questions": 50
+      },
+      "Arts & Culture": {
+        "correct": 16,
+        "questions": 30
+      }
+    },
+    "byDifficulty": {
+      "easy": {
+        "correct": 25,
+        "questions": 42
+      },
+      "medium": {
+        "correct": 28,
+        "questions": 56
+      },
+      "hard": {
+        "correct": 22,
+        "questions": 42
+      }
+    },
+    "hallOfFame": {
+      "full/mixed": [
+        {
+          "nickname": "Chloe",
+          "finishedAt": "2026-11-03T09:05:19.000Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 435,
+          "total": 24,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 6,
+            "Science": 8,
+            "Geography": 4,
+            "Arts & Culture": 6
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 8,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 9,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 7,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 22,
+          "bestStreak": 6,
+          "bonuses": {
+            "base": 355,
+            "time": 45,
+            "noHint": 22,
+            "streak": 13
+          },
+          "tier": "Scholar"
+        },
+        {
+          "nickname": "Chloe",
+          "finishedAt": "2026-11-12T09:05:33.000Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 387,
+          "total": 22,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 7,
+            "Science": 8,
+            "Geography": 2,
+            "Arts & Culture": 5
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 7,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 9,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 6,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 22,
+          "bestStreak": 7,
+          "bonuses": {
+            "base": 325,
+            "time": 30,
+            "noHint": 16,
+            "streak": 16
+          },
+          "tier": "Scholar"
+        }
+      ],
+      "category/mixed": [
+        {
+          "nickname": "Chloe",
+          "finishedAt": "2026-11-05T09:01:46.000Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "mixed",
+          "points": 34,
+          "total": 2,
+          "maxScore": 10,
+          "byCategory": {
+            "Geography": 2
+          },
+          "questionsByCategory": {
+            "Geography": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 0,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 1,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 3,
+          "bestStreak": 1,
+          "bonuses": {
+            "base": 30,
+            "time": 0,
+            "noHint": 4,
+            "streak": 0
+          },
+          "tier": "Novice"
+        },
+        {
+          "nickname": "Chloe",
+          "finishedAt": "2026-11-15T09:01:39.000Z",
+          "mode": "category",
+          "subject": "Geography",
+          "difficulty": "mixed",
+          "points": 0,
+          "total": 0,
+          "maxScore": 10,
+          "byCategory": {
+            "Geography": 0
+          },
+          "questionsByCategory": {
+            "Geography": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 0,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 0,
+              "questions": 4
+            },
+            "hard": {
+              "correct": 0,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 6,
+          "bestStreak": 0,
+          "bonuses": {
+            "base": 0,
+            "time": 0,
+            "noHint": 0,
+            "streak": 0
+          },
+          "tier": "Novice"
+        }
+      ],
+      "speed/mixed": [
+        {
+          "nickname": "Chloe",
+          "finishedAt": "2026-11-08T09:02:36.000Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 243,
+          "total": 14,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 4,
+            "Science": 5,
+            "Geography": 2,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 5,
+              "questions": 7
+            },
+            "medium": {
+              "correct": 5,
+              "questions": 7
+            },
+            "hard": {
+              "correct": 4,
+              "questions": 6
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 13,
+          "bestStreak": 6,
+          "bonuses": {
+            "base": 205,
+            "time": 21,
+            "noHint": 8,
+            "streak": 9
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Chloe",
+          "finishedAt": "2026-11-18T09:02:22.000Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 236,
+          "total": 13,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 4,
+            "Science": 5,
+            "Geography": 2,
+            "Arts & Culture": 2
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 4,
+              "questions": 5
+            },
+            "medium": {
+              "correct": 5,
+              "questions": 9
+            },
+            "hard": {
+              "correct": 4,
+              "questions": 6
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 12,
+          "bestStreak": 6,
+          "bonuses": {
+            "base": 195,
+            "time": 24,
+            "noHint": 8,
+            "streak": 9
+          },
+          "tier": "Scholar"
+        }
+      ]
+    }
+  }
+}

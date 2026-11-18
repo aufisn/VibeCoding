@@ -107,6 +107,33 @@ node scripts/backup-report.mjs examples/sample-backup.json leaderboard --period 
 node scripts/backup-report.mjs examples/sample-backup.json audit
 ```
 
+## Teacher mode
+
+Teacher mode compares many players at a glance. Each player's results stay in their own browser, so the teacher collects one backup per device (**Statistics → Download backup**) into a `class/` folder. That folder is git-ignored, so pupils' data stays on the teacher's computer. Then, in a Claude Code session opened in this folder:
+
+| Command | What it does |
+| --- | --- |
+| `/teacher-collect [folder \| sample]` | Reads and checks every backup. It merges them, skips games handed in twice, notes shared devices and nicknames found on several devices, and leaves out impossible (edited) scores. |
+| `/teacher-overview [folder \| sample] [since date] [mode]` | One table of every player, ranked by accuracy. It shows games, best Full and Speed scores, streak, rank, strongest and weakest category, trend and last played. |
+| `/teacher-compare [folder \| sample] Ana, Ben` | Chosen players (or everyone) side by side: general measures, each category, each difficulty and best score per mode, with the leader of each row. |
+| `/teacher-insights [folder \| sample] [threshold 60] [inactive 7]` | What to act on: the class's weakest category, who needs support, the most improved, top performers, inactive players, and habits such as heavy Eliminate use, skipping and running out of time. |
+| `/teacher-mode [folder \| sample] [players] [since date] [mode]` | **All of the above in order.** It saves `reports/teacher-YYYY-MM-DD.md` with a short teacher's summary. |
+
+These are custom commands in `.claude/commands/` (Claude Code treats them like skills). `sample` means `examples/class/`, a pretend class of 7 players. It covers a shared library computer, one pupil on two devices, a backup handed in twice, and an edited score the audit catches; `scripts/make-sample-class.mjs` rebuilds it. A sample report is in `reports/teacher-2026-11-18.md`.
+
+Fair comparison:
+- Players are ranked by **accuracy**, because points depend on mode and run length. Points are only compared within one mode.
+- Players with fewer than 20 questions are listed but not ranked.
+- Trend compares the latest games with the earlier ones and needs 4 or more games.
+
+The script also works on its own:
+
+```sh
+node scripts/teacher-report.mjs class all --out reports/teacher-$(date +%F).md
+node scripts/teacher-report.mjs examples/class compare --players "Ana,Ben" --now 2026-11-18T12:00
+node scripts/teacher-report.mjs class insights --since 2026-11-01 --threshold 50 --json
+```
+
 ## Running the tests
 
 ```sh
@@ -146,7 +173,10 @@ Run it from this folder. It uses Node's built-in test runner (Node 18+). Tests a
 | `scripts/list-questions.mjs` | Prints questions with their correct answers (used by `/quiz-check`) |
 | `scripts/backup-report.mjs` | Statistics, leaderboards and an audit from a backup file (used by `/quiz-stats` and `/quiz-leaderboard`) |
 | `examples/sample-backup.json` | A sample backup of 36 simulated games, for trying the skills |
-| `.claude/skills/` | The Claude Code skills: `quiz-validate`, `quiz-check`, `quiz-stats`, `quiz-leaderboard` |
+| `scripts/teacher-report.mjs` | Teacher mode: merges many players' backups and prints collect, overview, compare and insights reports (used by the `/teacher-*` commands) |
+| `scripts/make-sample-class.mjs`, `examples/class/` | Builds, and is, the pretend class used by `sample` in teacher mode |
+| `.claude/skills/` | The Claude Code skills: `quiz-validate`, `quiz-check`, `quiz-stats`, `quiz-leaderboard`, `quiz-expand` |
+| `.claude/commands/` | The teacher-mode commands: `teacher-collect`, `teacher-overview`, `teacher-compare`, `teacher-insights`, and `teacher-mode`, which runs them all |
 | `tests/*.test.mjs` | Unit tests (validator, quiz, scoring, score manager, state, storage, keys, service worker precache list); `tests/helpers.mjs` has shared fakes |
 | `package.json` | Only marks `.js` files as ES modules for Node. Nothing to install |
 

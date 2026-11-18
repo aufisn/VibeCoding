@@ -15,6 +15,7 @@ node scripts/validate-questions.mjs   # validate data/questions.json; exits 1 on
 node scripts/find-superlatives.mjs    # list "most", "first", "largest"... (guideline 2); /quiz-validate wraps it
 node scripts/list-questions.mjs [filter]          # questions with correct answers; /quiz-check uses it
 node scripts/backup-report.mjs <file> stats|leaderboard|audit   # /quiz-stats and /quiz-leaderboard use it
+node scripts/teacher-report.mjs <folder> collect|overview|compare|insights|all   # teacher mode (/teacher-*)
 node --test                           # unit tests in tests/
 python3 -m http.server 8000           # serve the folder, then open http://localhost:8000
 ```
@@ -41,6 +42,8 @@ ES modules and `fetch` need HTTP, so the page doesn't work from `file://`.
 ## Skills
 
 Project skills in `.claude/skills/`: `quiz-expand` (analyse, back up and grow the bank), `quiz-validate` (superlatives), `quiz-check` (fact-check answers; never edits questions or sets `verified`), `quiz-stats` and `quiz-leaderboard` (work on a backup file via `scripts/backup-report.mjs`, or guide code changes with a checklist). The scripts load backups through the game's own code, so keep them working when `js/data-manager.js` changes; `auditRuns()` must stay in line with `SCORING` and `RANK_TIERS`.
+
+Teacher-mode commands in `.claude/commands/`: `teacher-collect`, `teacher-overview`, `teacher-compare` and `teacher-insights`, plus `teacher-mode`, which runs all four and saves `reports/teacher-YYYY-MM-DD.md`. They use `scripts/teacher-report.mjs`, which merges many backups through `parseBackup()` and `auditRuns()`. Real class backups go in `class/`, which is git-ignored; ask before committing a report built from real pupils' data. `examples/class/` is a sample made by `scripts/make-sample-class.mjs` through the real engine. Rerun the script if game rules change, because its edited run in `dev.json` must keep failing the audit.
 
 ## Conventions
 

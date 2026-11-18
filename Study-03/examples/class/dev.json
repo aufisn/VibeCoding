@@ -1,0 +1,645 @@
+{
+  "app": "study-03-quiz",
+  "format": 1,
+  "exportedAt": "2026-11-10T09:02:50.000Z",
+  "runs": [
+    {
+      "nickname": "Dev",
+      "finishedAt": "2026-11-10T09:02:50.000Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 9999,
+      "total": 7,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 2,
+        "Science": 1,
+        "Geography": 1,
+        "Arts & Culture": 3
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 2,
+          "questions": 5
+        },
+        "medium": {
+          "correct": 3,
+          "questions": 6
+        },
+        "hard": {
+          "correct": 2,
+          "questions": 9
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 2,
+      "bestStreak": 2,
+      "bonuses": {
+        "base": 105,
+        "time": 9,
+        "noHint": 14,
+        "streak": 0
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Dev",
+      "finishedAt": "2026-11-08T09:05:12.000Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 267,
+      "total": 15,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 4,
+        "Science": 3,
+        "Geography": 4,
+        "Arts & Culture": 4
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 7,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 4,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 1,
+      "bestStreak": 3,
+      "bonuses": {
+        "base": 210,
+        "time": 27,
+        "noHint": 28,
+        "streak": 2
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Dev",
+      "finishedAt": "2026-11-06T09:03:11.000Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 150,
+      "total": 9,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 2,
+        "Science": 2,
+        "Geography": 3,
+        "Arts & Culture": 2
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 4,
+          "questions": 6
+        },
+        "medium": {
+          "correct": 4,
+          "questions": 11
+        },
+        "hard": {
+          "correct": 1,
+          "questions": 3
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 3,
+      "bestStreak": 4,
+      "bonuses": {
+        "base": 120,
+        "time": 12,
+        "noHint": 16,
+        "streak": 2
+      },
+      "tier": "Apprentice"
+    },
+    {
+      "nickname": "Dev",
+      "finishedAt": "2026-11-04T09:05:40.000Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 594,
+      "total": 31,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 9,
+        "Science": 6,
+        "Geography": 10,
+        "Arts & Culture": 6
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 10,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 12,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 9,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 3,
+      "bestStreak": 13,
+      "bonuses": {
+        "base": 460,
+        "time": 48,
+        "noHint": 56,
+        "streak": 30
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Dev",
+      "finishedAt": "2026-11-03T09:02:57.000Z",
+      "mode": "speed",
+      "subject": "Speed",
+      "difficulty": "mixed",
+      "points": 290,
+      "total": 14,
+      "maxScore": 20,
+      "byCategory": {
+        "History": 3,
+        "Science": 4,
+        "Geography": 3,
+        "Arts & Culture": 4
+      },
+      "questionsByCategory": {
+        "History": 5,
+        "Science": 5,
+        "Geography": 5,
+        "Arts & Culture": 5
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 1,
+          "questions": 3
+        },
+        "medium": {
+          "correct": 6,
+          "questions": 10
+        },
+        "hard": {
+          "correct": 7,
+          "questions": 7
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 2,
+      "bestStreak": 4,
+      "bonuses": {
+        "base": 240,
+        "time": 18,
+        "noHint": 26,
+        "streak": 6
+      },
+      "tier": "Expert"
+    },
+    {
+      "nickname": "Dev",
+      "finishedAt": "2026-11-02T09:05:40.000Z",
+      "mode": "full",
+      "subject": "All",
+      "difficulty": "mixed",
+      "points": 588,
+      "total": 32,
+      "maxScore": 40,
+      "byCategory": {
+        "History": 6,
+        "Science": 9,
+        "Geography": 9,
+        "Arts & Culture": 8
+      },
+      "questionsByCategory": {
+        "History": 10,
+        "Science": 10,
+        "Geography": 10,
+        "Arts & Culture": 10
+      },
+      "byDifficulty": {
+        "easy": {
+          "correct": 12,
+          "questions": 12
+        },
+        "medium": {
+          "correct": 12,
+          "questions": 16
+        },
+        "hard": {
+          "correct": 8,
+          "questions": 12
+        }
+      },
+      "skipped": 0,
+      "timedOut": 0,
+      "eliminated": 6,
+      "bestStreak": 15,
+      "bonuses": {
+        "base": 460,
+        "time": 48,
+        "noHint": 54,
+        "streak": 26
+      },
+      "tier": "Expert"
+    }
+  ],
+  "stats": {
+    "version": 2,
+    "gamesPlayed": 6,
+    "totalCorrect": 108,
+    "totalQuestions": 180,
+    "totalPoints": 2017,
+    "totalSkipped": 0,
+    "totalTimedOut": 0,
+    "totalHints": 17,
+    "bestStreak": 15,
+    "firstPlayedAt": "2026-11-02T09:05:40.000Z",
+    "lastPlayedAt": "2026-11-10T09:02:50.000Z",
+    "byMode": {
+      "full": {
+        "games": 3,
+        "points": 1449,
+        "correct": 78,
+        "questions": 120,
+        "bestPoints": 594
+      },
+      "category": {
+        "games": 0,
+        "points": 0,
+        "correct": 0,
+        "questions": 0,
+        "bestPoints": 0
+      },
+      "speed": {
+        "games": 3,
+        "points": 568,
+        "correct": 30,
+        "questions": 60,
+        "bestPoints": 290
+      }
+    },
+    "byCategory": {
+      "History": {
+        "correct": 26,
+        "questions": 45
+      },
+      "Science": {
+        "correct": 25,
+        "questions": 45
+      },
+      "Geography": {
+        "correct": 30,
+        "questions": 45
+      },
+      "Arts & Culture": {
+        "correct": 27,
+        "questions": 45
+      }
+    },
+    "byDifficulty": {
+      "easy": {
+        "correct": 36,
+        "questions": 50
+      },
+      "medium": {
+        "correct": 41,
+        "questions": 75
+      },
+      "hard": {
+        "correct": 31,
+        "questions": 55
+      }
+    },
+    "hallOfFame": {
+      "full/mixed": [
+        {
+          "nickname": "Dev",
+          "finishedAt": "2026-11-04T09:05:40.000Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 594,
+          "total": 31,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 9,
+            "Science": 6,
+            "Geography": 10,
+            "Arts & Culture": 6
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 10,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 12,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 9,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 3,
+          "bestStreak": 13,
+          "bonuses": {
+            "base": 460,
+            "time": 48,
+            "noHint": 56,
+            "streak": 30
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Dev",
+          "finishedAt": "2026-11-02T09:05:40.000Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 588,
+          "total": 32,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 6,
+            "Science": 9,
+            "Geography": 9,
+            "Arts & Culture": 8
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 12,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 12,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 8,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 6,
+          "bestStreak": 15,
+          "bonuses": {
+            "base": 460,
+            "time": 48,
+            "noHint": 54,
+            "streak": 26
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Dev",
+          "finishedAt": "2026-11-08T09:05:12.000Z",
+          "mode": "full",
+          "subject": "All",
+          "difficulty": "mixed",
+          "points": 267,
+          "total": 15,
+          "maxScore": 40,
+          "byCategory": {
+            "History": 4,
+            "Science": 3,
+            "Geography": 4,
+            "Arts & Culture": 4
+          },
+          "questionsByCategory": {
+            "History": 10,
+            "Science": 10,
+            "Geography": 10,
+            "Arts & Culture": 10
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 7,
+              "questions": 12
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 16
+            },
+            "hard": {
+              "correct": 4,
+              "questions": 12
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 1,
+          "bestStreak": 3,
+          "bonuses": {
+            "base": 210,
+            "time": 27,
+            "noHint": 28,
+            "streak": 2
+          },
+          "tier": "Apprentice"
+        }
+      ],
+      "speed/mixed": [
+        {
+          "nickname": "Dev",
+          "finishedAt": "2026-11-03T09:02:57.000Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 290,
+          "total": 14,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 3,
+            "Science": 4,
+            "Geography": 3,
+            "Arts & Culture": 4
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 1,
+              "questions": 3
+            },
+            "medium": {
+              "correct": 6,
+              "questions": 10
+            },
+            "hard": {
+              "correct": 7,
+              "questions": 7
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 2,
+          "bestStreak": 4,
+          "bonuses": {
+            "base": 240,
+            "time": 18,
+            "noHint": 26,
+            "streak": 6
+          },
+          "tier": "Expert"
+        },
+        {
+          "nickname": "Dev",
+          "finishedAt": "2026-11-06T09:03:11.000Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 150,
+          "total": 9,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 2,
+            "Science": 2,
+            "Geography": 3,
+            "Arts & Culture": 2
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 4,
+              "questions": 6
+            },
+            "medium": {
+              "correct": 4,
+              "questions": 11
+            },
+            "hard": {
+              "correct": 1,
+              "questions": 3
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 3,
+          "bestStreak": 4,
+          "bonuses": {
+            "base": 120,
+            "time": 12,
+            "noHint": 16,
+            "streak": 2
+          },
+          "tier": "Apprentice"
+        },
+        {
+          "nickname": "Dev",
+          "finishedAt": "2026-11-10T09:02:50.000Z",
+          "mode": "speed",
+          "subject": "Speed",
+          "difficulty": "mixed",
+          "points": 128,
+          "total": 7,
+          "maxScore": 20,
+          "byCategory": {
+            "History": 2,
+            "Science": 1,
+            "Geography": 1,
+            "Arts & Culture": 3
+          },
+          "questionsByCategory": {
+            "History": 5,
+            "Science": 5,
+            "Geography": 5,
+            "Arts & Culture": 5
+          },
+          "byDifficulty": {
+            "easy": {
+              "correct": 2,
+              "questions": 5
+            },
+            "medium": {
+              "correct": 3,
+              "questions": 6
+            },
+            "hard": {
+              "correct": 2,
+              "questions": 9
+            }
+          },
+          "skipped": 0,
+          "timedOut": 0,
+          "eliminated": 2,
+          "bestStreak": 2,
+          "bonuses": {
+            "base": 105,
+            "time": 9,
+            "noHint": 14,
+            "streak": 0
+          },
+          "tier": "Apprentice"
+        }
+      ]
+    }
+  }
+}

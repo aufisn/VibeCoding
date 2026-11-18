@@ -17,6 +17,10 @@ Study-01/data/
 !Study-03/.claude/
 Study-03/.claude/*
 !Study-03/.claude/skills/
+!Study-03/.claude/commands/
 
 # Local question-bank backups made by scripts/backup-questions.mjs (git history keeps every version too).
 Study-03/backups/
+
+# Teacher mode: players' real backup files stay on the teacher's computer.
+Study-03/class/
