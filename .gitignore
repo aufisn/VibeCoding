@@ -24,3 +24,8 @@ Study-03/backups/
 
 # Teacher mode: players' real backup files stay on the teacher's computer.
 Study-03/class/
+
+# Secrets (API keys) never go to GitHub.
+.env
+.env.*
+!.env.example
