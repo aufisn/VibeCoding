@@ -1,0 +1,12 @@
+{
+  "name": "fridgechef",
+  "private": true,
+  "type": "module",
+  "description": "FridgeChef: analyse a fridge photo and get a recipe (local server + OpenRouter)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node scripts/check-key.mjs",
+    "test": "node --test"
+  }
+}

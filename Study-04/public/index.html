@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>FridgeChef</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>FridgeChef</h1>
+      <p class="lede">Snap your fridge, get a recipe.</p>
+      <section class="card" aria-labelledby="status-title">
+        <h2 id="status-title">Setup</h2>
+        <p id="status" role="status">Checking the server…</p>
+        <dl id="models" hidden>
+          <dt>Image recognition</dt>
+          <dd id="vision-model"></dd>
+          <dt>Recipe writing</dt>
+          <dd id="text-model"></dd>
+        </dl>
+        <p class="note">Your OpenRouter key stays on the local server. This page never sees it.</p>
+      </section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
