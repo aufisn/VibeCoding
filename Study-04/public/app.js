@@ -7,7 +7,8 @@ try {
   const res = await fetch("/api/status");
   const data = await res.json();
   if (!res.ok || !data.ready) throw new Error(data.error || "not ready");
-  status.textContent = "✔ Ready: the server has your OpenRouter key.";
+  const provider = data.provider === "anthropic" ? "Anthropic (Claude)" : "OpenRouter";
+  status.textContent = `✔ Ready: the server has your ${provider} key.`;
   document.getElementById("vision-model").textContent = data.models.vision;
   document.getElementById("text-model").textContent = data.models.text;
   document.getElementById("models").hidden = false;

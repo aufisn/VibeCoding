@@ -29,3 +29,6 @@ Study-03/class/
 .env
 .env.*
 !.env.example
+
+# Node packages (reinstall with npm install).
+node_modules/

@@ -23,11 +23,11 @@ test("maskKey shows only the start and the last 4 characters", () => {
 });
 
 test("checkConfig catches a missing or malformed key and a public HOST", () => {
-  const good = { OPENROUTER_API_KEY: FAKE_KEY, OPENROUTER_VISION_MODEL: "a/b:free", OPENROUTER_TEXT_MODEL: "c/d", HOST: "127.0.0.1", PORT: "8790" };
+  const good = { AI_PROVIDER: "openrouter", OPENROUTER_API_KEY: FAKE_KEY, OPENROUTER_VISION_MODEL: "a/b:free", OPENROUTER_TEXT_MODEL: "c/d", HOST: "127.0.0.1", PORT: "8790" };
   assert.deepEqual(checkConfig(good), []);
   assert.match(checkConfig({ ...good, OPENROUTER_API_KEY: "" }).join(), /missing/);
   assert.match(checkConfig({ ...good, OPENROUTER_API_KEY: "sk-or- spaced key" }).join(), /spaces/);
-  assert.match(checkConfig({ ...good, OPENROUTER_API_KEY: "sk-proj-abcdefghijkl" }).join(), /OpenRouter key/);
+  assert.match(checkConfig({ ...good, OPENROUTER_API_KEY: "sk-proj-abcdefghijkl" }).join(), /should start with "sk-or-"/);
   assert.match(checkConfig({ ...good, HOST: "0.0.0.0" }).join(), /must not be reachable/);
   assert.match(checkConfig({ ...good, OPENROUTER_TEXT_MODEL: "nope" }).join(), /provider\/model/);
 });
@@ -85,7 +85,7 @@ test("errors are plain messages without the key", async () => {
 /* ---------- The running server ---------- */
 
 const config = Object.freeze(
-  Object.defineProperty({ OPENROUTER_VISION_MODEL: "v/vision", OPENROUTER_TEXT_MODEL: "t/text", HOST: "127.0.0.1", PORT: "0" }, "OPENROUTER_API_KEY", { value: FAKE_KEY })
+  Object.defineProperty({ AI_PROVIDER: "openrouter", OPENROUTER_VISION_MODEL: "v/vision", OPENROUTER_TEXT_MODEL: "t/text", HOST: "127.0.0.1", PORT: "0" }, "OPENROUTER_API_KEY", { value: FAKE_KEY })
 );
 const client = createOpenRouterClient({ apiKey: FAKE_KEY, fetch: async () => new Response("{}") });
 const server = await startServer({
@@ -125,7 +125,7 @@ test("no response ever contains the key", async () => {
 test("status works and tells the page only what it needs", async () => {
   const r = await get("/api/status", {});
   assert.equal(r.status, 200);
-  assert.deepEqual(JSON.parse(r.text), { ready: true, models: { vision: "v/vision", text: "t/text" } });
+  assert.deepEqual(JSON.parse(r.text), { ready: true, provider: "openrouter", models: { vision: "v/vision", text: "t/text" } });
   assert.match(r.headers["content-security-policy"], /default-src 'self'/);
   assert.equal(r.headers["x-content-type-options"], "nosniff");
 });

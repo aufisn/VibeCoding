@@ -9,7 +9,7 @@ Live site: **https://aufisn.github.io/VibeCoding/**
 | [Study-01](Study-01/) | Handwriting recognizer (Python, scikit-learn) | Runs locally only ([instructions](https://aufisn.github.io/VibeCoding/Study-01/)) |
 | [Study-02](Study-02/) | "My To-Do" app (HTML, CSS, JavaScript) | [Mobile](https://aufisn.github.io/VibeCoding/Study-02/) · [Desktop](https://aufisn.github.io/VibeCoding/Study-02/web_version/) |
 | [Study-03](Study-03/) | General knowledge quiz game (HTML, CSS, JavaScript) | [Open](https://aufisn.github.io/VibeCoding/Study-03/) |
-| [Study-04](Study-04/) | FridgeChef: fridge photo → ingredients → recipe (Node server + OpenRouter) | Runs locally only ([setup](Study-04/README.md)) |
+| [Study-04](Study-04/) | FridgeChef: fridge photo → ingredients → recipe (Node server + Claude) | Runs locally only ([setup](Study-04/README.md)) |
 
 The site is served by GitHub Pages straight from the `main` branch, so a push updates the live links within a minute or two.
 

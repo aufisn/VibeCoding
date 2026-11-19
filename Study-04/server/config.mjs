@@ -10,7 +10,10 @@ import { fileURLToPath } from "node:url";
 
 export const ENV_FILE = fileURLToPath(new URL("../.env", import.meta.url));
 
+export const PROVIDERS = Object.freeze(["anthropic", "openrouter"]);
+
 export const DEFAULTS = Object.freeze({
+  ANTHROPIC_MODEL: "claude-sonnet-5-5",
   OPENROUTER_VISION_MODEL: "google/gemma-4-26b-a4b-it:free",
   OPENROUTER_TEXT_MODEL: "google/gemma-4-31b-it:free",
   HOST: "127.0.0.1",
@@ -46,23 +49,34 @@ export function parseEnv(text) {
   return { values, problems };
 }
 
-/** "sk-or-v1-abc…74dd": enough to tell keys apart, useless to anyone else. */
+/** "sk-or-…74dd": enough to tell keys apart, useless to anyone else. */
 export function maskKey(key) {
   if (typeof key !== "string" || key.length < 12) return "(not set)";
   return `${key.slice(0, 6)}…${key.slice(-4)}`;
 }
 
-/** Problems with the settings, in plain words (never containing the key). Pure. */
+/** Problems with one key's format, in plain words (never containing the key). Pure. */
+function keyProblems(name, key, prefix, where) {
+  if (!key) return [`${name} is missing. Add it to .env (see .env.example).`];
+  const out = [];
+  if (/\s/.test(key)) out.push(`${name} contains spaces or line breaks. Copy it again from ${where}.`);
+  if (!key.startsWith(prefix)) out.push(`${name} doesn't look right (it should start with "${prefix}"). Copy it again from ${where}.`);
+  return out;
+}
+
+/** Problems with the settings, in plain words (never containing a key). Pure. */
 export function checkConfig(config) {
   const problems = [];
-  const key = config.OPENROUTER_API_KEY;
-  if (!key) problems.push("OPENROUTER_API_KEY is missing. Add it to .env (see .env.example).");
-  else {
-    if (/\s/.test(key)) problems.push("OPENROUTER_API_KEY contains spaces or line breaks. Copy it again from openrouter.ai/keys.");
-    if (!key.startsWith("sk-or-")) problems.push('OPENROUTER_API_KEY doesn\'t look like an OpenRouter key (they start with "sk-or-").');
+  if (!PROVIDERS.includes(config.AI_PROVIDER)) problems.push(`AI_PROVIDER must be one of: ${PROVIDERS.join(", ")}.`);
+  if (config.AI_PROVIDER === "anthropic") {
+    problems.push(...keyProblems("ANTHROPIC_API_KEY", config.ANTHROPIC_API_KEY, "sk-ant-", "the Claude Console (platform.claude.com)"));
+    if (!/^claude-[a-z0-9.-]+$/.test(config.ANTHROPIC_MODEL ?? "")) problems.push(`ANTHROPIC_MODEL should look like ${DEFAULTS.ANTHROPIC_MODEL}`);
   }
-  for (const name of ["OPENROUTER_VISION_MODEL", "OPENROUTER_TEXT_MODEL"]) {
-    if (!/^[\w.-]+\/[\w.:-]+$/.test(config[name] ?? "")) problems.push(`${name} should look like provider/model, e.g. ${DEFAULTS[name]}`);
+  if (config.AI_PROVIDER === "openrouter") {
+    problems.push(...keyProblems("OPENROUTER_API_KEY", config.OPENROUTER_API_KEY, "sk-or-", "openrouter.ai/keys"));
+    for (const name of ["OPENROUTER_VISION_MODEL", "OPENROUTER_TEXT_MODEL"]) {
+      if (!/^[\w.-]+\/[\w.:-]+$/.test(config[name] ?? "")) problems.push(`${name} should look like provider/model, e.g. ${DEFAULTS[name]}`);
+    }
   }
   const port = Number(config.PORT);
   if (!Number.isInteger(port) || port < 1 || port > 65535) problems.push("PORT must be a number from 1 to 65535.");
@@ -88,18 +102,25 @@ export function loadConfig({ env = process.env, file = ENV_FILE, read = readFile
     if (mode & 0o077) warnings.push(`.env can be read by other users (permissions ${mode.toString(8)}). Fix: chmod 600 .env`);
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
-    if (!env.OPENROUTER_API_KEY) warnings.push(".env not found. Copy .env.example to .env and add your key.");
+    if (!env.ANTHROPIC_API_KEY && !env.OPENROUTER_API_KEY) warnings.push(".env not found. Copy .env.example to .env and add your key.");
   }
   if (fileProblems.length) warnings.push(`.env: ${fileProblems.join("; ")}`);
 
   const pick = (name) => env[name] ?? fromFile[name] ?? DEFAULTS[name];
+  // Claude when an Anthropic key is set, otherwise OpenRouter; AI_PROVIDER overrides.
+  const anthropicKey = env.ANTHROPIC_API_KEY ?? fromFile.ANTHROPIC_API_KEY;
+  const openrouterKey = env.OPENROUTER_API_KEY ?? fromFile.OPENROUTER_API_KEY;
   const config = {
+    AI_PROVIDER: env.AI_PROVIDER ?? fromFile.AI_PROVIDER ?? (anthropicKey ? "anthropic" : openrouterKey ? "openrouter" : "anthropic"),
+    ANTHROPIC_MODEL: pick("ANTHROPIC_MODEL"),
     OPENROUTER_VISION_MODEL: pick("OPENROUTER_VISION_MODEL"),
     OPENROUTER_TEXT_MODEL: pick("OPENROUTER_TEXT_MODEL"),
     HOST: pick("HOST"),
     PORT: pick("PORT"),
   };
-  Object.defineProperty(config, "OPENROUTER_API_KEY", { value: env.OPENROUTER_API_KEY ?? fromFile.OPENROUTER_API_KEY, enumerable: false });
+  // Keys are non-enumerable: printing or JSON.stringify-ing the config can't leak them.
+  Object.defineProperty(config, "ANTHROPIC_API_KEY", { value: anthropicKey, enumerable: false });
+  Object.defineProperty(config, "OPENROUTER_API_KEY", { value: openrouterKey, enumerable: false });
   const problems = checkConfig(config);
   return { config: Object.freeze(config), problems, warnings };
 }

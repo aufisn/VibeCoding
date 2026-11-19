@@ -21,6 +21,17 @@ import { fileURLToPath } from "node:url";
 
 import { loadConfig, maskKey } from "./server/config.mjs";
 import { createOpenRouterClient } from "./server/openrouter.mjs";
+import { createClaudeClient } from "./server/claude.mjs";
+
+/** The models in use for each step, for the active provider. */
+export function activeModels(config) {
+  return config.AI_PROVIDER === "anthropic"
+    ? { vision: config.ANTHROPIC_MODEL, text: config.ANTHROPIC_MODEL }
+    : { vision: config.OPENROUTER_VISION_MODEL, text: config.OPENROUTER_TEXT_MODEL };
+}
+
+/** The active provider's API key (server side only). */
+export const activeKey = (config) => (config.AI_PROVIDER === "anthropic" ? config.ANTHROPIC_API_KEY : config.OPENROUTER_API_KEY);
 
 export const PUBLIC_DIR = fileURLToPath(new URL("./public/", import.meta.url));
 export const MAX_BODY_BYTES = 8 * 1024 * 1024; // room for a phone photo as base64
@@ -89,7 +100,8 @@ export function createApp({ config, client, publicDir = PUBLIC_DIR, routes = {},
     "GET /api/status": async (_req, res) =>
       send(res, 200, {
         ready: Boolean(client),
-        models: { vision: config.OPENROUTER_VISION_MODEL, text: config.OPENROUTER_TEXT_MODEL },
+        provider: config.AI_PROVIDER,
+        models: activeModels(config),
       }),
     ...routes,
   };
@@ -142,7 +154,7 @@ export function startServer({ config, client, routes, log = console.log } = {}) 
     server.once("error", reject);
     server.listen(Number(config.PORT), config.HOST, () => {
       log(`FridgeChef is running at http://${config.HOST === "::1" ? "[::1]" : config.HOST}:${server.address().port}`);
-      log(`OpenRouter key ${maskKey(config.OPENROUTER_API_KEY)} loaded (stays on this server). Press Ctrl+C to stop.`);
+      log(`${config.AI_PROVIDER === "anthropic" ? "Anthropic" : "OpenRouter"} key ${maskKey(activeKey(config))} loaded (stays on this server). Press Ctrl+C to stop.`);
       resolve(server);
     });
   });
@@ -156,7 +168,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.error("\nFix .env, then run: npm run check");
     process.exit(1);
   }
-  const client = createOpenRouterClient({ apiKey: config.OPENROUTER_API_KEY, appUrl: `http://${config.HOST}:${config.PORT}` });
+  const client =
+    config.AI_PROVIDER === "anthropic"
+      ? createClaudeClient({ apiKey: config.ANTHROPIC_API_KEY, model: config.ANTHROPIC_MODEL })
+      : createOpenRouterClient({ apiKey: config.OPENROUTER_API_KEY, appUrl: `http://${config.HOST}:${config.PORT}` });
   await startServer({ config, client }).catch((err) => {
     console.error(err.code === "EADDRINUSE" ? `✖ Port ${config.PORT} is in use. Set another PORT in .env.` : `✖ ${err.message}`);
     process.exit(1);
