@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="-50 0 900 900">
+  <rect x="-50" width="900" height="900" fill="#e9eef2"/>
+  <rect x="40" y="30" width="720" height="840" rx="24" fill="#f8fbfd" stroke="#b8c4cc" stroke-width="6"/>
+  <g stroke="#b8c4cc" stroke-width="8"><line x1="40" y1="310" x2="760" y2="310"/><line x1="40" y1="590" x2="760" y2="590"/></g>
+  <!-- top shelf: milk carton, eggs -->
+  <g><rect x="90" y="110" width="110" height="190" fill="#ffffff" stroke="#4a6fa5" stroke-width="4"/><polygon points="90,110 145,60 200,110" fill="#dfe8f5" stroke="#4a6fa5" stroke-width="4"/>
+     <text x="145" y="215" font-family="Helvetica" font-size="34" font-weight="bold" fill="#2c4f86" text-anchor="middle">MILK</text></g>
+  <rect x="260" y="220" width="300" height="80" rx="8" fill="#cdb79e"/>
+  <g fill="#fff6e6" stroke="#d9c7a7" stroke-width="3"><ellipse cx="300" cy="215" rx="30" ry="40"/><ellipse cx="370" cy="215" rx="30" ry="40"/><ellipse cx="440" cy="215" rx="30" ry="40"/><ellipse cx="510" cy="215" rx="30" ry="40"/></g>
+  <g><rect x="600" y="200" width="120" height="100" rx="10" fill="#f2c94c" stroke="#c99a1a" stroke-width="4"/><text x="660" y="262" font-family="Helvetica" font-size="26" font-weight="bold" fill="#7a5a00" text-anchor="middle">CHEDDAR</text></g>
+  <!-- middle shelf: tomatoes, carrots, lettuce -->
+  <g><circle cx="130" cy="530" r="48" fill="#e0402f"/><circle cx="215" cy="545" r="40" fill="#d63a2a"/><path d="M118 485 l12 -14 l12 14 l14 -6 l-6 12" stroke="#2f7d32" stroke-width="7" fill="none"/></g>
+  <g fill="#f08a24"><polygon points="300,575 330,575 315,410"/><polygon points="345,575 375,575 360,420"/><polygon points="390,575 420,575 405,415"/></g>
+  <g fill="#3f9b3f"><path d="M312 412 l-12 -30 M315 410 l2 -34 M318 412 l14 -28" stroke="#3f9b3f" stroke-width="7"/></g>
+  <g><circle cx="590" cy="500" r="85" fill="#7cc35a"/><circle cx="560" cy="470" r="45" fill="#9ad977"/><circle cx="625" cy="525" r="40" fill="#68ad49"/></g>
+  <!-- bottom shelf: butter, apples, lemon -->
+  <g><rect x="90" y="760" width="200" height="90" rx="6" fill="#fff3b0" stroke="#d1b94a" stroke-width="4"/><text x="190" y="815" font-family="Helvetica" font-size="32" font-weight="bold" fill="#8a7414" text-anchor="middle">BUTTER</text></g>
+  <g><circle cx="400" cy="800" r="50" fill="#c62828"/><circle cx="500" cy="805" r="46" fill="#d32f2f"/><path d="M400 752 q6 -22 18 -26" stroke="#5d4037" stroke-width="6" fill="none"/><path d="M500 760 q6 -22 18 -26" stroke="#5d4037" stroke-width="6" fill="none"/></g>
+  <ellipse cx="640" cy="810" rx="70" ry="48" fill="#f5e050" stroke="#d4bd2c" stroke-width="4"/>
+</svg>
