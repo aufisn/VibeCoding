@@ -14,6 +14,8 @@
   --radius: 16px;
   --warn: #b45309;
   --error: #b3261e;
+  --error-soft: #fdecea;
+  --pick-border: #ffc7a8;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -27,13 +29,15 @@
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     --warn: #f0b45c;
     --error: #ff8a80;
+    --error-soft: #3a1f1c;
+    --pick-border: #7a4a33;
   }
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 0.95rem/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-main { max-width: 72rem; margin: 0 auto; padding: 0.9rem 1rem 1.5rem; }
+main { max-width: 72rem; margin: 0 auto; padding: 0.9rem 1rem 0.75rem; }
 a { color: var(--accent-ink); }
 h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
 small { display: block; color: var(--muted); font-size: 0.8rem; }
@@ -66,9 +70,26 @@ small { display: block; color: var(--muted); font-size: 0.8rem; }
 .steps button[aria-current="step"] strong { color: var(--accent-ink); }
 .steps .saved-tab b { background: var(--accent-2); }
 
-#progress { min-height: 1.3em; margin: 0 0 0.4rem; color: var(--muted); font-size: 0.88rem; }
-.error { margin: 0 0 0.5rem; color: var(--error); }
+/* Progress line: quiet when idle, a sticky orange pill with a spinner and timer while Claude works */
+.statusbar { display: flex; align-items: center; gap: 0.5rem; min-height: 1.3em; margin: 0 0 0.2rem; padding: 0.3rem 0; border: 1px solid transparent; color: var(--muted); font-size: 0.88rem; }
+.statusbar .spinner, .elapsed:empty { display: none; }
+.statusbar.busy {
+  position: sticky; top: 0.4rem; z-index: 5; width: fit-content; max-width: 100%;
+  padding: 0.3rem 0.85rem; border-color: var(--accent); border-radius: 999px;
+  background: var(--accent-soft); color: var(--text); font-weight: 600; box-shadow: var(--shadow);
+}
+.statusbar.busy .spinner {
+  display: inline-block; flex: none; width: 1em; height: 1em; border-radius: 50%;
+  border: 2px solid var(--accent); border-right-color: transparent; animation: spin 0.8s linear infinite;
+}
+.elapsed { color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .statusbar.busy .spinner { animation-duration: 2.4s; } }
+.error { margin: 0 0 0.5rem; padding: 0.5rem 0.8rem; border: 1px solid currentColor; border-radius: 12px; background: var(--error-soft); color: var(--error); }
 .error a { color: inherit; }
+.hint { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
+.link { padding: 0.2rem 0.4rem; background: none; color: var(--accent-ink); text-decoration: underline; font-weight: 600; }
+.tab, #recipes, #github-setup { scroll-margin-top: 3.5rem; }
 
 /* Buttons and inputs */
 button { font: inherit; border: 0; border-radius: 12px; padding: 0.6rem 1rem; cursor: pointer; }
@@ -80,20 +101,25 @@ input, select { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--
 input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
 
-/* 1. Recognize: picker and tips on the left, the photo on the right */
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.pick { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; border: 2px dashed #ffc7a8; border-radius: 14px; padding: 0.8rem 1rem; background: var(--accent-soft); cursor: pointer; }
+/* 1. Recognize: picker and tips on the left, the photo (and the button) on the right.
+   On a phone: picker, photo and button, then the tips, so the next action is in view. */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "pick preview" "tips preview"; grid-template-rows: auto 1fr; gap: 0 1rem; }
+.split .pick { grid-area: pick; }
+.split .preview-box { grid-area: preview; }
+.split .tips { grid-area: tips; }
+.pick { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; min-width: 0; border: 2px dashed var(--pick-border); border-radius: 14px; padding: 0.8rem 1rem; background: var(--accent-soft); cursor: pointer; }
 .pick:hover, .pick:focus-within { border-color: var(--accent); }
 .pick-icon { font-size: 1.8rem; }
+.pick > span:not(.pick-icon) { flex: 1 1 11rem; min-width: 0; }
 .pick input { flex-basis: 100%; max-width: 100%; border: 0; background: none; padding: 0; }
 .tips { margin: 0.75rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.88rem; }
 .preview-box { display: flex; flex-direction: column; }
-#preview { display: block; width: 100%; height: 15rem; object-fit: contain; border-radius: 12px; background: var(--bg); }
-.placeholder { display: grid; place-items: center; height: 15rem; margin: 0; border-radius: 12px; background: var(--bg); color: var(--muted); }
+#preview { display: block; width: 100%; height: 14rem; object-fit: contain; border-radius: 12px; background: var(--bg); }
+.placeholder { display: grid; place-items: center; height: 14rem; margin: 0; border-radius: 12px; background: var(--bg); color: var(--muted); }
 
-/* 2. Adjust: the ingredients in a two-column grid of category cards */
-#groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
-.group { border: 1px solid var(--border); border-radius: 12px; padding: 0.3rem 0.8rem 0.5rem; margin: 0; min-width: 0; background: var(--surface); }
+/* 2. Adjust: category cards packed in columns (three on a wide window), then "add" and "next" in one row */
+#groups { columns: 3 15rem; column-gap: 0.6rem; }
+.group { break-inside: avoid; border: 1px solid var(--border); border-radius: 12px; padding: 0.3rem 0.8rem 0.5rem; margin: 0 0 0.6rem; min-width: 0; background: var(--surface); }
 .group legend { padding: 0 0.3rem; color: var(--accent-ink); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
 .item { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; padding: 0.08rem 0; }
 .item input { width: 1.05rem; height: 1.05rem; margin: 0; padding: 0; accent-color: var(--accent); }
@@ -101,6 +127,9 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 .badge { margin-left: auto; font-size: 0.7rem; padding: 0 0.45rem; border-radius: 999px; border: 1px solid currentColor; }
 .badge.medium { color: var(--muted); }
 .badge.low { color: var(--warn); }
+.adjust-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.6fr); align-items: end; gap: 0.75rem; }
+.adjust-actions .add { margin-top: 0; flex-wrap: nowrap; }
+.adjust-actions .primary { margin-top: 0; }
 .add { align-items: end; }
 .add label { display: grid; gap: 0.15rem; font-size: 0.85rem; color: var(--muted); }
 .add input { width: 100%; }
@@ -109,19 +138,22 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 /* 3. Cook: options in one row, the two recipes side by side */
 .options { display: grid; grid-template-columns: repeat(4, 1fr) minmax(12rem, 1.3fr); align-items: end; gap: 0.75rem; margin-top: 0.25rem; }
 .options .primary { margin-top: 0; }
-.recipe-body { display: grid; grid-template-columns: 2fr 3fr; gap: 0.9rem; }
+.recipe-body { display: grid; grid-template-columns: minmax(8rem, 1fr) 2fr; gap: 0.9rem; }
 .options label { display: grid; gap: 0.2rem; font-size: 0.85rem; color: var(--muted); }
 .options output { color: var(--accent-ink); font-weight: 700; }
 .options input[type="range"] { padding: 0; border: 0; background: none; accent-color: var(--accent); width: 100%; }
 #recipes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.75rem; }
 #recipes:empty { display: none; }
-.recipe { border: 1px solid var(--border); border-radius: 14px; padding: 0.75rem 1rem; background: var(--surface); box-shadow: var(--shadow); min-width: 0; }
-.recipe h3 { margin: 0; font-size: 1.1rem; }
+.recipe { border: 1px solid var(--border); border-radius: 14px; padding: 0.7rem 1rem; background: var(--surface); box-shadow: var(--shadow); min-width: 0; font-size: 0.9rem; }
+.recipe-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.25rem 0.75rem; }
+.recipe-head .row { margin-top: 0; gap: 0.4rem; }
+.recipe-head button { padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+.recipe h3 { margin: 0.2rem 0 0; font-size: 1.1rem; }
 .recipe h4 { margin: 0.5rem 0 0.15rem; font-size: 0.9rem; color: var(--accent-ink); }
 .recipe ul, .recipe ol { margin: 0; padding-left: 1.3rem; }
 .recipe li { margin: 0.05rem 0; }
 .summary { margin: 0.2rem 0; }
-.facts { display: inline-block; margin: 0.2rem 0; padding: 0.05rem 0.55rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: 0.8rem; font-weight: 600; }
+.facts { display: inline-block; margin: 0.2rem 0; padding: 0.05rem 0.55rem; border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink); font-size: 0.8rem; font-weight: 600; }
 
 /* Saved */
 .saved-item { border-top: 1px solid var(--border); padding: 0.4rem 0; }
@@ -131,18 +163,25 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 /* GitHub connection and the local status line */
 summary { cursor: pointer; }
 summary h2 { display: inline; }
-#settings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 0.6rem; }
+#settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.6rem; margin-top: 0.6rem; }
+#settings .primary { display: inline-block; width: auto; margin-top: 0; padding-inline: 1.5rem; }
 #settings label { display: grid; gap: 0.15rem; font-size: 0.85rem; color: var(--muted); }
 #settings input { width: 100%; }
-#settings .row, #settings-msg { grid-column: 1 / -1; }
+#settings .row { grid-column: 1 / -1; margin-top: 0.2rem; }
 #settings-msg { margin: 0; font-size: 0.88rem; }
-.footer { margin: 0.75rem 0 0; text-align: center; color: var(--muted); font-size: 0.8rem; }
 
 /* Narrow screens (phones, Fold cover): one column everywhere */
 @media (max-width: 760px) {
   .options { grid-template-columns: 1fr 1fr; }
   .options .primary { grid-column: 1 / -1; }
-  .split, #recipes { grid-template-columns: 1fr; }
+  #recipes { grid-template-columns: 1fr; }
+  .split { grid-template-columns: minmax(0, 1fr); grid-template-areas: "pick" "preview" "tips"; grid-template-rows: none; }
+  .split .preview-box { margin-top: 0.75rem; }
+  #preview, .placeholder { height: 12rem; }
+  /* Keep "Next" within thumb reach while scrolling a long list */
+  .adjust-actions { display: contents; } /* so "Next" can stick within the whole card */
+  .adjust-actions .add { margin-top: 0.6rem; }
+  .adjust-actions .primary { position: sticky; bottom: 0.75rem; z-index: 4; margin-top: 0.75rem; }
   .steps small { display: none; }
   .mode { margin-left: 0; flex-basis: 100%; }
 }
@@ -151,6 +190,17 @@ summary h2 { display: inline; }
   .steps button { flex-direction: column; gap: 0.2rem; padding: 0.45rem 0.2rem; text-align: center; }
   .steps b { width: 1.6rem; height: 1.6rem; }
   .steps strong { font-size: 0.82rem; }
-  #groups, #settings, .recipe-body { grid-template-columns: 1fr; }
-  #preview, .placeholder { height: 12rem; }
+  #settings, .recipe-body { grid-template-columns: 1fr; }
+  #preview { height: 12rem; }
+  .placeholder { height: 5rem; }
+  .top h1 { font-size: 1.6rem; }
+  .lede { font-size: 0.88rem; }
+}
+/* Touch screens: rows and controls big enough for a thumb (about 44 px) */
+@media (pointer: coarse) {
+  .item { min-height: 2.75rem; }
+  .item input { width: 1.4rem; height: 1.4rem; }
+  input:not([type="checkbox"]):not([type="range"]):not([type="file"]), select { min-height: 2.75rem; }
+  button { min-height: 2.75rem; }
+  .saved-item summary { padding: 0.6rem 0; }
 }

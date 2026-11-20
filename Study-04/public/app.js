@@ -68,8 +68,30 @@ function showTab(name) {
     else b.removeAttribute("aria-current");
   }
   if (name === "cook") renderCook();
+  // On a phone the user may be far down the previous step: bring the new one into view.
+  const section = $(`tab-${name}`);
+  if (section.getBoundingClientRect().top < 0) section.scrollIntoView({ block: "start" });
 }
-for (const b of document.querySelectorAll(".steps button")) b.addEventListener("click", () => showTab(b.dataset.tab));
+for (const b of document.querySelectorAll(".steps button")) {
+  b.addEventListener("click", () => {
+    if (!busy) $("progress").textContent = ""; // an old "Done" line belongs to the step it came from
+    showTab(b.dataset.tab);
+  });
+}
+
+/** Marks the page as working: spinner, running timer, and a sticky status bar. Returns a stop function. */
+function startBusy(started = Date.now()) {
+  const bar = $("statusbar");
+  const tick = () => ($("elapsed").textContent = `${Math.round((Date.now() - started) / 1000)} s`);
+  bar.classList.add("busy");
+  tick();
+  const timer = setInterval(tick, 1000);
+  return () => {
+    clearInterval(timer);
+    bar.classList.remove("busy");
+    $("elapsed").textContent = "";
+  };
+}
 
 function setError(message, link) {
   const box = $("error");
@@ -83,20 +105,47 @@ function setError(message, link) {
     a.rel = "noreferrer";
     box.append(a);
   }
+  // The button the user pressed may be far below on a phone: make sure the error is seen.
+  if (box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: "center" });
 }
 
 const ready = () => (LOCAL ? localReady : settingsProblems(githubSettings()).length === 0);
 function updateButtons() {
   $("recognize").disabled = busy || !photo || !ready();
   $("cook").disabled = busy || !ready() || !ingredients.some((i) => i.use);
+  // Say why a button is greyed out, so the next action is always clear.
+  const notReady = ready() ? "" : LOCAL ? "The local server isn't ready: see the message at the top." : "First set up the GitHub connection.";
+  setHint("recognize-hint", busy ? "" : notReady || (photo ? "" : "Choose a photo first."));
+  setHint("cook-hint", busy ? "" : notReady || (ingredients.some((i) => i.use) ? "" : "Tick at least one ingredient in step 2 (Adjust) first."));
+}
+function setHint(id, text) {
+  const hint = $(id);
+  hint.replaceChildren();
+  hint.hidden = !text;
+  if (!text) return;
+  hint.append(el("span", text));
+  if (!LOCAL && !ready()) {
+    hint.append(
+      button("Open the connection form", () => {
+        const setup = $("github-setup");
+        setup.open = true;
+        setup.scrollIntoView({ block: "start" });
+        setup.querySelector("input")?.focus({ preventScroll: true });
+      }, "link")
+    );
+  }
 }
 
 /** Sends a request (local server or GitHub) and hands the answer to `show`. */
 async function run(payload, show) {
   busy = true;
-  updateButtons();
   setError("");
   const started = Date.now();
+  const pressed = $(payload.type === "recognize" ? "recognize" : "cook");
+  const label = pressed.textContent;
+  pressed.textContent = "Working…";
+  const stopBusy = startBusy(started);
+  updateButtons();
   const stage = (text) => ($("progress").textContent = text);
   try {
     let answer;
@@ -114,6 +163,8 @@ async function run(payload, show) {
     stage(err.name === "AbortError" ? "Stopped waiting." : "");
     if (err.name !== "AbortError") setError(err.message, err.link);
   } finally {
+    stopBusy();
+    pressed.textContent = label;
     waiting = null;
     busy = false;
     updateButtons();
@@ -268,6 +319,8 @@ function showRecipes(answer) {
   store(KEYS.recipes, recipes);
   renderRecipes();
   showTab("cook");
+  // On a narrow screen the recipes land below the options: show them.
+  if (matchMedia("(max-width: 760px)").matches) $("recipes").scrollIntoView({ block: "start" });
 }
 
 function renderRecipes() {
@@ -289,7 +342,11 @@ function download(recipe) {
 
 function recipeCard(r, { save, savedAt, onDelete } = {}) {
   const card = el("article", null, "recipe");
-  card.append(el("h3", r.title));
+  // Title with its actions beside it, so Save is in view as soon as the recipe appears.
+  const head = el("div", null, "recipe-head");
+  const row = el("div", null, "row");
+  head.append(el("h3", r.title), row);
+  card.append(head);
   if (r.summary) card.append(el("p", r.summary, "summary"));
   card.append(el("p", `${r.cuisine} · ${r.difficulty} · ${r.minutes} min · serves ${r.servings}`, "facts"));
   // Ingredients and steps side by side, so a recipe fits on one screen.
@@ -305,7 +362,6 @@ function recipeCard(r, { save, savedAt, onDelete } = {}) {
   body.append(left, right);
   card.append(body);
   if (r.extra?.length) card.append(el("p", `You may need: ${r.extra.join(", ")}`, "note"));
-  const row = el("div", null, "row");
   if (save) {
     const already = saved.some((s) => s.recipe.title === r.title && s.recipe.steps?.join() === r.steps?.join());
     const b = button(already ? "✔ Saved" : "Save", () => {
@@ -319,10 +375,9 @@ function recipeCard(r, { save, savedAt, onDelete } = {}) {
     b.disabled = already;
     row.append(b);
   }
-  row.append(button("Download as text", () => download(r)));
+  row.append(Object.assign(button("Download .txt", () => download(r)), { title: "Download this recipe as a text file" }));
   if (onDelete) row.append(button("Delete", onDelete));
-  if (savedAt) row.append(el("span", `Saved ${new Date(savedAt).toLocaleDateString()}`, "note"));
-  card.append(row);
+  if (savedAt) card.append(el("p", `Saved ${new Date(savedAt).toLocaleDateString()}`, "note"));
   return card;
 }
 
@@ -338,6 +393,7 @@ function renderSaved() {
       recipeCard(s.recipe, {
         savedAt: s.savedAt,
         onDelete: () => {
+          if (!confirm(`Delete "${s.recipe.title}" from your saved recipes? This can't be undone.`)) return;
           saved.splice(n, 1);
           store(KEYS.saved, saved);
           renderSaved();
@@ -357,18 +413,21 @@ renderRecipes();
 renderSaved();
 
 if (LOCAL) {
-  $("mode").textContent = "Running on this computer (local server)";
-  $("local-setup").hidden = false;
+  // The server status lives in the header line, so every step keeps its full height.
+  $("mode").textContent = "Local server · checking…";
   try {
     const res = await fetch("/api/status");
     const data = await res.json();
     if (!res.ok || !data.ready) throw new Error();
     localReady = Boolean(data.analyze);
-    $("status").textContent = localReady
-      ? `✔ Ready: the server has your Claude key (${data.models.vision}).`
-      : "The server is using OpenRouter, which can't do this. Add ANTHROPIC_API_KEY to .env and restart.";
+    if (localReady) $("mode").textContent = `✔ Local server ready (${data.models.vision}) · your API key stays on it`;
+    else {
+      $("mode").textContent = "Local server not ready";
+      setError("The server is using OpenRouter, which can't read photos. Add ANTHROPIC_API_KEY to .env and restart it.");
+    }
   } catch {
-    $("status").textContent = "✖ The server isn't running. Start it with: npm start";
+    $("mode").textContent = "Local server not running";
+    setError("The local server isn't running. Start it with: npm start, then reload this page.");
   }
 } else {
   $("mode").textContent = "Running through GitHub (no laptop needed)";
@@ -412,6 +471,7 @@ if (LOCAL) {
     busy = true;
     waiting = new AbortController();
     const started = Date.now();
+    const stopBusy = startBusy(started);
     $("progress").textContent = "Picking up your last request…";
     waitForAnswer({ settings: githubSettings(), id: pending, resumed: true, signal: waiting.signal, onStage: (t) => ($("progress").textContent = t) })
       .then((answer) => showAnswer(answer, started))
@@ -420,6 +480,7 @@ if (LOCAL) {
         if (err.name !== "AbortError") setError(err.message, err.link);
       })
       .finally(() => {
+        stopBusy();
         waiting = null;
         busy = false;
         updateButtons();

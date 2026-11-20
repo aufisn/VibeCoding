@@ -8,7 +8,7 @@ It works in three steps, like the app in the book. Both AI steps use **Claude So
 2. **Adjust:** you untick anything that's wrong and add what's missing. Items Claude is unsure about start unticked.
 3. **Cook:** choose the **cuisine**, **difficulty**, **max time** and **servings**, and Claude writes **two different recipes**, also in a fixed JSON shape.
 
-**Save** keeps a recipe on your device (the **Saved** tab), and **Download as text** saves it as a `.txt` file.
+**Save** keeps a recipe on your device (the **Saved** tab), and **Download .txt** saves it as a text file.
 
 [OpenRouter](https://openrouter.ai) stays as an optional backup provider (see "Free models" below).
 

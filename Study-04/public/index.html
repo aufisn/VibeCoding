@@ -25,42 +25,48 @@
         <button type="button" data-tab="saved" class="saved-tab"><b>★</b><span><strong>Saved <span id="saved-count"></span></strong><small>Your recipe list.</small></span></button>
       </nav>
 
-      <p id="progress" role="status" aria-live="polite"></p>
-      <p id="error" class="error" role="alert" hidden></p>
+      <!-- Progress: stays in view (sticky) while Claude works, with a running timer. -->
+      <div id="statusbar" class="statusbar">
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="progress" role="status" aria-live="polite"></span>
+        <span id="elapsed" class="elapsed" aria-hidden="true"></span>
+      </div>
+      <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
 
       <section id="tab-recognize" class="card tab" aria-labelledby="recognize-title">
         <h2 id="recognize-title">Your fridge photo</h2>
         <div class="split">
-          <div>
-            <label class="pick" for="photo">
-              <span class="pick-icon" aria-hidden="true">📷</span>
-              <span><strong>Take or choose a photo</strong><small>JPG, PNG, WEBP or GIF · shrunk to about 300 KB before sending</small></span>
-              <input id="photo" type="file" accept="image/*" />
-            </label>
-            <ul class="tips">
-              <li>Open the door wide and step back so every shelf is in the frame.</li>
-              <li>Good light helps: Claude marks anything it's unsure about.</li>
-              <li>You can fix the list in step 2 before cooking.</li>
-            </ul>
-          </div>
+          <label class="pick" for="photo">
+            <span class="pick-icon" aria-hidden="true">📷</span>
+            <span><strong>Take or choose a photo</strong><small>JPG, PNG, WEBP or GIF · shrunk to about 300 KB before sending</small></span>
+            <input id="photo" type="file" accept="image/*" />
+          </label>
           <div class="preview-box">
-            <img id="preview" alt="The photo you chose" hidden />
+            <img id="preview" alt="Your fridge photo, ready to send" hidden />
             <p id="no-photo" class="placeholder">Your photo shows here.</p>
             <button id="recognize" type="button" class="primary" disabled>Recognize ingredients</button>
+            <p id="recognize-hint" class="hint" hidden></p>
           </div>
+          <ul class="tips">
+            <li>Open the door wide and step back so every shelf is in the frame.</li>
+            <li>Good light helps: Claude marks anything it's unsure about.</li>
+            <li>You can fix the list in step 2 before cooking.</li>
+          </ul>
         </div>
       </section>
 
       <section id="tab-adjust" class="card tab" aria-labelledby="adjust-title" hidden>
         <h2 id="adjust-title">What Claude found</h2>
         <p id="found-summary" class="note"></p>
-        <div id="groups"></div>
         <p id="notes" class="note"></p>
-        <form id="add-form" class="row add">
-          <label class="grow">Add an ingredient <input id="add-name" maxlength="60" autocomplete="off" /></label>
-          <button type="submit" class="secondary">Add</button>
-        </form>
-        <button id="to-cook" type="button" class="primary">Next: recipe options</button>
+        <div id="groups"></div>
+        <div class="adjust-actions">
+          <form id="add-form" class="row add">
+            <label class="grow">Missing something? Add it <input id="add-name" maxlength="60" autocomplete="off" placeholder="e.g. garlic" /></label>
+            <button type="submit" class="secondary">Add</button>
+          </form>
+          <button id="to-cook" type="button" class="primary">Next: recipe options →</button>
+        </div>
       </section>
 
       <section id="tab-cook" class="card tab" aria-labelledby="cook-title" hidden>
@@ -73,6 +79,7 @@
           <label>Servings <output id="servings-out"></output> <input id="servings" type="range" /></label>
           <button id="cook" type="button" class="primary" disabled>Generate recipes</button>
         </div>
+        <p id="cook-hint" class="hint" hidden></p>
         <div id="recipes"></div>
       </section>
 
@@ -81,8 +88,6 @@
         <p class="note">Kept only in this browser, on this device.</p>
         <div id="saved"></div>
       </section>
-
-      <p id="local-setup" class="footer" hidden><span id="status">Checking the server…</span> · Your API key stays on the local server; this page never sees it.</p>
 
       <details id="github-setup" class="card" hidden>
         <summary><h2>GitHub connection</h2></summary>
@@ -96,10 +101,10 @@
           <label>Run token (fine-grained, Actions: write) <input name="runToken" type="password" spellcheck="false" autocapitalize="off" /></label>
           <label>Passphrase (same as FC_PASSPHRASE) <input name="passphrase" type="password" spellcheck="false" autocapitalize="off" /></label>
           <div class="row">
-            <button type="submit" class="primary">Save</button>
+            <button type="submit" class="primary">Save connection</button>
             <button id="forget" type="button" class="secondary">Forget on this device</button>
+            <p id="settings-msg" role="status"></p>
           </div>
-          <p id="settings-msg" role="status"></p>
         </form>
       </details>
     </main>
