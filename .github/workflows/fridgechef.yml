@@ -1,0 +1,54 @@
+# FridgeChef (Study-04): answers one photo request from the web page.
+# Started by the page's "Get a recipe" button (workflow_dispatch); there is
+# no schedule, so it costs nothing until you use it.
+#
+# This repo is public, so its Actions logs and run inputs are public too.
+# The photo and the answer travel only through the secret Gist, encrypted;
+# the only input here is a random request ID, and the log shows only
+# progress words.
+name: FridgeChef
+run-name: FridgeChef ${{ inputs.request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: "Request ID made by the FridgeChef page"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  answer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Study-04
+    env:
+      # Passed through env (not ${{ }} inside run:), so input text can't become shell code.
+      REQUEST_ID: ${{ inputs.request_id }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
+      FC_PASSPHRASE: ${{ secrets.FC_PASSPHRASE }}
+      FC_GIST_ID: ${{ secrets.FC_GIST_ID }}
+      FC_GIST_TOKEN: ${{ secrets.FC_GIST_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: Study-04
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Study-04/package-lock.json
+
+      - name: Install packages
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+
+      - name: Answer the request
+        run: node ci/run-request.mjs

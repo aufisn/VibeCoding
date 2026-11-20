@@ -4,24 +4,63 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'self' https://api.github.com https://gist.githubusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <meta name="referrer" content="no-referrer" />
     <title>FridgeChef</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main>
-      <h1>FridgeChef</h1>
-      <p class="lede">Snap your fridge, get a recipe.</p>
-      <section class="card" aria-labelledby="status-title">
+      <header>
+        <h1>FridgeChef</h1>
+        <p class="lede">Snap your fridge, get a recipe.</p>
+        <p id="mode" class="mode"></p>
+      </header>
+
+      <section class="card" aria-labelledby="photo-title">
+        <h2 id="photo-title">Your fridge</h2>
+        <label class="pick" for="photo">
+          <span>📷 Take or choose a photo</span>
+          <input id="photo" type="file" accept="image/*" />
+        </label>
+        <img id="preview" alt="The photo you chose" hidden />
+        <button id="go" type="button" disabled>Get a recipe</button>
+        <p id="progress" role="status" aria-live="polite"></p>
+        <p id="error" class="error" role="alert" hidden></p>
+      </section>
+
+      <section id="result" class="card" aria-labelledby="result-title" hidden>
+        <h2 id="result-title">What Claude found</h2>
+        <ul id="ingredients" class="ingredients"></ul>
+        <p id="notes" class="note"></p>
+        <div id="recipe" class="recipe"></div>
+        <p id="meta" class="meta"></p>
+      </section>
+
+      <section id="local-setup" class="card" aria-labelledby="status-title" hidden>
         <h2 id="status-title">Setup</h2>
-        <p id="status" role="status">Checking the server…</p>
-        <dl id="models" hidden>
-          <dt>Image recognition</dt>
-          <dd id="vision-model"></dd>
-          <dt>Recipe writing</dt>
-          <dd id="text-model"></dd>
-        </dl>
+        <p id="status">Checking the server…</p>
         <p class="note">Your API key stays on the local server. This page never sees it.</p>
       </section>
+
+      <details id="github-setup" class="card" hidden>
+        <summary><h2>GitHub connection</h2></summary>
+        <p class="note">
+          Saved only in this browser, on this device. The Anthropic key isn't here: it stays in the repository's
+          secrets on GitHub. See <a href="https://github.com/aufisn/VibeCoding/tree/main/Study-04#run-it-from-anywhere-github" rel="noreferrer">the setup steps</a>.
+        </p>
+        <form id="settings" autocomplete="off">
+          <label>Gist ID <input name="gistId" spellcheck="false" autocapitalize="off" /></label>
+          <label>Gist token (classic, gist scope) <input name="gistToken" type="password" spellcheck="false" autocapitalize="off" /></label>
+          <label>Run token (fine-grained, Actions: write) <input name="runToken" type="password" spellcheck="false" autocapitalize="off" /></label>
+          <label>Passphrase (same as FC_PASSPHRASE) <input name="passphrase" type="password" spellcheck="false" autocapitalize="off" /></label>
+          <div class="row">
+            <button type="submit">Save</button>
+            <button id="forget" type="button" class="secondary">Forget on this device</button>
+          </div>
+          <p id="settings-msg" role="status"></p>
+        </form>
+      </details>
     </main>
     <script type="module" src="app.js"></script>
   </body>

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // FridgeChef local server. It serves the web page from public/ and is the
-// only place the OpenRouter API key is used: the browser talks to this server,
-// and this server talks to OpenRouter. The key never reaches the browser.
+// only place the API key is used: the browser talks to this server, and this
+// server talks to Anthropic (or OpenRouter). The key never reaches the browser.
 //
 //   npm start            (or: node server.mjs)
 //   → http://127.0.0.1:8790
@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import { loadConfig, maskKey } from "./server/config.mjs";
 import { createOpenRouterClient } from "./server/openrouter.mjs";
 import { createClaudeClient } from "./server/claude.mjs";
+import { analyzeFridge } from "./server/fridgechef.mjs";
 
 /** The models in use for each step, for the active provider. */
 export function activeModels(config) {
@@ -102,7 +103,20 @@ export function createApp({ config, client, publicDir = PUBLIC_DIR, routes = {},
         ready: Boolean(client),
         provider: config.AI_PROVIDER,
         models: activeModels(config),
+        analyze: typeof client?.identifyIngredients === "function",
       }),
+    // A fridge photo in, ingredients and a recipe out (Claude only).
+    "POST /api/analyze": async (req, res) => {
+      if (typeof client?.identifyIngredients !== "function") return send(res, 501, { error: "Photo analysis needs Claude: add ANTHROPIC_API_KEY to .env." });
+      const body = await readJson(req);
+      try {
+        return send(res, 200, await analyzeFridge(client, body?.image));
+      } catch (err) {
+        // ClaudeError and photo checks carry plain messages without the key.
+        const status = err.status >= 400 && err.status < 600 ? err.status : 502;
+        return send(res, status, { error: err.name === "ClaudeError" || err.status ? err.message : "Claude couldn't analyse the photo." });
+      }
+    },
     ...routes,
   };
 

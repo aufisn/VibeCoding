@@ -125,9 +125,19 @@ test("no response ever contains the key", async () => {
 test("status works and tells the page only what it needs", async () => {
   const r = await get("/api/status", {});
   assert.equal(r.status, 200);
-  assert.deepEqual(JSON.parse(r.text), { ready: true, provider: "openrouter", models: { vision: "v/vision", text: "t/text" } });
+  assert.deepEqual(JSON.parse(r.text), { ready: true, provider: "openrouter", models: { vision: "v/vision", text: "t/text" }, analyze: false });
   assert.match(r.headers["content-security-policy"], /default-src 'self'/);
   assert.equal(r.headers["x-content-type-options"], "nosniff");
+});
+
+test("photo analysis needs Claude, and refuses cross-site posts", async () => {
+  const origin = `http://127.0.0.1:${port}`;
+  const body = JSON.stringify({ image: { base64: "AAAA", mediaType: "image/jpeg" } });
+  const r = await get("/api/analyze", { method: "POST", headers: { origin, "content-type": "application/json" }, body });
+  assert.equal(r.status, 501);
+  assert.match(JSON.parse(r.text).error, /needs Claude/);
+  const evil = await get("/api/analyze", { method: "POST", headers: { origin: "https://evil.example", "content-type": "application/json" }, body });
+  assert.equal(evil.status, 403);
 });
 
 test("files outside public/ can't be reached", async () => {
