@@ -130,14 +130,16 @@ test("status works and tells the page only what it needs", async () => {
   assert.equal(r.headers["x-content-type-options"], "nosniff");
 });
 
-test("photo analysis needs Claude, and refuses cross-site posts", async () => {
+test("recognize and recipes need Claude, and refuse cross-site posts", async () => {
   const origin = `http://127.0.0.1:${port}`;
   const body = JSON.stringify({ image: { base64: "AAAA", mediaType: "image/jpeg" } });
-  const r = await get("/api/analyze", { method: "POST", headers: { origin, "content-type": "application/json" }, body });
-  assert.equal(r.status, 501);
-  assert.match(JSON.parse(r.text).error, /needs Claude/);
-  const evil = await get("/api/analyze", { method: "POST", headers: { origin: "https://evil.example", "content-type": "application/json" }, body });
-  assert.equal(evil.status, 403);
+  for (const path of ["/api/recognize", "/api/recipes"]) {
+    const r = await get(path, { method: "POST", headers: { origin, "content-type": "application/json" }, body });
+    assert.equal(r.status, 501, path);
+    assert.match(JSON.parse(r.text).error, /needs Claude/);
+    const evil = await get(path, { method: "POST", headers: { origin: "https://evil.example", "content-type": "application/json" }, body });
+    assert.equal(evil.status, 403, path);
+  }
 });
 
 test("files outside public/ can't be reached", async () => {

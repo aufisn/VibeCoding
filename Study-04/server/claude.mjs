@@ -5,6 +5,8 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
+import { CATEGORIES } from "../public/options.js";
+
 export const DEFAULT_CLAUDE_MODEL = "claude-sonnet-5-5";
 
 /** USD per million tokens (input, output), to show what each request cost. */
@@ -28,8 +30,9 @@ export const INGREDIENTS_SCHEMA = Object.freeze({
           name: { type: "string" },
           quantity: { type: "string" },
           confidence: { type: "string", enum: ["high", "medium", "low"] },
+          category: { type: "string", enum: CATEGORIES },
         },
-        required: ["name", "quantity", "confidence"],
+        required: ["name", "quantity", "confidence", "category"],
         additionalProperties: false,
       },
     },
@@ -40,13 +43,54 @@ export const INGREDIENTS_SCHEMA = Object.freeze({
 });
 
 export const VISION_PROMPT = `This is a photo of food, usually the inside of a refrigerator.
-List every food ingredient you can see, with a rough quantity and how confident you are (high, medium or low).
+List every food ingredient you can see, with a rough quantity, how confident you are (high, medium or low), and its category (${CATEGORIES.join(", ")}).
 Use simple English ingredient names, such as "eggs" or "cheddar cheese". Name what's inside a container only when you can tell; otherwise describe it (e.g. "leftovers in a container") with low confidence. Skip non-food items.
 In notes, mention anything unclear in one or two short sentences, or leave it empty.`;
 
 export const recipePrompt = (ingredients) => `Ingredients available: ${ingredients}.
 Write one simple home recipe that uses mainly these ingredients (salt, pepper, oil and water may be added).
 Format: a title line, then "Ingredients:" as a list with amounts, then "Steps:" as a numbered list, then "Time:" in minutes. Keep it under 200 words.`;
+
+/** The answer shape for "two recipes", enforced by structured outputs. */
+export const RECIPES_SCHEMA = Object.freeze({
+  type: "object",
+  properties: {
+    recipes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          summary: { type: "string" },
+          cuisine: { type: "string" },
+          difficulty: { type: "string", enum: ["Easy", "Medium", "Hard"] },
+          minutes: { type: "integer" },
+          servings: { type: "integer" },
+          ingredients: {
+            type: "array",
+            items: { type: "object", properties: { item: { type: "string" }, amount: { type: "string" } }, required: ["item", "amount"], additionalProperties: false },
+          },
+          steps: { type: "array", items: { type: "string" } },
+          extra: { type: "array", items: { type: "string" } },
+        },
+        required: ["title", "summary", "cuisine", "difficulty", "minutes", "servings", "ingredients", "steps", "extra"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["recipes"],
+  additionalProperties: false,
+});
+
+/** The prompt for two recipes from a checked ingredient list and checked options. Pure. */
+export const recipesPrompt = (ingredients, o) => `Ingredients available: ${ingredients.join(", ")}.
+Write two different home recipes that use mainly these ingredients.
+- Cuisine: ${o.cuisine === "Any" ? "any (pick what suits the ingredients; make the two recipes different styles)" : o.cuisine}
+- Difficulty: ${o.difficulty} or easier
+- Total time: at most ${o.maxMinutes} minutes, including preparation
+- Servings: ${o.servings}
+Salt, pepper, oil and water may always be added. In "extra", list anything else a recipe needs that isn't in the list (keep it short; empty if nothing).
+Give amounts for ${o.servings} serving(s). Steps are short, clear sentences without numbers. "summary" is one sentence. "minutes" is the honest total time.`;
 
 /** Cost in USD of one response's usage, or null for an unknown model. Pure. */
 export function costOf(model, usage) {
@@ -162,6 +206,23 @@ export function createClaudeClient({ apiKey, model = DEFAULT_CLAUDE_MODEL, works
         throw new ClaudeError("Claude's ingredient list couldn't be read. Try again.", 200);
       }
       return { ingredients: parsed.ingredients, notes: parsed.notes, usage: reply.usage, cost: reply.cost, model: reply.model };
+    },
+
+    /**
+     * Two recipes from checked ingredient names and checked options (see public/options.js).
+     * @returns {{ recipes: object[], usage, cost, model }}
+     */
+    async writeRecipes(ingredients, options) {
+      const reply = await ask(recipesPrompt(ingredients, options), { output_config: { format: { type: "json_schema", schema: RECIPES_SCHEMA } } });
+      let parsed;
+      try {
+        parsed = JSON.parse(reply.text);
+      } catch {
+        throw new ClaudeError("Claude's recipes couldn't be read. Try again.", 200);
+      }
+      const recipes = (parsed.recipes ?? []).slice(0, 2);
+      if (!recipes.length) throw new ClaudeError("Claude didn't return any recipes. Try again.", 200);
+      return { recipes, usage: reply.usage, cost: reply.cost, model: reply.model };
     },
 
     /** A recipe (plain text) from a list or comma-separated string of ingredients. */

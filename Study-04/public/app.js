@@ -1,26 +1,71 @@
-// FridgeChef page. Two ways to run, picked automatically:
-// - local:  opened from this Mac's server (npm start) → POST /api/analyze
-// - GitHub: opened from GitHub Pages → encrypted request through a secret Gist
+// FridgeChef page, in three steps like the book's app:
+//   1 Recognize: a photo → ingredients by category
+//   2 Adjust:    tick off what's wrong, add what's missing
+//   3 Cook:      cuisine, difficulty, time, servings → two recipes
+// plus Saved recipes (this device only) with a text download.
+//
+// Two ways to run, picked automatically:
+// - local:  opened from this Mac's server (npm start) → /api/recognize, /api/recipes
+// - GitHub: opened from GitHub Pages → encrypted requests through a secret Gist
 //           and a GitHub Actions job (see remote.js)
 // Either way the page never has the Anthropic key. Everything Claude returns
 // is shown as text (textContent), never as HTML.
 
 import { preparePhoto } from "./photo.js";
-import { parseRecipe } from "./recipe.js";
+import { CATEGORIES, checkIngredients, checkOptions, cleanName, CUISINES, DEFAULT_OPTIONS, DIFFICULTIES, recipeText, SERVINGS, TIME } from "./options.js";
 import { askGitHub, forgetSettings, loadSettings, pendingRequest, saveSettings, SETTING_FIELDS, settingsProblems, waitForAnswer } from "./remote.js";
 
 const $ = (id) => document.getElementById(id);
 const LOCAL = ["127.0.0.1", "localhost", "[::1]", "::1"].includes(location.hostname);
+const KEYS = { ingredients: "fridgechef.ingredients.v1", options: "fridgechef.options.v1", saved: "fridgechef.saved.v1", recipes: "fridgechef.recipes.v1" };
+
 let photo = null; // the prepared photo { base64, mediaType, ... }
 let busy = false;
 let localReady = false;
+let ingredients = load(KEYS.ingredients, []); // [{ name, quantity, confidence, category, use }]
+let recipes = load(KEYS.recipes, []); // the last two recipes
+let saved = load(KEYS.saved, []); // [{ savedAt, recipe }]
+
+function load(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(fallback) ? (Array.isArray(v) ? v : fallback) : v ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+function store(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage full or blocked: the page still works for this visit */
+  }
+}
 
 function el(tag, text, className) {
   const node = document.createElement(tag);
-  if (text !== undefined) node.textContent = text;
+  if (text !== undefined && text !== null) node.textContent = text;
   if (className) node.className = className;
   return node;
 }
+function button(text, onClick, className = "secondary") {
+  const b = el("button", text, className);
+  b.type = "button";
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+/* ---------- Tabs, progress, errors ---------- */
+
+function showTab(name) {
+  for (const t of document.querySelectorAll(".tab")) t.hidden = t.id !== `tab-${name}`;
+  for (const b of document.querySelectorAll(".steps button")) {
+    if (b.dataset.tab === name) b.setAttribute("aria-current", "step");
+    else b.removeAttribute("aria-current");
+  }
+  if (name === "cook") renderCook();
+}
+for (const b of document.querySelectorAll(".steps button")) b.addEventListener("click", () => showTab(b.dataset.tab));
 
 function setError(message, link) {
   const box = $("error");
@@ -36,75 +81,53 @@ function setError(message, link) {
   }
 }
 
-function updateButton() {
-  const ready = LOCAL ? localReady : settingsProblems(loadSettings()).length === 0;
-  $("go").disabled = busy || !photo || !ready;
+const ready = () => (LOCAL ? localReady : settingsProblems(loadSettings()).length === 0);
+function updateButtons() {
+  $("recognize").disabled = busy || !photo || !ready();
+  $("cook").disabled = busy || !ready() || !ingredients.some((i) => i.use);
 }
 
-function showResult(answer) {
-  $("result").hidden = false;
-  const list = $("ingredients");
-  list.replaceChildren();
-  for (const i of answer.ingredients ?? []) {
-    const li = el("li");
-    li.append(el("span", i.name), i.quantity ? el("span", ` · ${i.quantity}`, "qty") : "", el("span", i.confidence, `badge ${i.confidence}`));
-    list.append(li);
-  }
-  if (!answer.ingredients?.length) list.append(el("li", "No food found in this photo."));
-  $("notes").textContent = answer.notes ?? "";
-
-  const box = $("recipe");
-  box.replaceChildren();
-  if (answer.recipe) {
-    for (const b of parseRecipe(answer.recipe)) {
-      if (b.type === "title") box.append(el("h3", b.text));
-      else if (b.type === "heading") box.append(el("h4", b.text));
-      else if (b.type === "para") box.append(el("p", b.text));
-      else {
-        const l = el(b.type === "steps" ? "ol" : "ul");
-        for (const item of b.items) l.append(el("li", item));
-        box.append(l);
-      }
-    }
-  } else {
-    box.append(el("p", "No recipe: Claude wasn't confident about any ingredient. Try a clearer, brighter photo."));
-  }
-  const cost = typeof answer.cost === "number" ? ` · cost $${answer.cost.toFixed(4)}` : "";
-  $("meta").textContent = `${answer.model ?? "Claude"}${answer.seconds ? ` · Claude took ${answer.seconds} s` : ""}${cost}`;
-  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-async function askLocal(image) {
-  const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image }) });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `The server answered ${res.status}.`);
-  return data;
-}
-
-async function run(task) {
+/** Sends a request (local server or GitHub) and hands the answer to `show`. */
+async function run(payload, show) {
   busy = true;
-  updateButton();
+  updateButtons();
   setError("");
   const started = Date.now();
+  const stage = (text) => ($("progress").textContent = text);
   try {
-    const answer = await task((text) => ($("progress").textContent = text));
-    if (answer.ok === false) throw new Error(answer.error || "Claude couldn't answer.");
-    showResult(answer);
-    $("progress").textContent = `✔ Done in ${Math.round((Date.now() - started) / 1000)} s.`;
+    let answer;
+    if (LOCAL) {
+      stage(payload.type === "recognize" ? "Claude is looking at your fridge…" : "Claude is writing two recipes…");
+      const res = await fetch(`/api/${payload.type}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      answer = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(answer.error || `The server answered ${res.status}.`);
+    } else {
+      answer = await askGitHub({ settings: loadSettings(), payload, onStage: stage });
+    }
+    showAnswer(answer, started, show);
   } catch (err) {
-    $("progress").textContent = "";
+    stage("");
     setError(err.message, err.link);
   } finally {
     busy = false;
-    updateButton();
+    updateButtons();
   }
 }
+
+function showAnswer(answer, started, show) {
+  if (answer.ok === false) throw new Error(answer.error || "Claude couldn't answer.");
+  (show ?? (answer.type === "recipes" ? showRecipes : showIngredients))(answer);
+  const cost = typeof answer.cost === "number" ? ` · cost $${answer.cost.toFixed(4)}` : "";
+  $("progress").textContent = `✔ Done in ${Math.round((Date.now() - started) / 1000)} s${cost}.`;
+}
+
+/* ---------- 1. Recognize ---------- */
 
 $("photo").addEventListener("change", async (e) => {
   const file = e.target.files?.[0];
   setError("");
   photo = null;
-  updateButton();
+  updateButtons();
   if (!file) return;
   try {
     $("progress").textContent = "Preparing the photo…";
@@ -118,22 +141,202 @@ $("photo").addEventListener("change", async (e) => {
     $("progress").textContent = "";
     setError(err.message);
   }
-  updateButton();
+  updateButtons();
 });
 
-$("go").addEventListener("click", () => {
-  if (!photo) return;
-  const image = { base64: photo.base64, mediaType: photo.mediaType };
-  run(async (stage) => {
-    if (LOCAL) {
-      stage("Claude is looking at your fridge and writing a recipe…");
-      return askLocal(image);
-    }
-    return askGitHub({ settings: loadSettings(), image, onStage: stage });
-  });
+$("recognize").addEventListener("click", () => {
+  if (photo) run({ type: "recognize", image: { base64: photo.base64, mediaType: photo.mediaType } });
 });
+
+function showIngredients(answer) {
+  // Low-confidence guesses start unticked: you decide whether they're really there.
+  ingredients = (answer.ingredients ?? []).map((i) => ({ ...i, name: cleanName(i.name), use: i.confidence !== "low" }));
+  store(KEYS.ingredients, ingredients);
+  $("notes").textContent = answer.notes ?? "";
+  renderIngredients();
+  showTab("adjust");
+}
+
+/* ---------- 2. Adjust ---------- */
+
+function renderIngredients() {
+  const box = $("groups");
+  box.replaceChildren();
+  const groups = CATEGORIES.map((c) => [c, ingredients.filter((i) => (i.category ?? "other") === c)]).filter(([, list]) => list.length);
+  $("found-summary").textContent = ingredients.length
+    ? `${ingredients.length} ingredient${ingredients.length === 1 ? "" : "s"} across ${groups.length} categor${groups.length === 1 ? "y" : "ies"}. Untick anything that's wrong.`
+    : "Nothing yet: recognize a photo first, or add ingredients yourself.";
+  for (const [category, list] of groups) {
+    const group = el("fieldset", null, "group");
+    group.append(el("legend", `${category} · ${list.length}`));
+    for (const item of list) {
+      const label = el("label", null, "item");
+      const box2 = el("input");
+      box2.type = "checkbox";
+      box2.checked = item.use;
+      box2.addEventListener("change", () => {
+        item.use = box2.checked;
+        store(KEYS.ingredients, ingredients);
+        updateButtons();
+      });
+      label.append(box2, el("span", item.name), item.quantity ? el("span", item.quantity, "qty") : "");
+      if (item.confidence === "low" || item.confidence === "medium") label.append(el("span", item.confidence === "low" ? "unsure" : "likely", `badge ${item.confidence}`));
+      group.append(label);
+    }
+    box.append(group);
+  }
+  updateButtons();
+}
+
+$("add-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = cleanName($("add-name").value);
+  if (!name) return;
+  if (!ingredients.some((i) => i.name.toLowerCase() === name.toLowerCase())) ingredients.push({ name, quantity: "", confidence: "high", category: "other", use: true, added: true });
+  else ingredients.find((i) => i.name.toLowerCase() === name.toLowerCase()).use = true;
+  $("add-name").value = "";
+  store(KEYS.ingredients, ingredients);
+  renderIngredients();
+});
+
+$("to-cook").addEventListener("click", () => showTab("cook"));
+
+/* ---------- 3. Cook ---------- */
+
+function fillOptions() {
+  const o = { ...DEFAULT_OPTIONS, ...load(KEYS.options, {}) };
+  for (const [id, list] of [["cuisine", CUISINES], ["difficulty", DIFFICULTIES]]) {
+    $(id).replaceChildren(...list.map((v) => Object.assign(el("option", v), { value: v })));
+  }
+  Object.assign($("time"), { min: TIME.min, max: TIME.max, step: TIME.step });
+  Object.assign($("servings"), { min: SERVINGS.min, max: SERVINGS.max, step: 1 });
+  try {
+    const ok = checkOptions(o);
+    $("cuisine").value = ok.cuisine;
+    $("difficulty").value = ok.difficulty;
+    $("time").value = ok.maxMinutes;
+    $("servings").value = ok.servings;
+  } catch {
+    Object.assign($("cuisine"), { value: DEFAULT_OPTIONS.cuisine });
+  }
+  showOptionValues();
+}
+function readOptions() {
+  return checkOptions({ cuisine: $("cuisine").value, difficulty: $("difficulty").value, maxMinutes: Number($("time").value), servings: Number($("servings").value) });
+}
+function showOptionValues() {
+  $("time-out").textContent = `${$("time").value} min`;
+  $("servings-out").textContent = $("servings").value;
+}
+for (const id of ["cuisine", "difficulty", "time", "servings"]) {
+  $(id).addEventListener("input", () => {
+    showOptionValues();
+    store(KEYS.options, readOptions());
+  });
+}
+
+function renderCook() {
+  const using = ingredients.filter((i) => i.use).map((i) => i.name);
+  $("using").textContent = using.length ? `Using: ${using.join(", ")}` : "No ingredients ticked: go back to step 2.";
+  updateButtons();
+}
+
+$("cook").addEventListener("click", () => {
+  try {
+    const list = checkIngredients(ingredients.filter((i) => i.use).map((i) => i.name));
+    run({ type: "recipes", ingredients: list, options: readOptions() });
+  } catch (err) {
+    setError(err.message);
+  }
+});
+
+function showRecipes(answer) {
+  recipes = answer.recipes ?? [];
+  store(KEYS.recipes, recipes);
+  renderRecipes();
+  showTab("cook");
+}
+
+function renderRecipes() {
+  $("recipes").replaceChildren(...recipes.map((r) => recipeCard(r, { save: true })));
+}
+
+/* ---------- Recipes and Saved ---------- */
+
+function download(recipe) {
+  const url = URL.createObjectURL(new Blob([recipeText(recipe)], { type: "text/plain;charset=utf-8" }));
+  const a = el("a");
+  a.href = url;
+  a.download = `${(recipe.title || "recipe").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "recipe"}.txt`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function recipeCard(r, { save, savedAt, onDelete } = {}) {
+  const card = el("article", null, "recipe");
+  card.append(el("h3", r.title));
+  if (r.summary) card.append(el("p", r.summary, "summary"));
+  card.append(el("p", `${r.cuisine} · ${r.difficulty} · ${r.minutes} min · serves ${r.servings}`, "facts"));
+  card.append(el("h4", "Ingredients"));
+  const ul = el("ul");
+  for (const i of r.ingredients ?? []) ul.append(el("li", `${i.amount ? `${i.amount} ` : ""}${i.item}`));
+  card.append(ul, el("h4", "Steps"));
+  const ol = el("ol");
+  for (const s of r.steps ?? []) ol.append(el("li", s));
+  card.append(ol);
+  if (r.extra?.length) card.append(el("p", `You may need: ${r.extra.join(", ")}`, "note"));
+  const row = el("div", null, "row");
+  if (save) {
+    const already = saved.some((s) => s.recipe.title === r.title && s.recipe.steps?.join() === r.steps?.join());
+    const b = button(already ? "✔ Saved" : "Save", () => {
+      saved.unshift({ savedAt: new Date().toISOString(), recipe: r });
+      saved = saved.slice(0, 50);
+      store(KEYS.saved, saved);
+      b.textContent = "✔ Saved";
+      b.disabled = true;
+      renderSaved();
+    });
+    b.disabled = already;
+    row.append(b);
+  }
+  row.append(button("Download as text", () => download(r)));
+  if (onDelete) row.append(button("Delete", onDelete));
+  if (savedAt) row.append(el("span", `Saved ${new Date(savedAt).toLocaleDateString()}`, "note"));
+  card.append(row);
+  return card;
+}
+
+function renderSaved() {
+  $("saved-count").textContent = saved.length ? `(${saved.length})` : "";
+  const box = $("saved");
+  box.replaceChildren();
+  if (!saved.length) box.append(el("p", "No saved recipes yet. Use Save under a recipe.", "note"));
+  saved.forEach((s, n) => {
+    const details = el("details", null, "saved-item");
+    details.append(el("summary", s.recipe.title));
+    details.append(
+      recipeCard(s.recipe, {
+        savedAt: s.savedAt,
+        onDelete: () => {
+          saved.splice(n, 1);
+          store(KEYS.saved, saved);
+          renderSaved();
+          renderRecipes();
+        },
+      })
+    );
+    box.append(details);
+  });
+}
 
 /* ---------- Start-up ---------- */
+
+fillOptions();
+renderIngredients();
+renderRecipes();
+renderSaved();
 
 if (LOCAL) {
   $("mode").textContent = "Running on this computer (local server)";
@@ -145,7 +348,7 @@ if (LOCAL) {
     localReady = Boolean(data.analyze);
     $("status").textContent = localReady
       ? `✔ Ready: the server has your Claude key (${data.models.vision}).`
-      : "The server is using OpenRouter, which can't read photos here. Add ANTHROPIC_API_KEY to .env and restart.";
+      : "The server is using OpenRouter, which can't do this. Add ANTHROPIC_API_KEY to .env and restart.";
   } catch {
     $("status").textContent = "✖ The server isn't running. Start it with: npm start";
   }
@@ -159,7 +362,7 @@ if (LOCAL) {
     for (const f of SETTING_FIELDS) form.elements[f].value = s[f];
     const problems = settingsProblems(s);
     setup.open = problems.length > 0;
-    $("settings-msg").textContent = problems.length ? "Fill in all four to start." : "✔ Connected settings saved on this device.";
+    $("settings-msg").textContent = problems.length ? "Fill in all four to start." : "✔ Connection saved on this device.";
   };
   fill();
   form.addEventListener("submit", (e) => {
@@ -173,21 +376,31 @@ if (LOCAL) {
     saveSettings(s);
     $("settings-msg").textContent = "✔ Saved on this device.";
     setup.open = false;
-    updateButton();
+    updateButtons();
   });
   $("forget").addEventListener("click", () => {
     forgetSettings();
     fill();
-    updateButton();
+    updateButtons();
   });
 
   // A request still waiting from last time (page closed or reloaded mid-wait)?
   const pending = pendingRequest();
-  if (pending && settingsProblems(loadSettings()).length === 0) {
-    run((stage) => {
-      stage("Picking up your last request…");
-      return waitForAnswer({ settings: loadSettings(), id: pending, onStage: stage });
-    });
+  if (pending && ready()) {
+    busy = true;
+    const started = Date.now();
+    $("progress").textContent = "Picking up your last request…";
+    waitForAnswer({ settings: loadSettings(), id: pending, onStage: (t) => ($("progress").textContent = t) })
+      .then((answer) => showAnswer(answer, started))
+      .catch((err) => {
+        $("progress").textContent = "";
+        setError(err.message, err.link);
+      })
+      .finally(() => {
+        busy = false;
+        updateButtons();
+      });
   }
 }
-updateButton();
+showTab("recognize");
+updateButtons();

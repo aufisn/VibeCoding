@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 import { loadConfig, maskKey } from "./server/config.mjs";
 import { createOpenRouterClient } from "./server/openrouter.mjs";
 import { createClaudeClient } from "./server/claude.mjs";
-import { analyzeFridge } from "./server/fridgechef.mjs";
+import { handleRequest } from "./server/fridgechef.mjs";
 
 /** The models in use for each step, for the active provider. */
 export function activeModels(config) {
@@ -105,20 +105,23 @@ export function createApp({ config, client, publicDir = PUBLIC_DIR, routes = {},
         models: activeModels(config),
         analyze: typeof client?.identifyIngredients === "function",
       }),
-    // A fridge photo in, ingredients and a recipe out (Claude only).
-    "POST /api/analyze": async (req, res) => {
-      if (typeof client?.identifyIngredients !== "function") return send(res, 501, { error: "Photo analysis needs Claude: add ANTHROPIC_API_KEY to .env." });
-      const body = await readJson(req);
-      try {
-        return send(res, 200, await analyzeFridge(client, body?.image));
-      } catch (err) {
-        // ClaudeError and photo checks carry plain messages without the key.
-        const status = err.status >= 400 && err.status < 600 ? err.status : 502;
-        return send(res, status, { error: err.name === "ClaudeError" || err.status ? err.message : "Claude couldn't analyse the photo." });
-      }
-    },
+    // Step 1, a photo → ingredients; step 3, ingredients + options → two recipes (Claude only).
+    "POST /api/recognize": (req, res) => answer(req, res, "recognize"),
+    "POST /api/recipes": (req, res) => answer(req, res, "recipes"),
     ...routes,
   };
+
+  async function answer(req, res, type) {
+    if (typeof client?.identifyIngredients !== "function") return send(res, 501, { error: "FridgeChef needs Claude: add ANTHROPIC_API_KEY to .env." });
+    const body = await readJson(req);
+    try {
+      return send(res, 200, await handleRequest(client, { ...body, type }));
+    } catch (err) {
+      // ClaudeError and the input checks carry plain messages without the key.
+      const status = err.status >= 400 && err.status < 600 ? err.status : 502;
+      return send(res, status, { error: err.name === "ClaudeError" || err.status ? err.message : "Claude couldn't answer." });
+    }
+  }
 
   return async function handle(req, res) {
     try {

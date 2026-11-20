@@ -8,16 +8,18 @@ import { readFile } from "node:fs/promises";
 import { decryptJson, encryptJson } from "../public/fc-crypto.js";
 import { createGistClient, isRequestId, newRequestId, staleFiles } from "../public/mailbox.js";
 import { askGitHub, settingsProblems, waitForAnswer } from "../public/remote.js";
-import { parseRecipe } from "../public/recipe.js";
+import { checkIngredients, checkOptions, recipeText } from "../public/options.js";
 import { fitSize } from "../public/photo.js";
 import { missingSettings, runRequest } from "../ci/run-request.mjs";
-import { analyzeFridge, checkImage } from "../server/fridgechef.mjs";
+import { checkImage, handleRequest } from "../server/fridgechef.mjs";
 
 const GIST_ID = "f".repeat(32);
 const SETTINGS = { gistId: GIST_ID, gistToken: "ghp_" + "a".repeat(36), runToken: "github_pat_" + "b".repeat(40), passphrase: "correct horse battery" };
 const IMAGE = { base64: "iVBORw0KGgoAAAANSUhEUg==", mediaType: "image/jpeg" };
 
-function fakeClaude({ ingredients = [{ name: "eggs", quantity: "4", confidence: "high" }, { name: "jar", quantity: "1", confidence: "low" }], fail } = {}) {
+const RECIPE = { title: "Omelette", summary: "Quick eggs.", cuisine: "French", difficulty: "Easy", minutes: 10, servings: 2, ingredients: [{ item: "eggs", amount: "4" }], steps: ["Whisk.", "Cook."], extra: [] };
+
+function fakeClaude({ ingredients = [{ name: "eggs", quantity: "4", confidence: "high", category: "dairy & eggs" }, { name: "jar", quantity: "1", confidence: "low", category: "made-up" }], fail } = {}) {
   const calls = [];
   return {
     calls,
@@ -26,9 +28,10 @@ function fakeClaude({ ingredients = [{ name: "eggs", quantity: "4", confidence: 
       if (fail) throw fail;
       return { ingredients, notes: "", model: "claude-sonnet-5-5", cost: 0.006 };
     },
-    async writeRecipe(list) {
-      calls.push(["recipe", list]);
-      return { text: "Omelette\nIngredients:\n- 4 eggs\nSteps:\n1. Whisk.\nTime: 5 minutes", cost: 0.004 };
+    async writeRecipes(list, options) {
+      calls.push(["recipes", list, options]);
+      if (fail) throw fail;
+      return { recipes: [RECIPE, { ...RECIPE, title: "Frittata" }], model: "claude-sonnet-5-5", cost: 0.004 };
     },
   };
 }
@@ -88,7 +91,7 @@ test("encryption round-trips, uses Market Agent's envelope, and refuses a wrong 
   await assert.rejects(decryptJson('{"v":1,"kdf":"PBKDF2-SHA256","iter":1,"salt":"","iv":"","ct":""}', "x"), /isn't an encrypted/);
 });
 
-test("full GitHub round trip: the page sends, the job answers, the page shows and cleans up", async () => {
+test("full GitHub round trip: recognize, then two recipes; everything is cleaned up", async () => {
   const claude = fakeClaude();
   let gh;
   gh = fakeGitHub({
@@ -104,15 +107,19 @@ test("full GitHub round trip: the page sends, the job answers, the page shows an
   });
   const storage = memoryStorage();
   const stages = [];
-  const answer = await askGitHub({ settings: SETTINGS, image: IMAGE, fetch: gh.fetch, storage, onStage: (s) => stages.push(s), sleep: noSleep });
+  const answer = await askGitHub({ settings: SETTINGS, payload: { type: "recognize", image: IMAGE }, fetch: gh.fetch, storage, onStage: (s) => stages.push(s), sleep: noSleep });
 
   assert.equal(answer.ok, true);
-  assert.deepEqual(answer.ingredients.map((i) => i.name), ["eggs", "jar"]);
-  assert.match(answer.recipe, /^Omelette/);
-  assert.equal(answer.cost, 0.01);
+  assert.equal(answer.type, "recognize");
+  assert.deepEqual(answer.ingredients.map((i) => [i.name, i.category]), [["eggs", "dairy & eggs"], ["jar", "other"]], "unknown categories become other");
+  assert.equal(answer.cost, 0.006);
   assert.deepEqual(claude.calls[0][1], IMAGE, "the job got the exact photo");
-  assert.deepEqual(claude.calls[1][1], ["eggs"], "low-confidence finds stay out of the recipe");
-  assert.deepEqual(Object.keys(gh.files), [], "request and answer are both deleted");
+
+  const cooked = await askGitHub({ settings: SETTINGS, payload: { type: "recipes", ingredients: ["eggs", " eggs ", "milk"], options: { cuisine: "French", maxMinutes: 20 } }, fetch: gh.fetch, storage, sleep: noSleep });
+  assert.equal(cooked.type, "recipes");
+  assert.deepEqual(cooked.recipes.map((r) => r.title), ["Omelette", "Frittata"]);
+  assert.deepEqual(claude.calls[1].slice(1), [["eggs", "milk"], { cuisine: "French", difficulty: "Easy", maxMinutes: 20, servings: 2 }]);
+  assert.deepEqual(Object.keys(gh.files), [], "requests and answers are all deleted");
   assert.equal(storage.m.size, 0, "nothing pending");
   assert.ok(stages.some((s) => /uploading/i.test(s)) && stages.some((s) => /Decrypting/.test(s)));
   // Each token went only to its own API.
@@ -124,7 +131,7 @@ test("full GitHub round trip: the page sends, the job answers, the page shows an
 
 test("a failed dispatch removes the uploaded photo and explains the token problem", async () => {
   const gh = fakeGitHub({ dispatchStatus: 403 });
-  await assert.rejects(askGitHub({ settings: SETTINGS, image: IMAGE, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep }), /run token.*isn't allowed/i);
+  await assert.rejects(askGitHub({ settings: SETTINGS, payload: { type: "recognize", image: IMAGE }, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep }), /run token.*isn't allowed/i);
   assert.deepEqual(Object.keys(gh.files), []);
 });
 
@@ -138,14 +145,14 @@ test("Claude errors come back as an encrypted error answer the page shows", asyn
       assert.equal(r.ok, false);
     },
   });
-  const answer = await askGitHub({ settings: SETTINGS, image: IMAGE, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep });
+  const answer = await askGitHub({ settings: SETTINGS, payload: { type: "recognize", image: IMAGE }, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep });
   assert.equal(answer.ok, false);
   assert.equal(answer.error, "Claude declined this request.");
 });
 
 test("a job that fails without answering is reported with a link to its log", async () => {
   const gh = fakeGitHub({ onDispatch: (_id, run) => Object.assign(run, { status: "completed", conclusion: "failure" }) });
-  await assert.rejects(askGitHub({ settings: SETTINGS, image: IMAGE, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep }), (err) => {
+  await assert.rejects(askGitHub({ settings: SETTINGS, payload: { type: "recognize", image: IMAGE }, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep }), (err) => {
     assert.match(err.message, /failed without an answer/);
     assert.equal(err.link, "https://github.com/aufisn/VibeCoding/actions/runs/1");
     return true;
@@ -166,7 +173,7 @@ test("the job refuses bad IDs, missing requests and a wrong passphrase without l
   assert.match((await runRequest({ id: "../etc", passphrase: "x", gist, claude, log: () => {} })).message, /format/);
   assert.match((await runRequest({ id: newRequestId(), passphrase: "x", gist, claude, log: () => {} })).message, /isn't in the Gist/);
   const id = newRequestId();
-  gh.files[`req-${id}.enc`] = await encryptJson({ image: IMAGE }, "another passphrase");
+  gh.files[`req-${id}.enc`] = await encryptJson({ type: "recognize", image: IMAGE }, "another passphrase");
   const r = await runRequest({ id, passphrase: SETTINGS.passphrase, gist, claude, log: () => {} });
   assert.match(r.message, /passphrase is wrong/);
   assert.equal(claude.calls.length, 0, "Claude isn't called (or paid) for an unreadable request");
@@ -181,27 +188,31 @@ test("the job deletes mailbox files older than a day", async () => {
   assert.ok(isRequestId(fresh) && !isRequestId("abc") && !isRequestId(`${fresh}/x`));
 });
 
-test("settings checks, recipe parsing, photo sizing and photo checks", async () => {
+test("settings checks, photo sizing and photo checks", async () => {
   assert.deepEqual(settingsProblems(SETTINGS), []);
   assert.equal(settingsProblems({ gistId: "x", gistToken: "", runToken: "ghp_x", passphrase: "short" }).length, 4);
-
-  const blocks = parseRecipe("**Spinach Omelet**\n\nIngredients:\n- 3 eggs\n- **1 cup** spinach\nSteps:\n1. Whisk.\n2) Cook.\nTime: 12 minutes");
-  assert.deepEqual(blocks, [
-    { type: "title", text: "Spinach Omelet" },
-    { type: "heading", text: "Ingredients" },
-    { type: "bullets", items: ["3 eggs", "1 cup spinach"] },
-    { type: "heading", text: "Steps" },
-    { type: "steps", items: ["Whisk.", "Cook."] },
-    { type: "para", text: "Time: 12 minutes" },
-  ]);
-
   assert.deepEqual(fitSize(4032, 3024), { width: 1568, height: 1176 });
   assert.deepEqual(fitSize(800, 600), { width: 800, height: 600 });
-
   assert.throws(() => checkImage({ base64: "abc", mediaType: "image/bmp" }), /Unsupported/);
   assert.throws(() => checkImage({ base64: "<script>", mediaType: "image/png" }), /damaged/);
-  const none = await analyzeFridge(fakeClaude({ ingredients: [{ name: "?", quantity: "", confidence: "low" }] }), IMAGE);
-  assert.equal(none.recipe, "", "no recipe from guesses alone");
+});
+
+test("ingredient lists and recipe options are checked the same way everywhere", async () => {
+  assert.deepEqual(checkIngredients(["Eggs", "eggs", { name: " milk\n" }, "", null]), ["Eggs", "milk"]);
+  assert.throws(() => checkIngredients([]), /at least one/);
+  assert.throws(() => checkIngredients(Array.from({ length: 61 }, (_, i) => `item ${i}`)), /too many/);
+  assert.equal(checkIngredients(["x".repeat(500)])[0].length, 60);
+  assert.deepEqual(checkOptions({}), { cuisine: "Any", difficulty: "Easy", maxMinutes: 30, servings: 2 });
+  assert.throws(() => checkOptions({ cuisine: "Martian" }), /Cuisine/);
+  assert.throws(() => checkOptions({ maxMinutes: 500 }), /Max time/);
+  assert.throws(() => checkOptions({ servings: 0 }), /Servings/);
+  await assert.rejects(handleRequest(fakeClaude(), { type: "delete-everything" }), /Unknown request/);
+  await assert.rejects(handleRequest(fakeClaude(), { type: "recipes", ingredients: ["eggs"], options: { difficulty: "Impossible" } }), /Difficulty/);
+  const text = recipeText(RECIPE);
+  assert.match(text, /^Omelette\n/);
+  assert.match(text, /French · Easy · 10 min · serves 2/);
+  assert.match(text, /- 4 eggs/);
+  assert.match(text, /2\. Cook\./);
 });
 
 test("the workflow passes the request ID through env only and keeps secrets out of run lines", async () => {

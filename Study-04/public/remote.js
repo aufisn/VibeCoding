@@ -73,15 +73,16 @@ async function findRun(settings, fetch, id) {
 }
 
 /**
- * Sends a prepared photo ({ base64, mediaType }) through GitHub and waits for
- * the answer. `onStage(text)` reports progress. Returns the decrypted answer.
+ * Sends a request through GitHub and waits for the answer: { type: "recognize", image }
+ * or { type: "recipes", ingredients, options }. `onStage(text)` reports progress.
+ * Returns the decrypted answer.
  */
-export async function askGitHub({ settings, image, fetch = globalThis.fetch.bind(globalThis), storage = globalThis.localStorage, onStage = () => {}, sleep, now = () => Date.now() }) {
+export async function askGitHub({ settings, payload, fetch = globalThis.fetch.bind(globalThis), storage = globalThis.localStorage, onStage = () => {}, sleep, now = () => Date.now() }) {
   const gist = createGistClient({ token: settings.gistToken, gistId: settings.gistId, fetch });
   const id = newRequestId(now());
 
-  onStage("Encrypting and uploading the photo…");
-  await gist.write({ [requestFile(id)]: await encryptJson({ image, sentAt: new Date(now()).toISOString() }, settings.passphrase) });
+  onStage(payload.type === "recognize" ? "Encrypting and uploading the photo…" : "Encrypting and sending your list…");
+  await gist.write({ [requestFile(id)]: await encryptJson({ ...payload, sentAt: new Date(now()).toISOString() }, settings.passphrase) });
 
   onStage("Starting the FridgeChef job on GitHub…");
   const res = await actionsCall(settings, fetch, `/workflows/${WORKFLOW}/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: { request_id: id } }) });
@@ -116,7 +117,7 @@ export async function waitForAnswer({ settings, id, fetch = globalThis.fetch.bin
     if (round % 2 === 0) {
       run = (await findRun(settings, fetch, id).catch(() => null)) ?? run;
       if (!run || run.status === "queued" || run.status === "waiting" || run.status === "pending") onStage("Waiting for a GitHub computer to start (usually 15–40 s)…");
-      else if (run.status === "in_progress") onStage("Claude is looking at your fridge and writing a recipe…");
+      else if (run.status === "in_progress") onStage("Claude is working on it…");
     }
     await sleep(everyMs);
   }

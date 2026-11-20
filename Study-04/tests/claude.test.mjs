@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { costOf, createClaudeClient, describeClaudeError, INGREDIENTS_SCHEMA } from "../server/claude.mjs";
+import { costOf, createClaudeClient, describeClaudeError, INGREDIENTS_SCHEMA, RECIPES_SCHEMA } from "../server/claude.mjs";
 import { loadConfig, checkConfig } from "../server/config.mjs";
 
 const FAKE_ANTHROPIC = "sk-ant-api03-TESTKEY000000000000000000000000000000000000000000000000000000abcd";
@@ -109,4 +109,19 @@ test("a key without a workspace gets a clear fix; ANTHROPIC_WORKSPACE_ID is chec
   const base = { AI_PROVIDER: "anthropic", ANTHROPIC_API_KEY: FAKE_ANTHROPIC, ANTHROPIC_MODEL: "claude-sonnet-5-5", HOST: "127.0.0.1", PORT: "8790" };
   assert.deepEqual(checkConfig({ ...base, ANTHROPIC_WORKSPACE_ID: "wrkspc_01AbC" }), []);
   assert.match(checkConfig({ ...base, ANTHROPIC_WORKSPACE_ID: "my workspace" }).join(), /wrkspc_/);
+});
+
+test("writeRecipes asks for two recipes in a strict shape, with the options in the prompt", async () => {
+  const recipe = { title: "Shakshuka", summary: "", cuisine: "Middle Eastern", difficulty: "Easy", minutes: 25, servings: 2, ingredients: [], steps: [], extra: [] };
+  const sdk = fakeSdk({ content: [{ type: "text", text: JSON.stringify({ recipes: [recipe, recipe, recipe] }) }] });
+  const out = await createClaudeClient({ sdk }).writeRecipes(["eggs", "tomatoes"], { cuisine: "Middle Eastern", difficulty: "Easy", maxMinutes: 25, servings: 2 });
+  assert.equal(out.recipes.length, 2, "never more than two");
+  const req = sdk.calls[0];
+  assert.deepEqual(req.output_config.format, { type: "json_schema", schema: RECIPES_SCHEMA });
+  assert.match(req.messages[0].content, /eggs, tomatoes/);
+  assert.match(req.messages[0].content, /Cuisine: Middle Eastern/);
+  assert.match(req.messages[0].content, /at most 25 minutes/);
+  assert.ok(INGREDIENTS_SCHEMA.properties.ingredients.items.required.includes("category"));
+  const empty = createClaudeClient({ sdk: fakeSdk({ content: [{ type: "text", text: '{"recipes":[]}' }] }) });
+  await assert.rejects(empty.writeRecipes(["eggs"], {}), /didn't return any recipes/);
 });

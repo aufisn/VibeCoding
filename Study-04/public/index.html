@@ -13,28 +13,59 @@
     <main>
       <header>
         <h1>FridgeChef</h1>
-        <p class="lede">Snap your fridge, get a recipe.</p>
+        <p class="lede">From the ingredients you have to a recipe you can cook tonight.</p>
         <p id="mode" class="mode"></p>
       </header>
 
-      <section class="card" aria-labelledby="photo-title">
-        <h2 id="photo-title">Your fridge</h2>
+      <nav class="steps" aria-label="Steps">
+        <button type="button" data-tab="recognize" aria-current="step"><b>1</b> Recognize</button>
+        <button type="button" data-tab="adjust"><b>2</b> Adjust</button>
+        <button type="button" data-tab="cook"><b>3</b> Cook</button>
+        <button type="button" data-tab="saved">Saved <span id="saved-count"></span></button>
+      </nav>
+
+      <p id="progress" role="status" aria-live="polite"></p>
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <section id="tab-recognize" class="card tab" aria-labelledby="recognize-title">
+        <h2 id="recognize-title">Your fridge photo</h2>
         <label class="pick" for="photo">
           <span>📷 Take or choose a photo</span>
           <input id="photo" type="file" accept="image/*" />
         </label>
         <img id="preview" alt="The photo you chose" hidden />
-        <button id="go" type="button" disabled>Get a recipe</button>
-        <p id="progress" role="status" aria-live="polite"></p>
-        <p id="error" class="error" role="alert" hidden></p>
+        <button id="recognize" type="button" class="primary" disabled>Recognize ingredients</button>
       </section>
 
-      <section id="result" class="card" aria-labelledby="result-title" hidden>
-        <h2 id="result-title">What Claude found</h2>
-        <ul id="ingredients" class="ingredients"></ul>
+      <section id="tab-adjust" class="card tab" aria-labelledby="adjust-title" hidden>
+        <h2 id="adjust-title">What Claude found</h2>
+        <p id="found-summary" class="note"></p>
+        <div id="groups"></div>
         <p id="notes" class="note"></p>
-        <div id="recipe" class="recipe"></div>
-        <p id="meta" class="meta"></p>
+        <form id="add-form" class="row add">
+          <label class="grow">Add an ingredient <input id="add-name" maxlength="60" autocomplete="off" /></label>
+          <button type="submit" class="secondary">Add</button>
+        </form>
+        <button id="to-cook" type="button" class="primary">Next: recipe options</button>
+      </section>
+
+      <section id="tab-cook" class="card tab" aria-labelledby="cook-title" hidden>
+        <h2 id="cook-title">Generate recipes</h2>
+        <p id="using" class="note"></p>
+        <div class="options">
+          <label>Cuisine <select id="cuisine"></select></label>
+          <label>Difficulty <select id="difficulty"></select></label>
+          <label>Max time <output id="time-out"></output> <input id="time" type="range" /></label>
+          <label>Servings <output id="servings-out"></output> <input id="servings" type="range" /></label>
+        </div>
+        <button id="cook" type="button" class="primary" disabled>Generate recipes</button>
+        <div id="recipes"></div>
+      </section>
+
+      <section id="tab-saved" class="card tab" aria-labelledby="saved-title" hidden>
+        <h2 id="saved-title">Saved recipes</h2>
+        <p class="note">Kept only in this browser, on this device.</p>
+        <div id="saved"></div>
       </section>
 
       <section id="local-setup" class="card" aria-labelledby="status-title" hidden>
@@ -55,7 +86,7 @@
           <label>Run token (fine-grained, Actions: write) <input name="runToken" type="password" spellcheck="false" autocapitalize="off" /></label>
           <label>Passphrase (same as FC_PASSPHRASE) <input name="passphrase" type="password" spellcheck="false" autocapitalize="off" /></label>
           <div class="row">
-            <button type="submit">Save</button>
+            <button type="submit" class="primary">Save</button>
             <button id="forget" type="button" class="secondary">Forget on this device</button>
           </div>
           <p id="settings-msg" role="status"></p>

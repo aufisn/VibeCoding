@@ -2,10 +2,13 @@
 
 Take a photo of the inside of your fridge, and FridgeChef recognises the ingredients and writes a recipe from them.
 
-It works in two steps, both done by **Claude Sonnet 5.5** (`claude-sonnet-5-5`) through the Anthropic API:
+It works in three steps, like the app in the book. Both AI steps use **Claude Sonnet 5.5** (`claude-sonnet-5-5`) through the Anthropic API:
 
-1. **Image recognition:** Claude lists the ingredients in the photo, as JSON in a fixed shape (structured outputs, so the app can always read it).
-2. **Text generation:** Claude writes a recipe from that list.
+1. **Recognize:** Claude lists the ingredients in the photo, by category (vegetables, fruits, dairy & eggs, meat & seafood, …). The answer comes as JSON in a fixed shape (structured outputs), so the app can always read it.
+2. **Adjust:** you untick anything that's wrong and add what's missing. Items Claude is unsure about start unticked.
+3. **Cook:** choose the **cuisine**, **difficulty**, **max time** and **servings**, and Claude writes **two different recipes**, also in a fixed JSON shape.
+
+**Save** keeps a recipe on your device (the **Saved** tab), and **Download as text** saves it as a `.txt` file.
 
 [OpenRouter](https://openrouter.ai) stays as an optional backup provider (see "Free models" below).
 
@@ -47,12 +50,12 @@ phone page ──encrypted photo──▶ secret Gist ◀──encrypted answer�
      └──────────── "start the job" (run token) ──────────────────────▲
 ```
 
-1. The page shrinks the photo, encrypts it with your passphrase (AES-256-GCM) and saves it in a secret Gist.
+1. The page encrypts the request with your passphrase (AES-256-GCM) and saves it in a secret Gist. The request is either the shrunk photo or your ingredient list and options.
 2. It starts the **FridgeChef** workflow (`.github/workflows/fridgechef.yml`) with a random request ID.
-3. The job decrypts the photo, asks Claude for the ingredients and a recipe, and saves the answer encrypted in the Gist.
+3. The job decrypts the request, asks Claude, and saves the answer encrypted in the Gist.
 4. The page decrypts and shows it, then deletes it from the Gist. The job deletes anything older than a day.
 
-Each photo takes about 30–60 seconds, mostly GitHub starting a computer. GitHub Actions is free for public repos, and Claude costs about 1–2 cents per photo.
+Recognize and Cook are separate jobs, each about 30–60 seconds, mostly GitHub starting a computer. GitHub Actions is free for public repos. Claude costs about half a cent to recognize a photo and about 1–2 cents for two recipes.
 
 **What's public, and what isn't.** The repo is public, so the code and the Actions logs are public. The logs show only a random request ID and progress words. Photos and recipes exist only encrypted in the secret Gist, and the key exists only in GitHub's secret store.
 
@@ -116,13 +119,14 @@ The non-`:free` versions of the same models cost a tiny amount per request: a sh
 | --- | --- |
 | `server.mjs` | Local server: serves `public/`, holds the key, security checks. `createApp({ routes })` is where the API routes plug in |
 | `server/config.mjs` | Reads `.env` (`parseEnv`), checks the settings (`checkConfig`), masks the key (`maskKey`) |
-| `server/claude.mjs` | Claude client (official SDK): `identifyIngredients()` (photo → JSON ingredients), `writeRecipe()`, `checkModel()`, cost per request, safe error messages |
-| `server/fridgechef.mjs` | `analyzeFridge()`: photo → ingredients → recipe. Shared by the local server and the GitHub job |
+| `server/claude.mjs` | Claude client (official SDK): `identifyIngredients()` (photo → JSON ingredients), `writeRecipes()` (two recipes as JSON), `checkModel()`, cost per request, safe error messages |
+| `server/fridgechef.mjs` | `recognize()` (photo → ingredients) and `cook()` (ingredients + options → two recipes). Shared by the local server (`/api/recognize`, `/api/recipes`) and the GitHub job |
+| `public/options.js` | Categories, cuisines, difficulty, time and servings limits, and the checks on them. Shared by the page, the server and the job |
 | `ci/run-request.mjs` | The GitHub job: reads the encrypted request from the Gist, asks Claude, writes the encrypted answer |
 | `../.github/workflows/fridgechef.yml` | The GitHub Actions workflow (started by the page, never on a schedule) |
 | `public/fc-crypto.js` | Encryption (AES-256-GCM, PBKDF2-SHA256, 310,000 rounds), shared by the page and the job |
 | `public/mailbox.js`, `public/remote.js` | The Gist mailbox, and GitHub mode (upload, start the job, wait, decrypt) |
-| `public/photo.js`, `public/recipe.js` | Shrinks the photo before sending; shows the recipe as safe text |
+| `public/photo.js` | Shrinks the photo before sending |
 | `server/openrouter.mjs` | OpenRouter backup client: `keyInfo()`, `chat()`, safe error messages |
 | `scripts/check-key.mjs` | `npm run check`: key and model check, with the key masked (free for Claude) |
 | `scripts/try-models.mjs` | Tries text generation or image recognition and prints the answer, tokens and cost |
