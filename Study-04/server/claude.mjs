@@ -59,6 +59,9 @@ export function costOf(model, usage) {
 export function describeClaudeError(err) {
   const status = err?.status;
   const apiMessage = String(err?.error?.error?.message ?? "");
+  if (status === 400 && /download/i.test(apiMessage)) {
+    return "Anthropic couldn't download the image from that URL (some sites block it). Save the photo and use the file instead.";
+  }
   if (status === 400 && /workspace/i.test(apiMessage)) {
     return "This API key isn't scoped to a workspace. Either create a key inside a workspace (Claude Console → API keys), or set ANTHROPIC_WORKSPACE_ID=wrkspc_… in .env.";
   }

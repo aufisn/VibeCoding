@@ -105,6 +105,7 @@ test("a key without a workspace gets a clear fix; ANTHROPIC_WORKSPACE_ID is chec
   const err = { status: 400, error: { error: { message: "This API key is not scoped to a workspace, so this request must include the anthropic-workspace-id header" } } };
   assert.match(describeClaudeError(err), /ANTHROPIC_WORKSPACE_ID/);
   assert.match(describeClaudeError({ status: 400 }), /couldn't use the request/);
+  assert.match(describeClaudeError({ status: 400, error: { error: { message: "Unable to download the file." } } }), /use the file instead/);
   const base = { AI_PROVIDER: "anthropic", ANTHROPIC_API_KEY: FAKE_ANTHROPIC, ANTHROPIC_MODEL: "claude-sonnet-5-5", HOST: "127.0.0.1", PORT: "8790" };
   assert.deepEqual(checkConfig({ ...base, ANTHROPIC_WORKSPACE_ID: "wrkspc_01AbC" }), []);
   assert.match(checkConfig({ ...base, ANTHROPIC_WORKSPACE_ID: "my workspace" }).join(), /wrkspc_/);
