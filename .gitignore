@@ -32,3 +32,6 @@ Study-03/class/
 
 # Node packages (reinstall with npm install).
 node_modules/
+
+# FridgeChef: the secret Gist ID stays on this Mac.
+Study-04/.fc_gist_id
