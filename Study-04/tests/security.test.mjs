@@ -171,3 +171,59 @@ test("oversized and invalid bodies are refused", async () => {
   const big = await get("/api/test", { method: "POST", headers: { origin, host: `localhost:${port}` }, body: "x".repeat(9 * 1024 * 1024) });
   assert.equal(big.status, 413);
 });
+
+/* ---------- The two Claude routes, with a fake Claude ---------- */
+
+test("recognize and recipes answer through Claude, and Claude's errors keep their HTTP status", async () => {
+  const { MAX_IMAGE_BASE64 } = await import("../server/fridgechef.mjs");
+  const { ClaudeError } = await import("../server/claude.mjs");
+  assert.equal(MAX_IMAGE_BASE64 * 0.75, 5 * 1024 * 1024 + 1, "the base64 limit is 5 MB of image (rounded up to a whole base64 group)");
+  let failWith = null;
+  const claude = {
+    async identifyIngredients(image) {
+      if (failWith) throw failWith;
+      assert.deepEqual(image, { base64: "AAAA", mediaType: "image/jpeg" });
+      return { ingredients: [{ name: "eggs", quantity: "4", confidence: "high", category: "dairy & eggs" }], notes: "", model: "claude-sonnet-5-5", cost: 0.006 };
+    },
+    async writeRecipes(list, options) {
+      if (failWith) throw failWith;
+      return { recipes: [{ title: `${list[0]} ${options.cuisine}` }], model: "claude-sonnet-5-5", cost: 0.004 };
+    },
+  };
+  const claudeConfig = Object.freeze({ AI_PROVIDER: "anthropic", ANTHROPIC_MODEL: "claude-sonnet-5-5", HOST: "127.0.0.1", PORT: "0" });
+  const s2 = await startServer({ config: claudeConfig, client: claude, log: () => {} });
+  const p2 = s2.address().port;
+  const post = (path, body) =>
+    new Promise((resolve, reject) => {
+      const req = request({ host: "127.0.0.1", port: p2, path, method: "POST", headers: { host: `127.0.0.1:${p2}`, origin: `http://127.0.0.1:${p2}`, "content-type": "application/json" } }, (res) => {
+        let text = "";
+        res.on("data", (c) => (text += c)).on("end", () => resolve({ status: res.statusCode, body: JSON.parse(text) }));
+      });
+      req.on("error", reject);
+      req.end(JSON.stringify(body));
+    });
+  try {
+    const seen = await post("/api/recognize", { image: { base64: "AAAA", mediaType: "image/jpeg" } });
+    assert.equal(seen.status, 200);
+    assert.equal(seen.body.type, "recognize");
+    assert.deepEqual(seen.body.ingredients.map((i) => i.name), ["eggs"]);
+    const cooked = await post("/api/recipes", { ingredients: ["eggs"], options: { cuisine: "French" } });
+    assert.equal(cooked.status, 200);
+    assert.deepEqual(cooked.body.recipes, [{ title: "eggs French" }]);
+    assert.equal((await post("/api/recipes", { ingredients: [] })).status, 400, "input checks give 400");
+    assert.equal((await post("/api/recognize", { image: { base64: "A".repeat(MAX_IMAGE_BASE64 + 4), mediaType: "image/jpeg" } })).status, 413);
+
+    failWith = new ClaudeError("Too many requests or spending limit reached. Wait a moment and try again.", 429);
+    const limited = await post("/api/recognize", { image: { base64: "AAAA", mediaType: "image/jpeg" } });
+    assert.deepEqual([limited.status, limited.body.error], [429, failWith.message]);
+    failWith = new ClaudeError("Claude declined this request.", 200); // a 200 from Anthropic is still a failure here
+    assert.equal((await post("/api/recipes", { ingredients: ["eggs"] })).status, 502);
+    failWith = new ClaudeError("Couldn't reach Anthropic.", 0);
+    assert.equal((await post("/api/recipes", { ingredients: ["eggs"] })).status, 502);
+    failWith = new TypeError("secret internals sk-ant-xyz");
+    const hidden = await post("/api/recipes", { ingredients: ["eggs"] });
+    assert.deepEqual([hidden.status, hidden.body.error], [502, "Claude couldn't answer."], "unexpected errors don't leak their message");
+  } finally {
+    s2.close();
+  }
+});

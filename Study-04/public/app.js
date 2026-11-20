@@ -12,7 +12,7 @@
 // is shown as text (textContent), never as HTML.
 
 import { preparePhoto } from "./photo.js";
-import { CATEGORIES, checkIngredients, checkOptions, cleanName, CUISINES, DEFAULT_OPTIONS, DIFFICULTIES, recipeText, SERVINGS, TIME } from "./options.js";
+import { CATEGORIES, checkIngredients, checkOptions, cleanName, CUISINES, DEFAULT_OPTIONS, DIFFICULTIES, recipeText, SERVINGS, TIME, validIngredients, validRecipes, validSaved } from "./options.js";
 import { askGitHub, forgetSettings, loadSettings, pendingRequest, saveSettings, SETTING_FIELDS, settingsProblems, waitForAnswer } from "./remote.js";
 
 const $ = (id) => document.getElementById(id);
@@ -22,9 +22,13 @@ const KEYS = { ingredients: "fridgechef.ingredients.v1", options: "fridgechef.op
 let photo = null; // the prepared photo { base64, mediaType, ... }
 let busy = false;
 let localReady = false;
-let ingredients = load(KEYS.ingredients, []); // [{ name, quantity, confidence, category, use }]
-let recipes = load(KEYS.recipes, []); // the last two recipes
-let saved = load(KEYS.saved, []); // [{ savedAt, recipe }]
+// Saved data is shape-checked: a bad entry is dropped instead of stopping the page.
+let ingredients = validIngredients(load(KEYS.ingredients, [])); // [{ name, quantity, confidence, category, use }]
+let recipes = validRecipes(load(KEYS.recipes, [])); // the last two recipes
+let saved = validSaved(load(KEYS.saved, [])); // [{ savedAt, recipe }]
+let sessionSettings = null; // GitHub settings kept for this visit only, when the browser won't store them
+let waiting = null; // AbortController of the GitHub wait in progress, so "Forget" can stop it
+const githubSettings = () => sessionSettings ?? loadSettings();
 
 function load(key, fallback) {
   try {
@@ -81,7 +85,7 @@ function setError(message, link) {
   }
 }
 
-const ready = () => (LOCAL ? localReady : settingsProblems(loadSettings()).length === 0);
+const ready = () => (LOCAL ? localReady : settingsProblems(githubSettings()).length === 0);
 function updateButtons() {
   $("recognize").disabled = busy || !photo || !ready();
   $("cook").disabled = busy || !ready() || !ingredients.some((i) => i.use);
@@ -102,13 +106,15 @@ async function run(payload, show) {
       answer = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(answer.error || `The server answered ${res.status}.`);
     } else {
-      answer = await askGitHub({ settings: loadSettings(), payload, onStage: stage });
+      waiting = new AbortController();
+      answer = await askGitHub({ settings: githubSettings(), payload, onStage: stage, signal: waiting.signal });
     }
     showAnswer(answer, started, show);
   } catch (err) {
-    stage("");
-    setError(err.message, err.link);
+    stage(err.name === "AbortError" ? "Stopped waiting." : "");
+    if (err.name !== "AbortError") setError(err.message, err.link);
   } finally {
+    waiting = null;
     busy = false;
     updateButtons();
   }
@@ -139,6 +145,12 @@ $("photo").addEventListener("change", async (e) => {
     $("no-photo").hidden = true;
     $("progress").textContent = `Photo ready (${photo.width}×${photo.height}, ${photo.kb} KB).`;
   } catch (err) {
+    // Don't leave the previous photo on show for a file that wasn't usable.
+    const preview = $("preview");
+    if (preview.src) URL.revokeObjectURL(preview.src);
+    preview.removeAttribute("src");
+    preview.hidden = true;
+    $("no-photo").hidden = false;
     $("progress").textContent = "";
     setError(err.message);
   }
@@ -364,11 +376,11 @@ if (LOCAL) {
   setup.hidden = false;
   const form = $("settings");
   const fill = () => {
-    const s = loadSettings();
+    const s = githubSettings();
     for (const f of SETTING_FIELDS) form.elements[f].value = s[f];
     const problems = settingsProblems(s);
     setup.open = problems.length > 0;
-    $("settings-msg").textContent = problems.length ? "Fill in all four to start." : "✔ Connection saved on this device.";
+    $("settings-msg").textContent = problems.length ? "Fill in all four to start." : sessionSettings ? "✔ Connection set for this visit only." : "✔ Connection saved on this device.";
   };
   fill();
   form.addEventListener("submit", (e) => {
@@ -379,12 +391,16 @@ if (LOCAL) {
       $("settings-msg").textContent = `✖ ${problems.join(" ")}`;
       return;
     }
-    saveSettings(s);
-    $("settings-msg").textContent = "✔ Saved on this device.";
+    sessionSettings = saveSettings(s) ? null : s;
+    $("settings-msg").textContent = sessionSettings
+      ? "⚠ This browser won't save it (storage is blocked or full), so it works only until you close this page."
+      : "✔ Saved on this device.";
     setup.open = false;
     updateButtons();
   });
   $("forget").addEventListener("click", () => {
+    waiting?.abort(); // stop any wait: its answer can't be decrypted without the passphrase anyway
+    sessionSettings = null;
     forgetSettings();
     fill();
     updateButtons();
@@ -394,15 +410,17 @@ if (LOCAL) {
   const pending = pendingRequest();
   if (pending && ready()) {
     busy = true;
+    waiting = new AbortController();
     const started = Date.now();
     $("progress").textContent = "Picking up your last request…";
-    waitForAnswer({ settings: loadSettings(), id: pending, onStage: (t) => ($("progress").textContent = t) })
+    waitForAnswer({ settings: githubSettings(), id: pending, resumed: true, signal: waiting.signal, onStage: (t) => ($("progress").textContent = t) })
       .then((answer) => showAnswer(answer, started))
       .catch((err) => {
-        $("progress").textContent = "";
-        setError(err.message, err.link);
+        $("progress").textContent = err.name === "AbortError" ? "Stopped waiting." : "";
+        if (err.name !== "AbortError") setError(err.message, err.link);
       })
       .finally(() => {
+        waiting = null;
         busy = false;
         updateButtons();
       });

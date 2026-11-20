@@ -12,40 +12,69 @@ export function fitSize(width, height, max = MAX_SIDE) {
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
 }
 
+/**
+ * Loads the photo into an <img> (EXIF orientation applied). Waiting for "load"
+ * (not img.decode()) means the browser has read the size but not unpacked
+ * every pixel yet. Call `release()` once it has been drawn.
+ */
+async function loadImage(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  try {
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = url;
+    });
+  } catch (err) {
+    URL.revokeObjectURL(url);
+    throw err;
+  }
+  return { img, release: () => URL.revokeObjectURL(url) };
+}
+
+/**
+ * The photo at the size to send. A 48 MP phone photo decoded at full size is
+ * ~190 MB of pixels; asking createImageBitmap to resize while decoding keeps
+ * it to ~7 MB. Returns { picture, width, height, release }.
+ */
 async function decode(file) {
-  if (globalThis.createImageBitmap) {
+  const { img, release } = await loadImage(file); // throws for formats this browser can't open
+  const size = fitSize(img.naturalWidth || img.width, img.naturalHeight || img.height);
+  if (globalThis.createImageBitmap && (size.width < img.naturalWidth || size.height < img.naturalHeight)) {
     try {
-      return await createImageBitmap(file, { imageOrientation: "from-image" });
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image", resizeWidth: size.width, resizeHeight: size.height, resizeQuality: "high" });
+      // A browser that resizes before turning the photo upright gives the
+      // sides swapped (and the picture squashed): use the plain path then.
+      if (bitmap.width === size.width && bitmap.height === size.height) {
+        release();
+        return { picture: bitmap, ...size, release: () => bitmap.close?.() };
+      }
+      bitmap.close?.();
     } catch {
-      /* fall back to <img> below */
+      /* resize options not supported: the <img> below works everywhere */
     }
   }
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    return img;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  return { picture: img, ...size, release };
 }
 
 /** @returns {Promise<{ base64: string, mediaType: "image/jpeg", width: number, height: number, kb: number }>} */
 export async function preparePhoto(file) {
   if (!file?.type?.startsWith("image/")) throw new Error("That file isn't a photo.");
-  let picture;
+  let picture, width, height, release;
   try {
-    picture = await decode(file);
+    ({ picture, width, height, release } = await decode(file));
   } catch {
     throw new Error("This browser can't open that photo format. Try a JPEG or PNG (on iPhone: Settings → Camera → Formats → Most Compatible).");
   }
-  const { width, height } = fitSize(picture.width, picture.height);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  canvas.getContext("2d").drawImage(picture, 0, 0, width, height);
-  picture.close?.();
+  try {
+    canvas.getContext("2d").drawImage(picture, 0, 0, width, height);
+  } finally {
+    release();
+  }
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
   if (!blob) throw new Error("Couldn't prepare the photo.");
   const bytes = new Uint8Array(await blob.arrayBuffer());

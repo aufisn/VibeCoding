@@ -125,3 +125,15 @@ test("writeRecipes asks for two recipes in a strict shape, with the options in t
   const empty = createClaudeClient({ sdk: fakeSdk({ content: [{ type: "text", text: '{"recipes":[]}' }] }) });
   await assert.rejects(empty.writeRecipes(["eggs"], {}), /didn't return any recipes/);
 });
+
+test("the cost is worked out for the model that actually answered (fallbacks)", async () => {
+  const image = { base64: "AAAA", mediaType: "image/jpeg" };
+  const text = JSON.stringify({ ingredients: [], notes: "" });
+  const asked = await createClaudeClient({ sdk: fakeSdk({ content: [{ type: "text", text }] }) }).identifyIngredients(image);
+  assert.equal(asked.cost, (1000 * 2 + 500 * 10) / 1e6, "same model: Sonnet prices");
+  const fellBack = await createClaudeClient({ sdk: fakeSdk({ model: "claude-opus-5-5", content: [{ type: "text", text }] }) }).identifyIngredients(image);
+  assert.equal(fellBack.model, "claude-opus-5-5");
+  assert.equal(fellBack.cost, (1000 * 4 + 500 * 20) / 1e6, "priced as Opus, not Sonnet");
+  const unknown = await createClaudeClient({ sdk: fakeSdk({ model: "claude-something-new", content: [{ type: "text", text }] }) }).identifyIngredients(image);
+  assert.equal(unknown.cost, null, "no made-up price for a model we don't know");
+});

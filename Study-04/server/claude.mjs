@@ -163,7 +163,9 @@ export function createClaudeClient({ apiKey, model = DEFAULT_CLAUDE_MODEL, works
     if (response.stop_reason === "max_tokens") throw new ClaudeError("The answer was cut off. Try again.", 200);
     const text = response.content.filter((b) => b.type === "text").map((b) => b.text).join("");
     if (!text.trim()) throw new ClaudeError("Claude returned an empty answer. Try again.", 200);
-    return { text, model: response.model, usage: response.usage, cost: costOf(model, response.usage) };
+    // Price by the model that actually answered (a fallback may differ from the
+    // one asked for); costOf gives null for a model it has no price for.
+    return { text, model: response.model, usage: response.usage, cost: costOf(response.model || model, response.usage) };
   }
 
   return {

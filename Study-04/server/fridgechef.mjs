@@ -6,7 +6,7 @@
 import { IMAGE_MEDIA_TYPES } from "./claude.mjs";
 import { CATEGORIES, checkIngredients, checkOptions } from "../public/options.js";
 
-export const MAX_IMAGE_BASE64 = 7 * 1024 * 1024; // about 5 MB of image
+export const MAX_IMAGE_BASE64 = Math.ceil((5 * 1024 * 1024) / 3) * 4; // base64 of exactly 5 MB
 
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
 const round = (n) => Math.round(n * 1e6) / 1e6;

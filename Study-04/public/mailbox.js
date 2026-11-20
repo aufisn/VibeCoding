@@ -55,21 +55,49 @@ export function createGistClient({ token, gistId, fetch = globalThis.fetch }) {
   if (!/^[0-9a-f]{20,40}$/i.test(gistId ?? "")) throw new Error("The Gist ID should be 32 letters and numbers (from the Gist's web address).");
   const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
 
-  async function call(method, body) {
+  // The last full read and its ETag. A GET of the Gist returns the content of
+  // every file (a pending photo is ~0.5 MB), so repeat reads send If-None-Match:
+  // GitHub answers 304 with no body when nothing changed, and 304s don't count
+  // against the rate limit. (cache: "no-store" keeps the browser's own cache
+  // out of it, so the 304 reaches this code and the header goes as written.)
+  let lastTag = null;
+  let lastFiles = null;
+
+  async function call(method, body, extraHeaders = {}) {
     let res;
     try {
-      res = await fetch(`${API}/gists/${gistId}`, { method, headers: body ? { ...headers, "Content-Type": "application/json" } : headers, body: body && JSON.stringify(body), cache: "no-store" });
+      res = await fetch(`${API}/gists/${gistId}`, { method, headers: { ...headers, ...(body ? { "Content-Type": "application/json" } : {}), ...extraHeaders }, body: body && JSON.stringify(body), cache: "no-store" });
     } catch {
       throw new GitHubError(0, "The Gist");
     }
-    if (!res.ok) throw new GitHubError(res.status, "The Gist");
-    return res.json();
+    return res;
   }
 
   return {
     /** { name: fileObject } for every file in the Gist. */
     async files() {
-      return (await call("GET")).files ?? {};
+      const res = await call("GET", undefined, lastTag && lastFiles ? { "If-None-Match": lastTag } : {});
+      if (res.status === 304 && lastFiles) return lastFiles;
+      if (!res.ok) throw new GitHubError(res.status, "The Gist");
+      const files = (await res.json()).files ?? {};
+      lastTag = res.headers?.get?.("etag") ?? null;
+      lastFiles = lastTag ? files : null;
+      return files;
+    },
+    /**
+     * The Gist's latest version (a revision ID), from a ~1 KB list instead of
+     * every file's content. It changes whenever any file changes.
+     */
+    async version() {
+      let res;
+      try {
+        res = await fetch(`${API}/gists/${gistId}/commits?per_page=1`, { headers, cache: "no-store" });
+      } catch {
+        throw new GitHubError(0, "The Gist");
+      }
+      if (!res.ok) throw new GitHubError(res.status, "The Gist");
+      const [latest] = await res.json();
+      return typeof latest?.version === "string" ? latest.version : null;
     },
     /** The full text of one file object (big files are fetched from raw_url). */
     async text(file) {
@@ -82,7 +110,12 @@ export function createGistClient({ token, gistId, fetch = globalThis.fetch }) {
     async write(changes) {
       const files = {};
       for (const [name, text] of Object.entries(changes)) files[name] = text === null ? null : { content: text };
-      await call("PATCH", { files });
+      const res = await call("PATCH", { files });
+      // GitHub echoes the whole Gist back (including a just-uploaded photo);
+      // the change is already saved, so stop downloading that copy.
+      res.body?.cancel?.().catch?.(() => {});
+      if (!res.ok) throw new GitHubError(res.status, "The Gist");
+      lastTag = lastFiles = null; // our own change: read it fresh next time
     },
   };
 }

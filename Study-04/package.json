@@ -2,7 +2,7 @@
   "name": "fridgechef",
   "private": true,
   "type": "module",
-  "description": "FridgeChef: analyse a fridge photo and get a recipe (local server + OpenRouter)",
+  "description": "FridgeChef: a fridge photo to ingredients to two recipes with Claude (local server, or GitHub Pages + Actions)",
   "engines": {
     "node": ">=20"
   },

@@ -57,3 +57,58 @@ export function recipeText(r) {
   lines.push("", "Made with FridgeChef (Claude)");
   return lines.join("\n");
 }
+
+/* ---------- Data saved on this device, checked on load ---------- */
+// localStorage can hold anything (an old version, a hand edit, a cut-off
+// write), so the page keeps only entries of the right shape. Pure.
+
+const text = (v, max = 2000) => (typeof v === "string" ? v.slice(0, max) : "");
+const texts = (v) => (Array.isArray(v) ? v.filter((s) => typeof s === "string") : []);
+
+/** Saved ingredients: entries with a name, tidied; anything else is dropped. */
+export function validIngredients(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const i of list) {
+    const name = typeof i?.name === "string" ? cleanName(i.name) : "";
+    if (!name) continue;
+    out.push({
+      name,
+      quantity: cleanName(i.quantity),
+      confidence: ["high", "medium", "low"].includes(i.confidence) ? i.confidence : "high",
+      category: CATEGORIES.includes(i.category) ? i.category : "other",
+      use: i.use === true,
+      ...(i.added === true ? { added: true } : {}),
+    });
+  }
+  return out.slice(0, 200);
+}
+
+/** One recipe in the shape the page shows, or null. */
+function validRecipe(r) {
+  if (!r || typeof r !== "object" || typeof r.title !== "string" || !r.title.trim()) return null;
+  return {
+    title: text(r.title, 200),
+    summary: text(r.summary),
+    cuisine: text(r.cuisine, 60),
+    difficulty: text(r.difficulty, 20),
+    minutes: Number.isFinite(r.minutes) ? r.minutes : 0,
+    servings: Number.isFinite(r.servings) ? r.servings : 0,
+    ingredients: (Array.isArray(r.ingredients) ? r.ingredients : []).filter((i) => typeof i?.item === "string").map((i) => ({ item: text(i.item, 200), amount: text(i.amount, 100) })),
+    steps: texts(r.steps),
+    extra: texts(r.extra),
+  };
+}
+
+/** Saved recipes (the last answer): valid ones only. */
+export const validRecipes = (list) => (Array.isArray(list) ? list.map(validRecipe).filter(Boolean) : []);
+
+/** The Saved list: [{ savedAt, recipe }] with a valid recipe, at most 50. */
+export function validSaved(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((s) => typeof s?.savedAt === "string")
+    .map((s) => ({ savedAt: s.savedAt, recipe: validRecipe(s.recipe) }))
+    .filter((s) => s.recipe)
+    .slice(0, 50);
+}

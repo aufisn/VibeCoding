@@ -90,7 +90,8 @@ export async function readJson(req, limit = MAX_BODY_BYTES) {
  * handlers, so later features (ingredient analysis, recipes) plug in here.
  */
 export function createApp({ config, client, publicDir = PUBLIC_DIR, routes = {}, port = () => config.PORT }) {
-  // Worked out per request from the port actually in use (it can be 0 = any free port).
+  // Worked out on the first request, from the port actually in use (PORT can
+  // be 0 = any free port, known only once the server listens).
   let hosts;
   let origins;
   const refresh = () => {
