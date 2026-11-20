@@ -18,6 +18,9 @@ Study-01/data/
 Study-03/.claude/*
 !Study-03/.claude/skills/
 !Study-03/.claude/commands/
+!Study-04/.claude/
+Study-04/.claude/*
+!Study-04/.claude/agents/
 
 # Local question-bank backups made by scripts/backup-questions.mjs (git history keeps every version too).
 Study-03/backups/
