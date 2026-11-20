@@ -35,7 +35,7 @@ let ok = true;
 
 if (anthropic) {
   try {
-    const info = await createClaudeClient({ apiKey: config.ANTHROPIC_API_KEY, model: config.ANTHROPIC_MODEL }).checkModel();
+    const info = await createClaudeClient({ apiKey: config.ANTHROPIC_API_KEY, model: config.ANTHROPIC_MODEL, workspaceId: config.ANTHROPIC_WORKSPACE_ID }).checkModel();
     console.log(`✔ Anthropic accepts the key, and it can use ${info.name} (${info.id}).`);
     console.log("  (Checked with the Models API: nothing was generated, so this cost nothing.)");
   } catch (err) {

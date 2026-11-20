@@ -98,7 +98,7 @@ async function main(argv) {
   let result;
   try {
     if (anthropic) {
-      const claude = createClaudeClient({ apiKey: key, model });
+      const claude = createClaudeClient({ apiKey: key, model, workspaceId: config.ANTHROPIC_WORKSPACE_ID });
       result = kind === "text" ? await claude.writeRecipe(ingredients) : await claude.identifyIngredients(image);
     } else {
       const client = createOpenRouterClient({ apiKey: key });

@@ -71,6 +71,7 @@ export function checkConfig(config) {
   if (config.AI_PROVIDER === "anthropic") {
     problems.push(...keyProblems("ANTHROPIC_API_KEY", config.ANTHROPIC_API_KEY, "sk-ant-", "the Claude Console (platform.claude.com)"));
     if (!/^claude-[a-z0-9.-]+$/.test(config.ANTHROPIC_MODEL ?? "")) problems.push(`ANTHROPIC_MODEL should look like ${DEFAULTS.ANTHROPIC_MODEL}`);
+    if (config.ANTHROPIC_WORKSPACE_ID && !/^wrkspc_[A-Za-z0-9]+$/.test(config.ANTHROPIC_WORKSPACE_ID)) problems.push('ANTHROPIC_WORKSPACE_ID should look like wrkspc_… (Claude Console → Settings → Workspaces).');
   }
   if (config.AI_PROVIDER === "openrouter") {
     problems.push(...keyProblems("OPENROUTER_API_KEY", config.OPENROUTER_API_KEY, "sk-or-", "openrouter.ai/keys"));
@@ -113,6 +114,8 @@ export function loadConfig({ env = process.env, file = ENV_FILE, read = readFile
   const config = {
     AI_PROVIDER: env.AI_PROVIDER ?? fromFile.AI_PROVIDER ?? (anthropicKey ? "anthropic" : openrouterKey ? "openrouter" : "anthropic"),
     ANTHROPIC_MODEL: pick("ANTHROPIC_MODEL"),
+    // Only needed for a key that isn't scoped to a workspace (Claude Console → Workspaces).
+    ANTHROPIC_WORKSPACE_ID: pick("ANTHROPIC_WORKSPACE_ID") ?? "",
     OPENROUTER_VISION_MODEL: pick("OPENROUTER_VISION_MODEL"),
     OPENROUTER_TEXT_MODEL: pick("OPENROUTER_TEXT_MODEL"),
     HOST: pick("HOST"),

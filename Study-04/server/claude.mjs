@@ -58,6 +58,10 @@ export function costOf(model, usage) {
 /** A plain message for an SDK error, never containing the key. Pure. */
 export function describeClaudeError(err) {
   const status = err?.status;
+  const apiMessage = String(err?.error?.error?.message ?? "");
+  if (status === 400 && /workspace/i.test(apiMessage)) {
+    return "This API key isn't scoped to a workspace. Either create a key inside a workspace (Claude Console → API keys), or set ANTHROPIC_WORKSPACE_ID=wrkspc_… in .env.";
+  }
   const known = {
     400: "Claude couldn't use the request (for example an unreadable or oversized image).",
     401: "Anthropic refused the API key. Check ANTHROPIC_API_KEY in .env, or create a new key in the Claude Console.",
@@ -86,9 +90,11 @@ export class ClaudeError extends Error {
  * @param {{ apiKey?: string, model?: string, sdk?: object }} options
  *   `sdk` replaces the Anthropic client in tests.
  */
-export function createClaudeClient({ apiKey, model = DEFAULT_CLAUDE_MODEL, sdk } = {}) {
+export function createClaudeClient({ apiKey, model = DEFAULT_CLAUDE_MODEL, workspaceId, sdk } = {}) {
   if (!apiKey && !sdk) throw new Error("createClaudeClient needs an apiKey");
-  const client = sdk ?? new Anthropic({ apiKey, maxRetries: 2, timeout: 120_000 });
+  // A key that isn't scoped to a workspace must name one on every request.
+  const defaultHeaders = workspaceId ? { "anthropic-workspace-id": workspaceId } : undefined;
+  const client = sdk ?? new Anthropic({ apiKey, maxRetries: 2, timeout: 120_000, defaultHeaders });
 
   async function ask(content, extra = {}) {
     let response;

@@ -170,7 +170,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   const client =
     config.AI_PROVIDER === "anthropic"
-      ? createClaudeClient({ apiKey: config.ANTHROPIC_API_KEY, model: config.ANTHROPIC_MODEL })
+      ? createClaudeClient({ apiKey: config.ANTHROPIC_API_KEY, model: config.ANTHROPIC_MODEL, workspaceId: config.ANTHROPIC_WORKSPACE_ID })
       : createOpenRouterClient({ apiKey: config.OPENROUTER_API_KEY, appUrl: `http://${config.HOST}:${config.PORT}` });
   await startServer({ config, client }).catch((err) => {
     console.error(err.code === "EADDRINUSE" ? `✖ Port ${config.PORT} is in use. Set another PORT in .env.` : `✖ ${err.message}`);
