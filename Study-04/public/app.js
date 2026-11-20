@@ -136,6 +136,7 @@ $("photo").addEventListener("change", async (e) => {
     if (preview.src) URL.revokeObjectURL(preview.src);
     preview.src = URL.createObjectURL(file);
     preview.hidden = false;
+    $("no-photo").hidden = true;
     $("progress").textContent = `Photo ready (${photo.width}×${photo.height}, ${photo.kb} KB).`;
   } catch (err) {
     $("progress").textContent = "";
@@ -279,13 +280,18 @@ function recipeCard(r, { save, savedAt, onDelete } = {}) {
   card.append(el("h3", r.title));
   if (r.summary) card.append(el("p", r.summary, "summary"));
   card.append(el("p", `${r.cuisine} · ${r.difficulty} · ${r.minutes} min · serves ${r.servings}`, "facts"));
-  card.append(el("h4", "Ingredients"));
+  // Ingredients and steps side by side, so a recipe fits on one screen.
+  const body = el("div", null, "recipe-body");
+  const left = el("div");
   const ul = el("ul");
   for (const i of r.ingredients ?? []) ul.append(el("li", `${i.amount ? `${i.amount} ` : ""}${i.item}`));
-  card.append(ul, el("h4", "Steps"));
+  left.append(el("h4", "Ingredients"), ul);
+  const right = el("div");
   const ol = el("ol");
   for (const s of r.steps ?? []) ol.append(el("li", s));
-  card.append(ol);
+  right.append(el("h4", "Steps"), ol);
+  body.append(left, right);
+  card.append(body);
   if (r.extra?.length) card.append(el("p", `You may need: ${r.extra.join(", ")}`, "note"));
   const row = el("div", null, "row");
   if (save) {
