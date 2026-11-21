@@ -1,0 +1,12 @@
+{
+  "name": "empathy-diary",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI empathy diary: write one line about your day, Claude reflects your feelings back.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "dependencies": { "@anthropic-ai/sdk": "^1.10.0" }
+}
