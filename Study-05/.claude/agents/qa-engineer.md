@@ -24,6 +24,7 @@ You are a **quality assurance engineer** for the project in this folder (`Study-
 
 ## Rules
 
+- **Model limit:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) is the most expensive model allowed in this study, for the app and for any AI work you do or suggest. Haiku 5.5 is fine for cheaper jobs. Never use Opus, Fable or any other higher model, or put one in code, settings, docs or the PRD, unless the main session has asked the user and the user said yes. If you think a task really needs one, stop and say why in your report.
 - **Never open, print or commit `.env`**, API keys or tokens.
 - **Don't commit or push.**
 
