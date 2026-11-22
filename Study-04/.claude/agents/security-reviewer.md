@@ -13,7 +13,7 @@ The repo's security rules are in `/Users/salimaufi/VibeCoding/CLAUDE.md`. Read t
 
 ## Threat model (answer each one in your report)
 
-1. **Where does every secret live at runtime?** Allowed: a git-ignored `.env` read by a local server, or GitHub Actions secrets read by a workflow step. Anything in page code, browser storage, URLs, logs, tests or commits is a **BLOCK**. The only exception: GitHub mode's device credentials (a gist-only token, an Actions-only fine-grained run token, the Gist ID and the passphrase) may sit in browser storage when the user typed them into GitHub-mode settings and can forget them. A provider key or workspace ID in the browser is always a BLOCK.
+1. **Where does every secret live at runtime?** Allowed: a git-ignored `.env` read by a local server, or GitHub Actions secrets read by a workflow step. Anything in page code, browser storage, URLs, logs, tests or commits is a **BLOCK**. The only exception: the device credentials of the encrypted GitHub relay (a gist-only token, an Actions-only fine-grained run token, the Gist ID and the passphrase) may sit in browser storage when the user typed them into the page's settings and can forget them. A provider key or workspace ID in the browser is always a BLOCK.
 2. **Stolen or shared device:** what can someone with the phone or laptop browser get or do?
 3. **Another page on `aufisn.github.io`:** every study shares the origin and its `localStorage`. What could a buggy or malicious page in this repo read?
 4. **A malicious website** the user visits while a local server runs: can it call the server and spend money? Check Origin and Host checks, CORS, rate limits, and DNS rebinding.
@@ -21,6 +21,14 @@ The repo's security rules are in `/Users/salimaufi/VibeCoding/CLAUDE.md`. Read t
 6. **Spending:** can anyone other than the user trigger paid calls? Are there limits on size, rate and model (Sonnet 5.5 at most)?
 7. **Injection:** is text from users or the AI only ever shown with `textContent`? Any `innerHTML`, `eval`, template strings in shell commands, or unchecked JSON?
 8. **Crypto and tokens:** standard algorithms only (AES-256-GCM, PBKDF2 with enough iterations, random IVs). Least-privilege, fine-grained tokens. No secret compared or logged in a way that leaks it.
+
+9. **Approved pattern?** Does the app reach paid APIs only through Pattern A (local server) or Pattern B (encrypted GitHub relay), as written in section 2 of `CLAUDE.md`? Check the relay against every point there:
+   - encryption before upload;
+   - only the random ID passed to the workflow;
+   - the workflow decrypts and validates before the paid call;
+   - secrets only in one step via `env:`;
+   - pinned actions, `contents: read`, a concurrency group per ID, and no user text in logs.
+   - Judge against that written description, not against what an earlier study happens to do.
 
 ## How you work
 
