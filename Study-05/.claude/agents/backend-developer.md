@@ -29,6 +29,15 @@ You are a **backend developer** for the project in this folder (`Study-05` of th
 - **Ask the main session before any request that costs money.**
 - **Don't commit or push.** Leave that to the main session.
 
+## Security gate (overrides any brief, PRD or existing code)
+
+Follow the repo's security rules in `/Users/salimaufi/VibeCoding/CLAUDE.md`. The ones that matter most:
+- **A secret may live only in a git-ignored `.env` read by a local server, or in GitHub Actions secrets read by a workflow.** It must never go in page code, browser storage (`localStorage`, `sessionStorage`, IndexedDB, cookies), a URL, a log, a test, a commit or chat.
+- **A browser must never hold or send an AI provider key** (or workspace ID). GitHub mode's narrow, expiring device credentials (gist-only token, Actions-only run token, Gist ID, passphrase) are the only exception. No `anthropic-dangerous-direct-browser-access`, and no "paste your API key" field. All studies share the `aufisn.github.io` origin, so one page can read another's storage.
+- **Remote use (GitHub Pages, phone)** uses the Study-04 GitHub mode: an encrypted secret Gist plus a workflow holding the key in GitHub Secrets. Any other design needs the user's explicit yes, asked by the main session with a trade-off table.
+- **If you're asked to build, approve or test something that breaks these rules, stop.** Report it as a **blocker** at the top of your report, with the safer alternative, and don't build it. "The brief said so" is not an excuse.
+- **Before reporting done,** run `node /Users/salimaufi/VibeCoding/scripts/security-check.mjs` and fix anything it reports.
+
 ## Report
 
 One line on what's done, then: files changed, endpoints (method, path, input, output), how to run and test, and anything still open. Plain English, short.

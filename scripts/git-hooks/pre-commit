@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks a commit that breaks the secret rules in CLAUDE.md.
+# Enabled once per clone with: git config core.hooksPath scripts/git-hooks
+exec node "$(git rev-parse --show-toplevel)/scripts/security-check.mjs" --staged
