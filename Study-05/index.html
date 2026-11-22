@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:8791 https://api.anthropic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:8791 https://api.github.com https://gist.githubusercontent.com; img-src 'self' data:; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light dark">
 <title>Dear Diary</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%95%AF%EF%B8%8F%3C/text%3E%3C/svg%3E">
@@ -206,6 +206,18 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
 .field input { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--line); background: var(--card-2); }
 .small { font-family: var(--sans); font-size: .85rem; color: var(--muted); margin: 6px 0; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.offlinebox { margin: 10px 0 0; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--card-2); font-family: var(--sans); font-size: .92rem; }
+.offlinebox p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.offlinebox p:last-child { margin-bottom: 0; }
+.offlinebox a, .small a, .err a { color: var(--lav); font-weight: 700; text-underline-offset: 3px; }
+.offlinebox code, .small code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85em; background: var(--card-2); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; overflow-wrap: anywhere; }
+.listening .lbody { flex: 1; min-width: 0; }
+.listening .lbody p { margin: 0 0 4px; }
+.listening .lbody .sub { font-family: var(--sans); font-size: .88rem; color: var(--muted); }
+.listening .lbody .phrase { font-family: var(--sans); font-size: .92rem; font-weight: 600; color: var(--lav); }
+.err .glink { margin: 0 0 10px; font-family: var(--sans); font-size: .92rem; }
+.problems { margin: 6px 0 0; padding-left: 20px; font-family: var(--sans); font-size: .88rem; color: var(--warn); font-weight: 600; }
+.statuslist { margin: 6px 0 0; padding: 0; list-style: none; font-family: var(--sans); font-size: .85rem; color: var(--muted); }
 .saved { font-family: var(--sans); font-size: .88rem; font-weight: 600; color: var(--lav); margin: 6px 0 0; min-height: 1.3em; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
@@ -250,6 +262,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
           <button type="button" class="btn primary" id="send" disabled>Share with my diary</button>
         </div>
         <p class="hint" id="hint"></p>
+        <div class="offlinebox" id="offline" hidden></div>
         <p class="notice" id="notice" role="status"></p>
       </section>
 
@@ -264,6 +277,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
         <ul class="strip" id="strip" aria-label="Mood over the last 7 days"></ul>
         <ul class="entries" id="entries"></ul>
         <p class="empty" id="emptyHist">Your entries will be kept here, on this device only.</p>
+        <button type="button" class="btn danger" id="clearAll" hidden>Delete all entries</button>
       </section>
     </aside>
   </div>
@@ -273,20 +287,35 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   <h2 id="setTitle">Settings</h2>
   <p class="small" id="setIntro"></p>
   <form id="keyForm" method="dialog" autocomplete="off">
-  <div class="field">
-    <label for="apiKey">Anthropic API key</label>
-    <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+  <div id="ghFields" hidden>
+    <p class="small">Your Claude key never comes to this device. It stays in GitHub's secret storage. This page only sends your entry encrypted through your private Gist.</p>
+    <p class="small">These are the same settings as FridgeChef (Study-04). If you've set FridgeChef up on this device, you're ready.</p>
+    <div class="field">
+      <label for="gistId">Gist ID</label>
+      <input id="gistId" type="text" autocomplete="off" spellcheck="false" autocapitalize="off">
+    </div>
+    <div class="field">
+      <label for="gistToken">Gist token (classic, gist scope)</label>
+      <input id="gistToken" type="password" autocomplete="off" spellcheck="false" placeholder="Empty keeps saved">
+    </div>
+    <div class="field">
+      <label for="runToken">Run token (fine-grained, Actions: write)</label>
+      <input id="runToken" type="password" autocomplete="off" spellcheck="false" placeholder="Empty keeps saved">
+    </div>
+    <div class="field">
+      <label for="passphrase">Passphrase (12+ characters)</label>
+      <input id="passphrase" type="password" autocomplete="off" spellcheck="false" placeholder="Empty keeps saved">
+    </div>
+    <ul class="statuslist" id="statusList" aria-label="What is saved on this device"></ul>
+    <ul class="problems" id="problems" role="alert"></ul>
+    <p class="saved" id="saved" aria-live="polite"></p>
+    <p class="small">The tokens can't reveal your Claude key. Make them expire and keep them to the minimum permissions. Setup steps: <a href="https://github.com/aufisn/VibeCoding/tree/main/Study-04#run-it-from-anywhere-github" target="_blank" rel="noopener noreferrer">how to set up GitHub mode</a>.</p>
   </div>
-  <div class="field">
-    <label for="ws">Workspace ID (optional)</label>
-    <input id="ws" type="text" autocomplete="off" spellcheck="false">
-  </div>
-  <p class="saved" id="saved" aria-live="polite"></p>
-  <p class="small">Your key is saved in this browser only, on this device. It is sent only to Anthropic when you share an entry. Please use a separate key with a spending limit, and never use a key you share with others. Anyone using this browser could use it, so press "Forget key" on shared devices.</p>
-  <p class="small">Entries are saved per address, so the diary opened from a file and the diary opened on the local server keep separate histories.</p>
+  <p class="small">Entries are saved per address, so the diary opened from a file, on the local server and online keep separate histories.</p>
+  <p class="small" id="privacyNote"><strong>Privacy:</strong> Your diary history is saved in this browser only, unencrypted. On the online version, other pages on aufisn.github.io could read it, so don't use a shared browser. The local server version keeps its history separately at 127.0.0.1.</p>
   <div class="actions">
-    <button type="submit" class="btn primary" id="saveKey">Save</button>
-    <button type="button" class="btn danger" id="forgetKey">Forget key</button>
+    <button type="submit" class="btn primary" id="saveKey" hidden>Save</button>
+    <button type="button" class="btn danger" id="forgetKey" hidden>Forget on this device</button>
     <button type="button" class="btn" id="closeSettings">Close</button>
   </div>
   </form>
@@ -299,17 +328,21 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   var Core = globalThis.DiaryCore;
   var $ = function (id) { return document.getElementById(id); };
   var SERVER = "http://127.0.0.1:8791";
-  var KEY_STORE = "empathyDiary.key.v1";
+  var OLD_KEY_PREFIX = "empathyDiary.key";   /* old versions kept an API key here; it is deleted on load */
+  var PENDING_TEXT = "empathyDiary.pendingText.v1"; /* the words of an entry still waiting at GitHub (text only) */
+  var GH_URL = "https://aufisn.github.io/VibeCoding/Study-05/";
   var LOG_STORE = "empathyDiary.entries.v1";
-  var INTRO_STORE = "empathyDiary.intro.v1";
   var MAX_ENTRIES = 200;
 
   var els = {
     entry: $("entry"), count: $("count"), send: $("send"), hint: $("hint"), status: $("status"), resp: $("response"),
-    mode: $("mode"), today: $("today"), strip: $("strip"), entries: $("entries"), emptyHist: $("emptyHist"),
-    notice: $("notice"), keyForm: $("keyForm"), dlg: $("settings"), apiKey: $("apiKey"), ws: $("ws"), saved: $("saved"), setIntro: $("setIntro")
+    mode: $("mode"), today: $("today"), strip: $("strip"), entries: $("entries"), emptyHist: $("emptyHist"), clearAll: $("clearAll"),
+    notice: $("notice"), keyForm: $("keyForm"), dlg: $("settings"), saved: $("saved"), setIntro: $("setIntro"),
+    offline: $("offline"), ghFields: $("ghFields"), saveKey: $("saveKey"), forgetKey: $("forgetKey"), statusList: $("statusList"), problems: $("problems"),
+    gistId: $("gistId"), gistToken: $("gistToken"), runToken: $("runToken"), passphrase: $("passphrase")
   };
-  var state = { mode: "checking", base: "", busy: false, openId: null, entries: [], creds: { apiKey: "", workspaceId: "" } };
+  var state = { mode: "checking", base: "", busy: false, openId: null, entries: [] };
+  var gh = null; /* the GitHub-mode module, loaded only in GitHub mode */
 
   if (!Core) { els.hint.textContent = "The diary could not load its helper file (diary-core.js)."; els.entry.disabled = true; return; }
 
@@ -321,11 +354,13 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
-  function loadCreds() {
+  function removeOldKeys() {
     try {
-      var o = JSON.parse(lsGet(KEY_STORE) || "null");
-      if (o && typeof o.apiKey === "string" && o.apiKey) state.creds = { apiKey: o.apiKey, workspaceId: typeof o.workspaceId === "string" ? o.workspaceId : "" };
+      var del = [];
+      for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(OLD_KEY_PREFIX) === 0) del.push(k); }
+      del.forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
+    lsDel("empathyDiary.key.v1");
   }
   function validResult(r) {
     return r && typeof r === "object" && typeof r.primary_emotion === "string" && byId[r.primary_emotion] && Array.isArray(r.emotions) &&
@@ -389,10 +424,36 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     } catch (e) { return false; }
     finally { clearTimeout(t); }
   }
+  function linkTo(href, text) {
+    var a = el("a", null, text); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; return a;
+  }
+  function showOffline(reason) {
+    var b = els.offline; b.textContent = ""; b.hidden = false;
+    var p1 = el("p");
+    if (reason === "nokey") {
+      p1.textContent = "The local server is running but has no Claude key. Add ANTHROPIC_API_KEY to Study-05/.env, restart it with npm start, then reload.";
+      b.appendChild(p1);
+    } else if (reason === "ghfail") {
+      p1.textContent = "Online mode could not load on this page. Please reload. If it keeps happening, try the local server instead.";
+      b.appendChild(p1);
+      var pr = el("p"); pr.appendChild(document.createTextNode("Online version: ")); pr.appendChild(linkTo(GH_URL, GH_URL)); b.appendChild(pr);
+    } else {
+      p1.appendChild(document.createTextNode("To talk with your diary from this folder, start the local server: open Terminal in Study-05 and run "));
+      p1.appendChild(el("code", null, "npm start")); p1.appendChild(document.createTextNode(", then reload."));
+      b.appendChild(p1);
+      var p2 = el("p"); p2.appendChild(document.createTextNode("Or use the online version: ")); p2.appendChild(linkTo(GH_URL, GH_URL));
+      b.appendChild(p2);
+    }
+    els.entry.disabled = true;
+    setMode("offline", "", "Offline");
+  }
   async function detectMode() {
     var h = location.host;
-    var served = (location.protocol === "http:") && (h === "127.0.0.1:8791" || h === "localhost:8791");
-    if (served && await probe(location.origin, 3000)) { setMode("server", location.origin, "🏠 Local server"); return; }
+    var isLocalServer = (location.protocol === "http:") && (h === "127.0.0.1:8791" || h === "localhost:8791");
+    if (isLocalServer) {
+      if (await probe(location.origin, 3000)) { setMode("server", location.origin, "🏠 Local server"); return; }
+      showOffline("nokey"); return;
+    }
     if (location.protocol === "file:") {
       var up = false, ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 1500);
       try { await fetch(SERVER + "/api/status", { mode: "no-cors", cache: "no-store", signal: ctl.signal }); up = true; } catch (e) {}
@@ -403,23 +464,28 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
         location.replace(SERVER + "/");
         return;
       }
+      showOffline("nofile"); return;
     }
-    setMode("direct", "", "🔑 Direct (your key)");
-    if (!state.creds.apiKey && !lsGet(INTRO_STORE)) {
-      lsSet(INTRO_STORE, "1");
-      openSettings(true);
-    }
+    /* any other address (e.g. GitHub Pages): GitHub mode */
+    try { gh = await import("./web/github-mode.mjs"); }
+    catch (e) { showOffline("ghfail"); return; }
+    setMode("github", "", "🔒 GitHub");
+    var pend = null;
+    try { pend = gh.pendingRequest(); } catch (e) {}
+    if (pend) resumeEarlier();
+    else if (!gh.hasSettings()) openSettings(true);
   }
 
   /* ---------- write card ---------- */
   function charLen(s) { return Array.from(s).length; }
   function problem() {
     var raw = els.entry.value;
-    if (state.busy) return "";
+    if (state.busy || state.mode === "offline") return "";
     if (!raw.trim()) return "Write a line about your day (a few words or an emoji) to begin.";
     try { Core.checkEntry(raw); } catch (e) { return e.message; }
     if (state.mode === "checking") return "Getting ready…";
-    if (state.mode === "direct" && !state.creds.apiKey) return "Add your API key in Settings first.";
+    if (state.mode === "offline") return "";
+    if (state.mode === "github" && !gh.hasSettings()) return "Add your GitHub settings first (see Settings).";
     return "";
   }
   function updateSend() {
@@ -427,8 +493,8 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     els.count.textContent = n + "/" + Core.MAX_CHARS;
     els.count.classList.toggle("warn", n >= Core.MAX_CHARS - 30);
     var p = problem();
-    els.send.disabled = state.busy || !!p;
-    els.send.textContent = state.busy ? "Listening…" : (state.mode === "direct" && !state.creds.apiKey && els.entry.value.trim() ? "Add your key first" : "Share with my diary");
+    els.send.disabled = state.busy || !!p || state.mode === "offline" || state.mode === "checking";
+    els.send.textContent = state.busy ? "Listening…" : "Share with my diary";
     els.hint.textContent = "";
     if (p) els.hint.textContent = p;
     else if (!state.busy) {
@@ -445,11 +511,58 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     els.entry.style.height = Math.min(Math.max(els.entry.scrollHeight + 2, 64), 120) + "px";
   }
 
+  function pendingTextSet(t) { lsSet(PENDING_TEXT, JSON.stringify({ text: t, ts: Date.now() })); }
+  function pendingTextGet() {
+    try { var o = JSON.parse(lsGet(PENDING_TEXT) || "null"); return o && typeof o.text === "string" ? o.text : ""; } catch (e) { return ""; }
+  }
+  function pendingTextDone() { /* keep the words only while GitHub may still answer */
+    var still = null;
+    try { still = gh && gh.pendingRequest(); } catch (e) {}
+    if (!still) lsDel(PENDING_TEXT);
+  }
+
+  /* One wait at a time. cancelActive() aborts it and, in GitHub mode, really cancels it at GitHub. */
+  var active = null; /* { ctl, onCancel } */
+  function raceMs(p, ms) {
+    return Promise.race([Promise.resolve(p).catch(function () {}), new Promise(function (r) { setTimeout(r, ms); })]);
+  }
+  async function cancelGitHubRequest() {
+    lsDel(PENDING_TEXT);
+    try { await raceMs(gh && gh.cancelPending && gh.cancelPending(), 4000); } catch (e) {}
+    try { if (gh && gh.clearPending) gh.clearPending(); } catch (e) {}
+    lsDel(PENDING_TEXT);
+  }
+  function cancelActive() {
+    var a = active; if (!a) return Promise.resolve();
+    a.onCancel();
+    return a.isGh ? cancelGitHubRequest() : Promise.resolve();
+  }
+
+  function saveAndShow(text, result) {
+    var entry = { id: newId(), ts: Date.now(), text: text, result: result };
+    state.entries.unshift(entry);
+    if (state.entries.length > MAX_ENTRIES) state.entries.length = MAX_ENTRIES;
+    if (!saveEntries()) notify(SAVE_FAIL, true);
+    state.openId = entry.id;
+    state.busy = false; els.entry.readOnly = false;
+    els.status.textContent = "";
+    renderResult(entry, true);
+    renderEntries(); renderStrip();
+  }
+
+  function failMessage(e, cancelled, timedOut) {
+    if (cancelled) return { msg: "Cancelled. Your words are still here.", calm: true };
+    if (timedOut) return { msg: "This is taking longer than expected, so I stopped waiting. Your words are still here. Please try again." };
+    var msg = (e && e.message) ? e.message : "Something went wrong. Please try again.";
+    if (e instanceof TypeError && state.mode === "server") msg = "I could not reach the diary server. Is it still running?";
+    return { msg: msg, link: e && typeof e.link === "string" && /^https:\/\/github\.com\//.test(e.link) ? e.link : "" };
+  }
+
   async function submit() {
     if (state.busy) return;
     var clean;
     try { clean = Core.checkEntry(els.entry.value); } catch (e) { showError(e.message); return; }
-    if (state.mode === "direct" && !state.creds.apiKey) { openSettings(false); return; }
+    if (state.mode === "github" && !gh.hasSettings()) { openSettings(false); return; }
     state.busy = true; state.openId = null; renderEntries();
     els.entry.readOnly = true;
     updateSend();
@@ -457,11 +570,17 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     notify("");
     var ctl = new AbortController();
     var cancelled = false, timedOut = false;
-    var tm = setTimeout(function () { timedOut = true; ctl.abort(); }, globalThis.__diaryTimeoutMs || 75000);
-    showListening(function () { cancelled = true; ctl.abort(); });
+    var isGh = state.mode === "github";
+    var tm = isGh ? null : setTimeout(function () { timedOut = true; ctl.abort(); }, globalThis.__diaryTimeoutMs || 75000);
+    var onCancel = function () { cancelled = true; ctl.abort(); };
+    active = { ctl: ctl, onCancel: onCancel, isGh: isGh };
+    var ui = showListening(function () { cancelActive(); }, isGh);
     var result;
     try {
-      if (state.mode === "server") {
+      if (isGh) {
+        pendingTextSet(clean);
+        result = await gh.reflectViaGitHub({ text: clean, signal: ctl.signal, onProgress: ui.update });
+      } else {
         var r = await fetch(state.base + "/api/reflect", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: clean }), signal: ctl.signal
         });
@@ -469,59 +588,109 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
         try { j = await r.json(); } catch (e) {}
         if (!r.ok || !j || j.error) throw new Error((j && j.error) || "The diary server could not answer. Please try again.");
         result = j;
-      } else {
-        result = await Core.callClaudeDirect({ apiKey: state.creds.apiKey, workspaceId: state.creds.workspaceId || undefined, text: clean, signal: ctl.signal });
       }
       if (!validResult(result)) throw new Error("The answer came back in an unexpected shape. Please try again.");
     } catch (e) {
-      clearTimeout(tm);
+      if (tm) clearTimeout(tm);
+      active = null; stopTick();
+      if (isGh) {
+        if (e && e.name === "AbortError") cancelled = true;
+        if (cancelled) lsDel(PENDING_TEXT); else pendingTextDone();
+      }
       state.busy = false; els.entry.readOnly = false; updateSend();
-      if (cancelled) { showError("Cancelled. Your words are still here.", true); els.entry.focus(); return; }
-      if (timedOut) { showError("This is taking longer than expected, so I stopped waiting. Your words are still here. Please try again."); return; }
-      var msg = (e && e.message) ? e.message : "Something went wrong. Please try again.";
-      if (e instanceof TypeError && state.mode === "server") msg = "I could not reach the diary server. Is it still running?";
-      showError(msg);
+      var f = failMessage(e, cancelled, timedOut);
+      showError(f.msg, f.calm, f.link);
+      if (isGh && e && e.code === "settings") openSettings(false);
+      else if (cancelled) els.entry.focus();
       return;
     }
-    var entry = { id: newId(), ts: Date.now(), text: clean, result: result };
-    state.entries.unshift(entry);
-    if (state.entries.length > MAX_ENTRIES) state.entries.length = MAX_ENTRIES;
-    clearTimeout(tm);
-    if (!saveEntries()) notify(SAVE_FAIL, true);
-    state.openId = entry.id;
-    state.busy = false; els.entry.readOnly = false;
-    els.entry.value = ""; grow(); updateSend();
-    els.status.textContent = "";
-    renderResult(entry, true);
-    renderEntries(); renderStrip();
+    if (tm) clearTimeout(tm);
+    active = null; stopTick();
+    if (isGh) lsDel(PENDING_TEXT);
+    els.entry.value = ""; grow();
+    saveAndShow(clean, result);
+    updateSend();
   }
 
-  function showListening(onCancel) {
+  async function resumeEarlier() {
+    state.busy = true; els.entry.readOnly = true; updateSend();
+    var ctl = new AbortController(), cancelled = false;
+    active = { ctl: ctl, onCancel: function () { cancelled = true; ctl.abort(); }, isGh: true };
+    var ui = showListening(function () { cancelActive(); }, true, "Picking up your earlier entry");
+    var text = pendingTextGet() || "(an earlier entry)";
+    try {
+      var result = await gh.resumePending({ signal: ctl.signal, onProgress: ui.update });
+      active = null; stopTick();
+      if (result == null) { state.busy = false; els.entry.readOnly = false; els.resp.textContent = ""; els.status.textContent = ""; lsDel(PENDING_TEXT); updateSend(); return; }
+      if (!validResult(result)) throw new Error("The answer came back in an unexpected shape. Please try again.");
+      lsDel(PENDING_TEXT);
+      saveAndShow(text, result);
+      updateSend();
+    } catch (e) {
+      active = null; stopTick();
+      if (e && e.name === "AbortError") cancelled = true;
+      if (cancelled) lsDel(PENDING_TEXT); else pendingTextDone();
+      state.busy = false; els.entry.readOnly = false; updateSend();
+      var f = failMessage(e, cancelled, false);
+      if (cancelled) f.msg = "Cancelled. You can write a new entry any time.";
+      showError(f.msg, f.calm, f.link);
+      if (e && e.code === "settings") openSettings(false);
+    }
+  }
+
+  var tick = null;
+  function stopTick() { if (tick) { clearInterval(tick); tick = null; } }
+  function showListening(onCancel, isGh, title) {
+    stopTick();
     els.status.textContent = "";
     var c = el("section", "card listening");
     c.appendChild(el("span", "flame", "🕯️")).setAttribute("aria-hidden", "true");
+    var body = el("div", "lbody");
     var p = el("p");
-    p.style.flex = "1";
-    p.appendChild(document.createTextNode("Listening to your day"));
+    p.appendChild(document.createTextNode(title || "Listening to your day"));
     var d = el("span", "dots"); d.setAttribute("aria-hidden", "true");
     d.appendChild(el("span", null, ".")); d.appendChild(el("span", null, ".")); d.appendChild(el("span", null, "."));
     p.appendChild(d);
-    c.appendChild(p);
+    body.appendChild(p);
+    var phraseEl = null;
+    if (isGh) {
+      body.appendChild(el("p", "sub", "Your words travel encrypted through your GitHub and back. This takes about a minute, so feel free to take a breath. You can leave this page open."));
+      phraseEl = el("p", "phrase", "Getting started… 0 s");
+      phraseEl.setAttribute("aria-hidden", "true");
+      body.appendChild(phraseEl);
+    }
+    c.appendChild(body);
     var cb = el("button", "btn", "Cancel");
     cb.type = "button"; cb.id = "cancelWait";
     cb.addEventListener("click", onCancel);
     c.appendChild(cb);
     els.resp.textContent = "";
     els.resp.appendChild(c);
-    els.status.textContent = "Listening to your day…";
+    els.status.textContent = (title || "Listening to your day") + (isGh ? "… This takes about a minute." : "…");
+    var lastPhrase = "", lastSaid = "", t0 = Date.now();
+    function paint() {
+      if (!phraseEl) return;
+      if (!phraseEl.isConnected) { stopTick(); return; }
+      phraseEl.textContent = (lastPhrase || "Working") + " · " + Math.max(0, Math.round((Date.now() - t0) / 1000)) + " s";
+    }
+    if (phraseEl) tick = setInterval(paint, 1000); /* the screen reader is not told the seconds, only phrase changes */
+    return {
+      update: function (phrase) {
+        if (typeof phrase === "string" && phrase) lastPhrase = phrase;
+        paint();
+        if (lastPhrase && lastPhrase !== lastSaid) { lastSaid = lastPhrase; els.status.textContent = lastPhrase; }
+      }
+    };
   }
 
-  function showError(msg, calm) {
+  function showError(msg, calm, link) {
+    stopTick();
     els.status.textContent = "";
     els.resp.textContent = "";
     var c = el("section", "card err" + (calm ? " calm" : ""));
     c.setAttribute("role", calm ? "status" : "alert");
     c.appendChild(el("p", "msg", msg));
+    if (link) { var gp = el("p", "glink"); gp.appendChild(linkTo(link, "See what happened on GitHub")); c.appendChild(gp); }
     var row = el("div", "actions"); row.style.marginTop = "0";
     var retry = el("button", "btn primary", "Try again");
     retry.type = "button";
@@ -538,6 +707,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   /* ---------- response card ---------- */
   function renderResult(entry, focus) {
     var r = entry.result;
+    stopTick();
     els.resp.textContent = "";
     els.status.textContent = "";
     var wrap = el("div");
@@ -632,6 +802,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   function renderEntries() {
     els.entries.textContent = "";
     els.emptyHist.hidden = state.entries.length > 0;
+    els.clearAll.hidden = state.entries.length === 0;
     state.entries.forEach(function (en) {
       var li = el("li", "entry");
       var open = el("button", "open");
@@ -665,6 +836,16 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     });
   }
 
+  els.clearAll.addEventListener("click", function () {
+    if (!state.entries.length) return;
+    if (!window.confirm("Delete all " + state.entries.length + " diary entries from this device? This cannot be undone.")) return;
+    state.entries = []; state.openId = null;
+    if (!saveEntries()) notify("Couldn't update the saved diary on this device (storage is full or blocked).", true);
+    if (!state.busy) { els.resp.textContent = ""; els.status.textContent = "All entries deleted."; }
+    renderEntries(); renderStrip();
+    els.entry.focus();
+  });
+
   function renderStrip() {
     els.strip.textContent = "";
     var now = new Date();
@@ -687,25 +868,37 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   }
 
   /* ---------- settings ---------- */
-  function keyPreview(k) { return "saved (" + k.slice(0, 7) + "…" + k.slice(-4) + ")"; }
-  function refreshSaved() {
-    els.saved.textContent = state.creds.apiKey ? "Key " + keyPreview(state.creds.apiKey) + (state.creds.workspaceId ? " with a workspace ID" : "") : "No key saved yet.";
-  }
   var lastFocus = null;
+  function maskTail(v) { return v ? "saved (…" + v.slice(-4) + ")" : "not saved yet"; }
+  function refreshSaved() {
+    if (state.mode !== "github" || !gh) return;
+    var s = gh.loadSettings();
+    els.statusList.textContent = "";
+    [["Gist ID", maskTail(s.gistId)], ["Gist token", maskTail(s.gistToken)], ["Run token", maskTail(s.runToken)], ["Passphrase", s.passphrase ? "saved" : "not saved yet"]]
+      .forEach(function (r) { els.statusList.appendChild(el("li", null, r[0] + ": " + r[1])); });
+  }
   function openSettings(intro) {
     lastFocus = document.activeElement;
-    els.setIntro.textContent = intro
-      ? "Welcome. To listen to your day, this diary talks to Claude. Because this page runs without a server, it needs your own Anthropic API key. Paste it below and press Save."
-      : (state.mode === "server"
-        ? "The local server is already holding a key for you, so you do not need to add one. A key saved here is only used if the server is not running."
-        : "Paste your Anthropic API key so the diary can talk to Claude.");
-    els.apiKey.value = ""; els.ws.value = state.creds.workspaceId || "";
-    refreshSaved();
+    var isGh = state.mode === "github" && !!gh;
+    els.ghFields.hidden = !isGh; els.saveKey.hidden = !isGh; els.forgetKey.hidden = !isGh;
+    els.problems.textContent = ""; els.saved.textContent = "";
+    if (isGh) {
+      els.setIntro.textContent = intro
+        ? "Welcome. This online diary reaches Claude through your own GitHub, so it needs a few settings once on this device."
+        : "Settings for GitHub mode. Leave a field empty to keep what is saved.";
+      els.gistId.value = gh.loadSettings().gistId;
+      els.gistToken.value = els.runToken.value = els.passphrase.value = "";
+      refreshSaved();
+    } else if (state.mode === "server") {
+      els.setIntro.textContent = "Nothing to set up here. The local server holds your Claude key in Study-05/.env and never sends it to the page.";
+    } else {
+      els.setIntro.textContent = "Nothing to set up here. Locally, the Claude key lives in Study-05/.env and is read only by the local server. Online, the diary uses GitHub mode instead.";
+    }
     if (typeof els.dlg.showModal === "function") els.dlg.showModal(); else els.dlg.setAttribute("open", "");
-    els.apiKey.focus();
+    (isGh ? els.gistId : $("closeSettings")).focus();
   }
   function afterClose() {
-    els.apiKey.value = "";
+    els.gistToken.value = els.runToken.value = els.passphrase.value = "";
     var f = lastFocus; lastFocus = null;
     if (f && f.focus && document.contains(f)) f.focus();
     updateSend();
@@ -718,32 +911,41 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   els.dlg.addEventListener("close", afterClose); /* Esc, Close button and Save all end up here */
   els.keyForm.addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var k = els.apiKey.value.trim();
-    var w = els.ws.value.trim();
-    if (!k && state.creds.apiKey) k = state.creds.apiKey; // keep the saved key, just update the workspace
-    if (!k) { els.saved.textContent = "Please paste a key first."; els.apiKey.focus(); return; }
-    if (!/^sk-ant-[\w-]{10,}$/.test(k)) { els.saved.textContent = "That does not look like an Anthropic key (it starts with sk-ant-)."; els.apiKey.focus(); return; }
-    var stored = lsSet(KEY_STORE, JSON.stringify({ apiKey: k, workspaceId: w }));
-    state.creds = { apiKey: k, workspaceId: w };
-    els.apiKey.value = "";
-    refreshSaved(); updateSend();
-    if (!stored) {
-      els.saved.textContent = "Couldn't save the key on this device (storage is full or blocked). It works until you close this page, then you will need to add it again.";
+    if (state.mode !== "github" || !gh) return;
+    var cur = gh.loadSettings();
+    var next = {
+      gistId: els.gistId.value.trim() || cur.gistId,
+      gistToken: els.gistToken.value.trim() || cur.gistToken,
+      runToken: els.runToken.value.trim() || cur.runToken,
+      passphrase: els.passphrase.value.trim() || cur.passphrase
+    };
+    var probs = gh.settingsProblems(next);
+    els.problems.textContent = "";
+    if (probs.length) {
+      probs.forEach(function (p) { els.problems.appendChild(el("li", null, p)); });
+      els.saved.textContent = "Not saved yet. Please fix the points above.";
       return;
     }
+    var ok = gh.saveSettings(next);
+    els.gistToken.value = els.runToken.value = els.passphrase.value = "";
+    refreshSaved(); updateSend();
+    if (!ok) { els.saved.textContent = "Couldn't save on this device (storage is full or blocked)."; return; }
     lastFocus = els.entry;
     closeSettings();
-    notify("Saved. Your key is ready.");
+    notify("Saved. Your diary is ready.");
     els.entry.focus();
   });
-  $("forgetKey").addEventListener("click", function () {
-    lsDel(KEY_STORE);
-    state.creds = { apiKey: "", workspaceId: "" };
-    els.apiKey.value = ""; els.ws.value = "";
+  els.forgetKey.addEventListener("click", async function () {
+    els.forgetKey.disabled = true;
+    try { await cancelActive(); } catch (e) {} /* stop any wait first, while the tokens can still delete the request */
+    if (gh) gh.forgetSettings();
+    lsDel(PENDING_TEXT);
+    els.forgetKey.disabled = false;
+    els.gistId.value = els.gistToken.value = els.runToken.value = els.passphrase.value = "";
     refreshSaved(); updateSend();
     lastFocus = els.entry;
     closeSettings();
-    notify("Your key was removed from this device.");
+    notify("Your GitHub settings were removed from this device. FridgeChef (Study-04) uses the same settings, so it's signed out here too.");
     els.entry.focus();
   });
 
@@ -758,7 +960,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   els.send.addEventListener("click", submit);
 
   els.today.textContent = fmtDate(Date.now(), true);
-  loadCreds(); loadEntries();
+  removeOldKeys(); loadEntries();
   renderEntries(); renderStrip(); updateSend();
   detectMode();
 })();

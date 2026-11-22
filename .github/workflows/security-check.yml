@@ -1,0 +1,25 @@
+# Runs the repo's security check (scripts/security-check.mjs) on every push and
+# pull request, so the secret rules in CLAUDE.md hold even when a commit skips
+# the local pre-commit hook. No secrets are used here.
+name: Security check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Check for secrets and unsafe key handling
+        run: node scripts/security-check.mjs

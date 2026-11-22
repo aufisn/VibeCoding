@@ -19,7 +19,7 @@ const RATE_MAX = 20;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 
 /** The real Claude client. Returns the raw API message. */
-export function createClaude({ apiKey, workspaceId }) {
+export function createClaude({ apiKey, workspaceId, ci = false }) {
   const defaultHeaders = workspaceId ? { "anthropic-workspace-id": workspaceId } : undefined;
   const client = new Anthropic({ apiKey, maxRetries: 2, timeout: 60_000, defaultHeaders });
   return {
@@ -29,7 +29,7 @@ export function createClaude({ apiKey, workspaceId }) {
         return await client.beta.messages.create({ ...body, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
       } catch (err) {
         const status = err?.status ?? 0;
-        const e = new Error(Core.describeError(status, JSON.stringify(err?.error ?? {}), { server: true }));
+        const e = new Error(Core.describeError(status, JSON.stringify(err?.error ?? {}), { server: !ci, ci }));
         e.status = status === 0 || status >= 500 ? 502 : status;
         throw e;
       }
@@ -48,7 +48,7 @@ const HTML_HEADERS = {
   "x-content-type-options": "nosniff",
   "referrer-policy": "no-referrer",
   "x-frame-options": "DENY",
-  "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8791 https://api.anthropic.com; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8791; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 };
 
 function readBody(req) {

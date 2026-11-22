@@ -34,7 +34,9 @@ test("GET / without index.html, and /diary-core.js", async () => {
   assert.equal(r.status, 200);
   assert.match(await r.text(), /not built yet/);
   assert.equal(r.headers.get("x-content-type-options"), "nosniff");
-  assert.ok(r.headers.get("content-security-policy"));
+  const csp = r.headers.get("content-security-policy");
+  assert.ok(csp);
+  assert.doesNotMatch(csp, /anthropic\.com/, "the page never talks to Anthropic");
   const j = await fetch(base + "/diary-core.js");
   assert.match(j.headers.get("content-type"), /javascript/);
   assert.match(await j.text(), /DiaryCore/);

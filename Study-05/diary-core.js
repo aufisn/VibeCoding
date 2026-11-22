@@ -7,8 +7,6 @@
   var MODEL = "claude-sonnet-5-5";
   var MAX_CHARS = 300;
   var MAX_TOKENS = 1000;
-  var TIMEOUT_MS = 45000;
-  var API_URL = "https://api.anthropic.com/v1/messages";
   // USD per million tokens.
   var PRICES = { "claude-sonnet-5-5": { input: 2, output: 10 } };
 
@@ -89,7 +87,7 @@
     return clean;
   }
 
-  /** The Messages API request body, the same for server and direct mode. */
+  /** The Messages API request body, used by the server and by the GitHub job. */
   function buildRequestBody(text) {
     return {
       model: MODEL,
@@ -166,13 +164,15 @@
       var j = JSON.parse(bodyText || "");
       apiMessage = String((j && j.error && j.error.message) || "");
     } catch (e) { /* not JSON */ }
+    if (options && options.ci) {
+      if (status === 400 && /workspace/i.test(apiMessage)) return "The API key needs a workspace ID. Check the ANTHROPIC_WORKSPACE_ID secret in the repository settings.";
+      if (status === 401) return "The API key was not accepted. Check the ANTHROPIC_API_KEY secret in the repository settings.";
+      if (status === 403) return "The API key is not allowed to use this model. Check the ANTHROPIC_API_KEY secret in the repository settings.";
+    }
     if (serverMode) {
       if (status === 400 && /workspace/i.test(apiMessage)) return "The server's API key needs a workspace ID. Add ANTHROPIC_WORKSPACE_ID to Study-05/.env and restart the server.";
       if (status === 401) return "The server's API key was not accepted. Check ANTHROPIC_API_KEY in Study-05/.env and restart the server.";
       if (status === 403) return "The server's API key is not allowed to use this model. Check ANTHROPIC_API_KEY in Study-05/.env and restart the server.";
-    }
-    if (status === 400 && /workspace/i.test(apiMessage)) {
-      return "This key needs a workspace ID. Add your workspace ID (wrkspc_...) in the settings, or use a key created inside a workspace.";
     }
     if (status === 400 && /credit|balance/i.test(apiMessage)) return "The account has run out of credit. Add credit in the Claude Console.";
     var known = {
@@ -191,57 +191,11 @@
     return "Something went wrong talking to Claude. Please try again.";
   }
 
-  /** Browser direct mode: calls the Anthropic API with fetch. Returns the parsed result. */
-  async function callClaudeDirect(opts) {
-    opts = opts || {};
-    var apiKey = typeof opts.apiKey === "string" ? opts.apiKey.trim() : "";
-    if (!/^sk-ant-/.test(apiKey)) throw friendly("That does not look like an Anthropic API key (it should start with sk-ant-).", 401);
-    var text = checkEntry(opts.text);
-    var doFetch = opts.fetch || (typeof fetch === "function" ? fetch : null);
-    if (!doFetch) throw friendly(describeError(0), 0);
-
-    var headers = {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    };
-    var ws = typeof opts.workspaceId === "string" ? opts.workspaceId.trim() : "";
-    if (ws) headers["anthropic-workspace-id"] = ws;
-
-    var controller = new AbortController();
-    var timedOut = false;
-    var timer = setTimeout(function () { timedOut = true; controller.abort(); }, opts.timeoutMs || TIMEOUT_MS);
-    var onAbort = function () { controller.abort(); };
-    if (opts.signal) {
-      if (opts.signal.aborted) controller.abort();
-      else opts.signal.addEventListener("abort", onAbort);
-    }
-    try {
-      var res;
-      try {
-        res = await doFetch(API_URL, { method: "POST", headers: headers, body: JSON.stringify(buildRequestBody(text)), signal: controller.signal });
-      } catch (e) {
-        if (timedOut) throw friendly("Claude took too long to answer. Please try again.", 408);
-        if (opts.signal && opts.signal.aborted) throw friendly("Cancelled.", 499);
-        throw friendly(describeError(0), 0);
-      }
-      var bodyText = await res.text();
-      if (!res.ok) throw friendly(describeError(res.status, bodyText), res.status);
-      var message;
-      try { message = JSON.parse(bodyText); } catch (e) { throw friendly("Claude's answer could not be read. Please try again.", 502); }
-      return parseResult(message);
-    } finally {
-      clearTimeout(timer);
-      if (opts.signal) opts.signal.removeEventListener("abort", onAbort);
-    }
-  }
-
   var DiaryCore = {
-    MODEL: MODEL, MAX_CHARS: MAX_CHARS, MAX_TOKENS: MAX_TOKENS, TIMEOUT_MS: TIMEOUT_MS, PRICES: PRICES,
+    MODEL: MODEL, MAX_CHARS: MAX_CHARS, MAX_TOKENS: MAX_TOKENS, PRICES: PRICES,
     EMOTIONS: EMOTIONS, RESULT_SCHEMA: RESULT_SCHEMA, SYSTEM_PROMPT: SYSTEM_PROMPT,
     checkEntry: checkEntry, buildRequestBody: buildRequestBody, parseResult: parseResult,
-    describeError: describeError, callClaudeDirect: callClaudeDirect, costOf: costOf,
+    describeError: describeError, costOf: costOf,
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = DiaryCore;
