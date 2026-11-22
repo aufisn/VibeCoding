@@ -27,7 +27,7 @@ const post = (body, headers = {}) => fetch(base + "/api/reflect", { method: "POS
 test("status never exposes a key", async () => {
   const r = await fetch(base + "/api/status");
   assert.equal(r.status, 200);
-  assert.deepEqual(await r.json(), { ok: true, mode: "server", model: "claude-sonnet-5-5", keyLoaded: true });
+  assert.deepEqual(await r.json(), { ok: true, mode: "server", model: "claude-sonnet-5-5", keyLoaded: true, journalConfigured: false, journalMissing: [] });
 });
 test("GET / without index.html, and /diary-core.js", async () => {
   const r = await fetch(base + "/");

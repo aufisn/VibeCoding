@@ -175,31 +175,74 @@ textarea:focus-visible { border-color: var(--focus); outline-offset: 1px; }
 .support.urgent a { color: var(--text); }
 .support .t { font-family: var(--sans); font-weight: 700; margin-bottom: 4px; }
 
-/* History */
+/* Journal */
 .history { max-height: calc(100vh - 110px); overflow: auto; }
 @media (max-width: 899px) { .history { max-height: none; } }
-.strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 8px 0 14px; padding: 0; list-style: none; text-align: center; }
-.strip li { background: var(--card-2); border-radius: 10px; padding: 4px 0; font-family: var(--sans); font-size: .72rem; color: var(--muted); }
-.strip .e { display: block; font-size: 1.3rem; line-height: 1.5; }
+@media (min-width: 900px) { .history { position: sticky; top: 8px; } }
+.jmsg { margin: 6px 0 10px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--card-2); font-family: var(--sans); font-size: .9rem; overflow-wrap: anywhere; }
+.jmsg p { margin: 0 0 6px; }
+.jmsg.bad { border-color: var(--urgent-line); background: var(--warn-bg); }
+.jmsg .actions { margin-top: 8px; }
+.jmsg ul { margin: 4px 0 0; padding-left: 20px; }
+.banner { margin: 6px 0 12px; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--note-line); background: var(--note-bg); font-family: var(--sans); font-size: .92rem; }
+.banner p { margin: 0 0 8px; }
+.trend { margin: 4px 0 12px; font-family: var(--sans); }
+.trend h3, .jmonth { margin: 10px 0 4px; font-size: .95rem; font-weight: 700; font-family: var(--sans); }
+.trend p { margin: 0 0 4px; font-size: .88rem; color: var(--text); }
+.strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 6px 0 4px; padding: 0; list-style: none; text-align: center; }
+.strip li { background: var(--card-2); border-radius: 10px; padding: 4px 0 2px; font-size: .72rem; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.strip .e { display: block; font-size: 1.2rem; line-height: 1.3; }
+.strip .bcol { display: flex; align-items: flex-end; height: 34px; width: 12px; }
+.strip .bcol i { display: block; width: 100%; background: var(--lav); border-radius: 4px 4px 0 0; min-height: 2px; }
+.strip .n { color: var(--text); font-weight: 700; }
+.mini { display: flex; align-items: flex-end; gap: 2px; height: 34px; padding: 0 2px; margin: 4px 0 0; border-bottom: 1px solid var(--line); }
+.mini i { flex: 1; min-width: 2px; background: var(--lav); border-radius: 2px 2px 0 0; }
+.mini i.none { background: var(--line); height: 2px !important; }
+.jtools { display: grid; gap: 8px; margin: 8px 0; }
+.jtools label { display: block; font-family: var(--sans); font-weight: 600; font-size: .85rem; margin-bottom: 2px; }
+.jtools input[type="search"], .jtools select { width: 100%; min-height: 44px; padding: 6px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--line); background: var(--card-2); }
+.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-family: var(--sans); font-size: .9rem; cursor: pointer; }
+.check input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); }
 .entries { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .entry { display: flex; gap: 6px; align-items: stretch; }
 .entry .open {
-  flex: 1; min-width: 0; text-align: start; cursor: pointer; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center;
+  flex: 1; min-width: 0; text-align: start; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center;
   padding: 8px 12px; min-height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--card-2);
   transition: background-color .2s ease, transform .15s ease;
 }
 .entry .open:hover { background: var(--accent-soft); }
 .entry .open[aria-current="true"] { border-color: var(--accent); border-width: 2px; }
-.entry .em { grid-row: span 3; font-size: 1.6rem; }
+.entry.hid .open { border-style: dashed; background: transparent; }
+.entry .em { grid-row: span 4; font-size: 1.6rem; }
 .entry .d { font-family: var(--sans); font-size: .76rem; color: var(--muted); }
 .entry .open > * { min-width: 0; }
-.entry .tx, .entry .sm { text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; line-height: 1.4; }
-.entry .sm { color: var(--muted); font-size: .85rem; }
-.entry .del { align-self: center; padding: 0; width: 44px; font-size: 1.1rem; }
+.entry .tx, .entry .sm, .entry .qa { text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; line-height: 1.4; }
+.entry .sm, .entry .qa { color: var(--muted); font-size: .85rem; }
+.entry .hidebtn { align-self: center; padding: 6px 12px; font-size: .85rem; }
+.tag { display: inline-block; margin-inline-start: 6px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); font-size: .72rem; font-weight: 700; color: var(--muted); }
 .empty { color: var(--muted); font-size: .95rem; margin: 6px 0 0; }
+.more { margin-top: 10px; }
+
+/* Quote card */
+.qcard { background: linear-gradient(160deg, var(--lav-soft), var(--card) 70%); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px; animation: rise .5s ease both; overflow-wrap: anywhere; }
+.qcard h3 { margin: 0 0 8px; font-family: var(--sans); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--lav); }
+.qcard blockquote { margin: 0; font-size: 1.2rem; line-height: 1.55; font-style: italic; }
+.qcard .by { margin: 8px 0 0; font-family: var(--sans); font-size: .92rem; font-weight: 600; }
+.qcard .src { margin: 4px 0 0; font-family: var(--sans); font-size: .85rem; }
+.qcard .src a { color: var(--lav); font-weight: 700; text-underline-offset: 3px; }
+.qcard .tr { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 1rem; }
+.qcard .tr b { display: block; font-family: var(--sans); font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.qcard .st { display: inline-block; margin: 12px 0 0; padding: 2px 12px; border-radius: 999px; font-family: var(--sans); font-size: .82rem; font-weight: 700; }
+.qcard .st.ok { background: var(--lav-soft); color: var(--lav); border: 1px solid var(--lav); }
+.qcard .st.maybe { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--note-line); }
+.noquote { margin: 0; padding: 4px 4px 0; font-family: var(--sans); font-size: .85rem; color: var(--muted); }
+.savebar { margin: 10px 0 0; font-family: var(--sans); font-size: .88rem; }
+.savebar p { margin: 0 0 8px; }
+.savebar .ok { color: var(--lav); font-weight: 700; margin: 0; }
+.savebar.calm { padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--note-line); background: var(--note-bg); color: var(--text); }
 
 /* Settings dialog */
-dialog { width: min(480px, calc(100vw - 32px)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--text); padding: 20px; box-shadow: var(--shadow); }
+dialog { width: min(480px, calc(100vw - 32px)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--text); padding: 20px; box-shadow: var(--shadow); max-height: calc(100dvh - 32px); overflow: auto; }
 dialog::backdrop { background: rgba(40, 24, 14, .55); }
 .field { margin: 12px 0; }
 .field label { display: block; font-family: var(--sans); font-weight: 600; font-size: .9rem; margin-bottom: 4px; }
@@ -216,8 +259,17 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
 .listening .lbody .sub { font-family: var(--sans); font-size: .88rem; color: var(--muted); }
 .listening .lbody .phrase { font-family: var(--sans); font-size: .92rem; font-weight: 600; color: var(--lav); }
 .err .glink { margin: 0 0 10px; font-family: var(--sans); font-size: .92rem; }
+.older { margin-top: 12px; }
+.olderrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.olderrow select { flex: 1 1 160px; min-width: 0; min-height: 44px; }
 .problems { margin: 6px 0 0; padding-left: 20px; font-family: var(--sans); font-size: .88rem; color: var(--warn); font-weight: 600; }
 .statuslist { margin: 6px 0 0; padding: 0; list-style: none; font-family: var(--sans); font-size: .85rem; color: var(--muted); }
+.zone { margin: 14px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card-2); }
+.zone summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-family: var(--sans); font-weight: 700; font-size: .92rem; }
+.zone fieldset { border: 0; margin: 8px 0; padding: 0; }
+.zone legend { font-family: var(--sans); font-weight: 600; font-size: .9rem; padding: 0; }
+.zone.quiet summary { color: var(--muted); font-weight: 600; }
+.warnline { font-family: var(--sans); font-size: .85rem; color: var(--warn); font-weight: 600; margin: 6px 0; }
 .saved { font-family: var(--sans); font-size: .88rem; font-weight: 600; color: var(--lav); margin: 6px 0 0; min-height: 1.3em; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
@@ -272,12 +324,35 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
 
     <aside class="col" aria-labelledby="histTitle">
       <section class="card history">
-        <h2 id="histTitle">My diary</h2>
-        <p class="small" style="margin-top:0">The last 7 days</p>
-        <ul class="strip" id="strip" aria-label="Mood over the last 7 days"></ul>
-        <ul class="entries" id="entries"></ul>
-        <p class="empty" id="emptyHist">Your entries will be kept here, on this device only.</p>
-        <button type="button" class="btn danger" id="clearAll" hidden>Delete all entries</button>
+        <h2 id="histTitle">My Journal</h2>
+        <div class="jmsg" id="jmsg" role="status" hidden></div>
+        <div class="banner" id="jbanner" hidden>
+          <p id="jbannerText"></p>
+          <button type="button" class="btn primary" id="importBtn">Move them into my Journal</button>
+          <div id="stuckTools" hidden>
+            <button type="button" class="btn" id="stuckDownload">Download them</button>
+            <p class="warnline">The downloaded file is not encrypted.</p>
+          </div>
+        </div>
+        <div id="jbody" hidden>
+          <div class="trend" id="trend"></div>
+          <div class="jtools">
+            <div><label for="jsearch">Search your Journal</label><input id="jsearch" type="search" autocomplete="off" spellcheck="false" placeholder="A word, a feeling, an author"></div>
+            <div><label for="jmonth">Month</label><select id="jmonth"></select></div>
+            <label class="check" for="jshowHidden"><input type="checkbox" id="jshowHidden"><span id="jshowHiddenText">Show hidden (0)</span></label>
+          </div>
+          <p class="small" id="jscope"></p>
+          <div id="jcount" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+          <div id="jlist"></div>
+          <div class="older" id="jolder" hidden>
+            <label for="jolderSel">Older months</label>
+            <div class="olderrow">
+              <select id="jolderSel"></select>
+              <button type="button" class="btn" id="jolderBtn">Load older months</button>
+            </div>
+            <p class="small" id="jolderMsg" role="status"></p>
+          </div>
+        </div>
       </section>
     </aside>
   </div>
@@ -311,8 +386,33 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     <p class="saved" id="saved" aria-live="polite"></p>
     <p class="small">The tokens can't reveal your Claude key. Make them expire and keep them to the minimum permissions. Setup steps: <a href="https://github.com/aufisn/VibeCoding/tree/main/Study-04#run-it-from-anywhere-github" target="_blank" rel="noopener noreferrer">how to set up GitHub mode</a>.</p>
   </div>
-  <p class="small">Entries are saved per address, so the diary opened from a file, on the local server and online keep separate histories.</p>
-  <p class="small" id="privacyNote"><strong>Privacy:</strong> Your diary history is saved in this browser only, unencrypted. On the online version, other pages on aufisn.github.io could read it, so don't use a shared browser. The local server version keeps its history separately at 127.0.0.1.</p>
+  <p class="small" id="connectFirst" hidden>Connect your Journal first. Downloading and deleting need an open Journal.</p>
+  <div id="journalSettings" hidden>
+    <details class="zone" id="exportZone" open>
+      <summary>Download my Journal</summary>
+      <fieldset>
+        <legend>Format</legend>
+        <label class="check" for="fmtMd"><input type="radio" name="fmt" id="fmtMd" value="md" checked> Markdown (.md)</label>
+        <label class="check" for="fmtTxt"><input type="radio" name="fmt" id="fmtTxt" value="txt"> Plain text (.txt)</label>
+      </fieldset>
+      <label class="check" for="exHidden"><input type="checkbox" id="exHidden"> Include hidden entries</label>
+      <p class="small">Oldest first. Times are UTC.</p>
+      <p class="warnline">The downloaded file is not encrypted.</p>
+      <button type="button" class="btn" id="exportBtn">Download my Journal</button>
+      <p class="saved" id="exportMsg" role="status"></p>
+    </details>
+    <details class="zone quiet" id="dangerZone">
+      <summary>Delete the whole journal</summary>
+      <p class="small">This removes every entry from your Journal for all your devices. Older versions remain in your Gist's revision history on GitHub. Don't delete the Gist itself; FridgeChef uses it too. This also removes month files that can't be opened (damaged, or locked with a different passphrase).</p>
+      <div class="field">
+        <label for="deletePhrase">Type DELETE MY JOURNAL to enable the button</label>
+        <input id="deletePhrase" type="text" autocomplete="off" spellcheck="false" autocapitalize="off">
+      </div>
+      <button type="button" class="btn danger" id="deleteBtn" disabled>Delete the whole journal</button>
+      <p class="saved" id="deleteMsg" role="status"></p>
+    </details>
+  </div>
+  <p class="small" id="privacyNote"><strong>Privacy:</strong> Your Journal is stored encrypted (AES-256-GCM, with a key made from your passphrase) in your secret Gist, so your phone and computer share it. Nothing of your diary is kept in this browser. The Gist's file names show which months have entries, but never what's in them. If you lose your passphrase, the Journal can't be read and there is no way to recover it.</p>
   <div class="actions">
     <button type="submit" class="btn primary" id="saveKey" hidden>Save</button>
     <button type="button" class="btn danger" id="forgetKey" hidden>Forget on this device</button>
@@ -329,19 +429,27 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   var $ = function (id) { return document.getElementById(id); };
   var SERVER = "http://127.0.0.1:8791";
   var OLD_KEY_PREFIX = "empathyDiary.key";   /* old versions kept an API key here; it is deleted on load */
-  var PENDING_TEXT = "empathyDiary.pendingText.v1"; /* the words of an entry still waiting at GitHub (text only) */
+  var OLD_PENDING_TEXT = "empathyDiary.pendingText.v1"; /* older versions kept waiting words here; it is deleted on load, nothing is written to it any more */
+  var LATEST_MONTHS = 2;
   var GH_URL = "https://aufisn.github.io/VibeCoding/Study-05/";
-  var LOG_STORE = "empathyDiary.entries.v1";
-  var MAX_ENTRIES = 200;
+  var LOG_STORE = "empathyDiary.entries.v1";  /* the OLD plaintext history: only read to offer the one-time move into the Journal */
+  var DELETE_PHRASE = "DELETE MY JOURNAL";
+  var PAGE = 60;
 
   var els = {
     entry: $("entry"), count: $("count"), send: $("send"), hint: $("hint"), status: $("status"), resp: $("response"),
-    mode: $("mode"), today: $("today"), strip: $("strip"), entries: $("entries"), emptyHist: $("emptyHist"), clearAll: $("clearAll"),
+    mode: $("mode"), today: $("today"),
     notice: $("notice"), keyForm: $("keyForm"), dlg: $("settings"), saved: $("saved"), setIntro: $("setIntro"),
     offline: $("offline"), ghFields: $("ghFields"), saveKey: $("saveKey"), forgetKey: $("forgetKey"), statusList: $("statusList"), problems: $("problems"),
-    gistId: $("gistId"), gistToken: $("gistToken"), runToken: $("runToken"), passphrase: $("passphrase")
+    gistId: $("gistId"), gistToken: $("gistToken"), runToken: $("runToken"), passphrase: $("passphrase"),
+    jmsg: $("jmsg"), jbanner: $("jbanner"), jbannerText: $("jbannerText"), importBtn: $("importBtn"), jbody: $("jbody"), trend: $("trend"),
+    jsearch: $("jsearch"), jmonth: $("jmonth"), jshowHidden: $("jshowHidden"), jshowHiddenText: $("jshowHiddenText"), jcount: $("jcount"), jlist: $("jlist"),
+    journalSettings: $("journalSettings"), connectFirst: $("connectFirst"), jscope: $("jscope"), jolder: $("jolder"), jolderSel: $("jolderSel"), jolderBtn: $("jolderBtn"), jolderMsg: $("jolderMsg"), stuckTools: $("stuckTools"), stuckDownload: $("stuckDownload"), exportBtn: $("exportBtn"), exportMsg: $("exportMsg"), exHidden: $("exHidden"),
+    deletePhrase: $("deletePhrase"), deleteBtn: $("deleteBtn"), deleteMsg: $("deleteMsg"), dangerZone: $("dangerZone")
   };
-  var state = { mode: "checking", base: "", busy: false, openId: null, entries: [] };
+  /* The Journal lives in memory only: never in localStorage, sessionStorage, IndexedDB or cookies. */
+  var state = { mode: "checking", base: "", busy: false, openId: null,
+    j: { status: "idle", entries: [], problems: [] }, jmonth: "", jquery: "", jshowHidden: false, jlimit: PAGE, legacy: [], stuck: false, jbusy: false };
   var gh = null; /* the GitHub-mode module, loaded only in GitHub mode */
 
   if (!Core) { els.hint.textContent = "The diary could not load its helper file (diary-core.js)."; els.entry.disabled = true; return; }
@@ -349,7 +457,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   var byId = Object.create(null);
   Core.EMOTIONS.forEach(function (e) { byId[e.id] = e; });
 
-  /* ---------- storage (always guarded) ---------- */
+  /* ---------- storage (always guarded; only the old history lives here) ---------- */
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
@@ -361,31 +469,25 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
       del.forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
     lsDel("empathyDiary.key.v1");
+    lsDel(OLD_PENDING_TEXT);
   }
   function validResult(r) {
     return r && typeof r === "object" && typeof r.primary_emotion === "string" && byId[r.primary_emotion] && Array.isArray(r.emotions) &&
       typeof r.mood_score === "number" && typeof r.summary === "string" && typeof r.empathy === "string" &&
       typeof r.comfort === "string";
   }
-  function validEntry(e) {
-    return e && typeof e === "object" && typeof e.id === "string" && typeof e.ts === "number" && isFinite(e.ts) &&
-      typeof e.text === "string" && validResult(e.result);
-  }
-  function loadEntries() {
+  function loadLegacy() { /* everything in the old key is kept as it is: the server decides what is valid */
     var list = [];
     try {
       var raw = JSON.parse(lsGet(LOG_STORE) || "[]");
-      if (Array.isArray(raw)) list = raw.filter(validEntry);
+      if (Array.isArray(raw)) list = raw;
     } catch (e) {}
-    list.sort(function (a, b) { return b.ts - a.ts; });
-    state.entries = list.slice(0, MAX_ENTRIES);
+    state.legacy = list;
   }
-  function saveEntries() { return lsSet(LOG_STORE, JSON.stringify(state.entries)); }
   function notify(msg, bad) {
     els.notice.textContent = msg || "";
     els.notice.classList.toggle("bad", !!bad);
   }
-  var SAVE_FAIL = "Couldn't save this entry on this device (storage is full or blocked). It's shown here but will be gone after you close the page.";
 
   /* ---------- helpers ---------- */
   function el(tag, cls, text) {
@@ -399,14 +501,60 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     catch (e) { return new Date(ts).toDateString(); }
   }
   function dayKey(ts) { var d = new Date(ts); return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); }
+  function monthKey(ts) { var d = new Date(ts); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2); }
+  function monthLabel(key) {
+    var p = key.split("-");
+    try { return new Date(Number(p[0]), Number(p[1]) - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" }); } catch (e) { return key; }
+  }
   var INTENSITY = ["", "faint", "light", "moderate", "strong", "very strong"];
   function moodWord(n) { return n <= 2 ? "very low" : n <= 4 ? "low" : n <= 6 ? "in the middle" : n <= 8 ? "good" : "very good"; }
   function cost(u) {
     var c = u && Number(u.cost_usd);
     if (!isFinite(c) || c < 0) return "";
-    return "≈ $" + (c < 0.01 ? c.toFixed(3) : c.toFixed(2)) + " · Sonnet 5.5";
+    var s = "≈ $" + (c < 0.01 ? c.toFixed(3) : c.toFixed(2)) + " · Sonnet 5.5, quote by Haiku 5.5";
+    var w = Number(u.web_search_requests);
+    if (isFinite(w) && w > 0) s += " · " + w + (w === 1 ? " web search" : " web searches");
+    return s;
   }
   function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function safeLang(l) { return typeof l === "string" && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(l) ? l : ""; }
+  function linkTo(href, text) {
+    var a = el("a", null, text); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; return a;
+  }
+
+  /* ---------- the quote (always plain text; the link must be https) ---------- */
+  function okQuote(q) {
+    if (!q || typeof q !== "object" || typeof q.text !== "string" || !q.text.trim() || typeof q.author !== "string" || !q.author.trim()) return null;
+    var u;
+    try { u = new URL(String(q.url)); } catch (e) { return null; }
+    if (u.protocol !== "https:" || u.username || u.password) return null;
+    return {
+      text: q.text, author: q.author, source: typeof q.source === "string" ? q.source : "", url: u.href, host: u.hostname,
+      translation: typeof q.translation === "string" ? q.translation : "", language: safeLang(q.language)
+    };
+  }
+  /* One shape for everything the page shows: { id, ts, text, r, quote, qstatus, usage, hidden, mode, imported, save } */
+  function viewFromEntry(e) {
+    if (!e || typeof e !== "object" || typeof e.id !== "string" || !validResult(e.interpretation)) return null;
+    var ts = Date.parse(e.createdAt);
+    if (!isFinite(ts)) return null;
+    return { id: e.id, ts: ts, text: typeof e.text === "string" ? e.text : "", r: e.interpretation, quote: okQuote(e.quote),
+      qstatus: e.quote_status, usage: e.usage, hidden: e.hidden === true, imported: e.id.indexOf("legacy-") === 0 };
+  }
+  var INTERP = ["primary_emotion", "emotions", "mood_score", "summary", "empathy", "comfort", "gentle_step", "concern", "language"];
+  function interpretationOf(r) { var o = {}; INTERP.forEach(function (k) { if (r[k] !== undefined) o[k] = r[k]; }); return o; }
+  function viewFromResult(text, result) {
+    var id = typeof result.entryId === "string" && result.entryId ? result.entryId : newId();
+    var q = okQuote(result.quote);
+    return { id: id, ts: Date.now(), text: text, r: result, quote: q, qstatus: q ? result.quote_status : (result.quote_status === "unavailable" ? "unavailable" : "none"), usage: result.usage, hidden: false, imported: false,
+      save: { saved: result.saved === true, error: typeof result.saveError === "string" ? result.saveError : "", entry: result.entry && typeof result.entry === "object" ? result.entry : null, busy: false } };
+  }
+  function entryOfView(v) {
+    if (v.save && v.save.entry) return v.save.entry;
+    return { id: v.id, createdAt: new Date(v.ts).toISOString(), mode: state.mode === "github" ? "github" : "local", text: v.text, interpretation: interpretationOf(v.r),
+      quote: v.quote ? { text: v.quote.text, author: v.quote.author, source: v.quote.source, url: v.quote.url, translation: v.quote.translation, language: v.quote.language } : null,
+      quote_status: v.quote ? v.qstatus : (v.qstatus === "unavailable" ? "unavailable" : "none"), usage: v.usage || null };
+  }
 
   /* ---------- connection mode ---------- */
   function setMode(mode, base, label) {
@@ -423,9 +571,6 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
       return !!(j && j.ok === true && j.keyLoaded === true);
     } catch (e) { return false; }
     finally { clearTimeout(t); }
-  }
-  function linkTo(href, text) {
-    var a = el("a", null, text); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; return a;
   }
   function showOffline(reason) {
     var b = els.offline; b.textContent = ""; b.hidden = false;
@@ -446,12 +591,13 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     }
     els.entry.disabled = true;
     setMode("offline", "", "Offline");
+    renderJournal();
   }
   async function detectMode() {
     var h = location.host;
     var isLocalServer = (location.protocol === "http:") && (h === "127.0.0.1:8791" || h === "localhost:8791");
     if (isLocalServer) {
-      if (await probe(location.origin, 3000)) { setMode("server", location.origin, "🏠 Local server"); return; }
+      if (await probe(location.origin, 3000)) { setMode("server", location.origin, "🏠 Local server"); loadJournal(); return; }
       showOffline("nokey"); return;
     }
     if (location.protocol === "file:") {
@@ -472,9 +618,28 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     setMode("github", "", "🔒 GitHub");
     var pend = null;
     try { pend = gh.pendingRequest(); } catch (e) {}
+    loadJournal();
     if (pend) resumeEarlier();
     else if (!gh.hasSettings()) openSettings(true);
   }
+
+  /* ---------- talking to the local server's journal routes ---------- */
+  async function api(path, opts) {
+    var r, j = null;
+    if (path.indexOf("/api/journal") === 0) { /* every journal call carries this header, so a stray web page can't make it */
+      opts = Object.assign({}, opts); opts.headers = Object.assign({}, opts.headers, { "X-Diary": "1" });
+    }
+    try { r = await fetch(state.base + path, opts); }
+    catch (e) { throw new Error("I could not reach the diary server. Is it still running?"); }
+    try { j = await r.json(); } catch (e) {}
+    if (!r.ok) {
+      var err = new Error((j && typeof j.error === "string" && j.error) || "The Journal request did not work. Please try again.");
+      err.code = j && j.code; err.status = r.status; throw err;
+    }
+    return j || {};
+  }
+  function post(path, body) { return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
+  var NOT_CONFIGURED_TEXT = "Your Journal isn't connected on this computer yet: add FC_GIST_TOKEN and FC_PASSPHRASE to Study-05/.env and restart the server.";
 
   /* ---------- write card ---------- */
   function charLen(s) { return Array.from(s).length; }
@@ -511,26 +676,14 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     els.entry.style.height = Math.min(Math.max(els.entry.scrollHeight + 2, 64), 120) + "px";
   }
 
-  function pendingTextSet(t) { lsSet(PENDING_TEXT, JSON.stringify({ text: t, ts: Date.now() })); }
-  function pendingTextGet() {
-    try { var o = JSON.parse(lsGet(PENDING_TEXT) || "null"); return o && typeof o.text === "string" ? o.text : ""; } catch (e) { return ""; }
-  }
-  function pendingTextDone() { /* keep the words only while GitHub may still answer */
-    var still = null;
-    try { still = gh && gh.pendingRequest(); } catch (e) {}
-    if (!still) lsDel(PENDING_TEXT);
-  }
-
   /* One wait at a time. cancelActive() aborts it and, in GitHub mode, really cancels it at GitHub. */
   var active = null; /* { ctl, onCancel } */
   function raceMs(p, ms) {
     return Promise.race([Promise.resolve(p).catch(function () {}), new Promise(function (r) { setTimeout(r, ms); })]);
   }
   async function cancelGitHubRequest() {
-    lsDel(PENDING_TEXT);
     try { await raceMs(gh && gh.cancelPending && gh.cancelPending(), 4000); } catch (e) {}
     try { if (gh && gh.clearPending) gh.clearPending(); } catch (e) {}
-    lsDel(PENDING_TEXT);
   }
   function cancelActive() {
     var a = active; if (!a) return Promise.resolve();
@@ -538,16 +691,22 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     return a.isGh ? cancelGitHubRequest() : Promise.resolve();
   }
 
+  function addToJournal(v) { /* a just-saved entry shows up in the Journal at once (memory only) */
+    if (state.j.status !== "ready") { loadJournal(); return; }
+    var mk = new Date(v.ts).toISOString().slice(0, 7);
+    if (state.j.all && state.j.all.indexOf(mk) === -1) state.j.all.unshift(mk);
+    if (state.j.all && state.j.loaded.indexOf(mk) === -1) state.j.loaded.push(mk);
+    state.j.entries = state.j.entries.filter(function (x) { return x.id !== v.id; });
+    state.j.entries.unshift({ id: v.id, ts: v.ts, text: v.text, r: v.r, quote: v.quote, qstatus: v.qstatus, usage: v.usage, hidden: false, imported: false });
+    renderJournal();
+  }
   function saveAndShow(text, result) {
-    var entry = { id: newId(), ts: Date.now(), text: text, result: result };
-    state.entries.unshift(entry);
-    if (state.entries.length > MAX_ENTRIES) state.entries.length = MAX_ENTRIES;
-    if (!saveEntries()) notify(SAVE_FAIL, true);
-    state.openId = entry.id;
+    var v = viewFromResult(text, result);
+    state.openId = v.id;
     state.busy = false; els.entry.readOnly = false;
     els.status.textContent = "";
-    renderResult(entry, true);
-    renderEntries(); renderStrip();
+    renderResult(v, true);
+    if (v.save.saved) addToJournal(v); else renderJournal();
   }
 
   function failMessage(e, cancelled, timedOut) {
@@ -563,7 +722,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     var clean;
     try { clean = Core.checkEntry(els.entry.value); } catch (e) { showError(e.message); return; }
     if (state.mode === "github" && !gh.hasSettings()) { openSettings(false); return; }
-    state.busy = true; state.openId = null; renderEntries();
+    state.busy = true; state.openId = null; renderJournal();
     els.entry.readOnly = true;
     updateSend();
     els.resp.textContent = "";
@@ -578,7 +737,6 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     var result;
     try {
       if (isGh) {
-        pendingTextSet(clean);
         result = await gh.reflectViaGitHub({ text: clean, signal: ctl.signal, onProgress: ui.update });
       } else {
         var r = await fetch(state.base + "/api/reflect", {
@@ -595,7 +753,6 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
       active = null; stopTick();
       if (isGh) {
         if (e && e.name === "AbortError") cancelled = true;
-        if (cancelled) lsDel(PENDING_TEXT); else pendingTextDone();
       }
       state.busy = false; els.entry.readOnly = false; updateSend();
       var f = failMessage(e, cancelled, timedOut);
@@ -606,7 +763,6 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     }
     if (tm) clearTimeout(tm);
     active = null; stopTick();
-    if (isGh) lsDel(PENDING_TEXT);
     els.entry.value = ""; grow();
     saveAndShow(clean, result);
     updateSend();
@@ -617,24 +773,22 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     var ctl = new AbortController(), cancelled = false;
     active = { ctl: ctl, onCancel: function () { cancelled = true; ctl.abort(); }, isGh: true };
     var ui = showListening(function () { cancelActive(); }, true, "Picking up your earlier entry");
-    var text = pendingTextGet() || "(an earlier entry)";
     try {
       var result = await gh.resumePending({ signal: ctl.signal, onProgress: ui.update });
       active = null; stopTick();
-      if (result == null) { state.busy = false; els.entry.readOnly = false; els.resp.textContent = ""; els.status.textContent = ""; lsDel(PENDING_TEXT); updateSend(); return; }
+      if (result == null) { state.busy = false; els.entry.readOnly = false; els.resp.textContent = ""; els.status.textContent = ""; updateSend(); return; }
       if (!validResult(result)) throw new Error("The answer came back in an unexpected shape. Please try again.");
-      lsDel(PENDING_TEXT);
+      var text = result.entry && typeof result.entry.text === "string" && result.entry.text ? result.entry.text : "(an earlier entry)";
       saveAndShow(text, result);
       updateSend();
     } catch (e) {
       active = null; stopTick();
       if (e && e.name === "AbortError") cancelled = true;
-      if (cancelled) lsDel(PENDING_TEXT); else pendingTextDone();
       state.busy = false; els.entry.readOnly = false; updateSend();
       var f = failMessage(e, cancelled, false);
       if (cancelled) f.msg = "Cancelled. You can write a new entry any time.";
       showError(f.msg, f.calm, f.link);
-      if (e && e.code === "settings") openSettings(false);
+      if (state.mode === "github" && e && e.code === "settings") openSettings(false);
     }
   }
 
@@ -654,10 +808,12 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     body.appendChild(p);
     var phraseEl = null;
     if (isGh) {
-      body.appendChild(el("p", "sub", "Your words travel encrypted through your GitHub and back. This takes about a minute, so feel free to take a breath. You can leave this page open."));
+      body.appendChild(el("p", "sub", "Your words travel encrypted through your GitHub and back. Claude also looks for a quote, so this takes about a minute. Feel free to take a breath. You can leave this page open."));
       phraseEl = el("p", "phrase", "Getting started… 0 s");
       phraseEl.setAttribute("aria-hidden", "true");
       body.appendChild(phraseEl);
+    } else {
+      body.appendChild(el("p", "sub", "Claude is reading your day and looking for a quote at the same time. This takes about 6 to 10 seconds."));
     }
     c.appendChild(body);
     var cb = el("button", "btn", "Cancel");
@@ -666,7 +822,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     c.appendChild(cb);
     els.resp.textContent = "";
     els.resp.appendChild(c);
-    els.status.textContent = (title || "Listening to your day") + (isGh ? "… This takes about a minute." : "…");
+    els.status.textContent = (title || "Listening to your day") + (isGh ? "… This takes about a minute." : "… This takes about 6 to 10 seconds.");
     var lastPhrase = "", lastSaid = "", t0 = Date.now();
     function paint() {
       if (!phraseEl) return;
@@ -704,14 +860,81 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     els.status.textContent = calm ? "Cancelled." : "Something went wrong.";
   }
 
+  /* ---------- the quote card ---------- */
+  function quoteCard(v, fresh) {
+    var q = v.quote;
+    if (!q) return el("p", "noquote", v.qstatus === "unavailable" ? "Quote search wasn't available this time" : "No quote found today");
+    var c = el("section", "qcard");
+    c.setAttribute("aria-label", "A thought for " + (fresh ? "today" : "this day"));
+    var h = el("h3", null, fresh ? "A thought for today" : "A thought for this day");
+    c.appendChild(h);
+    var bq = el("blockquote", null, "“" + q.text + "”"); bq.dir = "auto";
+    c.appendChild(bq);
+    var by = el("p", "by", "— " + q.author + (q.source ? ", " + q.source : "")); by.dir = "auto";
+    c.appendChild(by);
+    var sp = el("p", "src");
+    sp.appendChild(document.createTextNode("Source: "));
+    var a = linkTo(q.url, q.host);
+    a.appendChild(el("span", "sr-only", " (opens in a new tab)"));
+    sp.appendChild(a);
+    c.appendChild(sp);
+    if (q.translation) {
+      var tr = el("p", "tr");
+      tr.appendChild(el("b", null, "Translation"));
+      var tt = el("span", null, q.translation); tt.dir = "auto";
+      if (q.language) tt.lang = q.language;
+      tr.appendChild(tt);
+      c.appendChild(tr);
+    }
+    var verified = v.qstatus === "verified";
+    c.appendChild(el("span", "st " + (verified ? "ok" : "maybe"), verified ? "✓ Verified source" : "Source found, exact wording not confirmed"));
+    return c;
+  }
+
+  /* ---------- save status (just-written entries) ---------- */
+  function saveBar(v) {
+    var s = v.save;
+    var bar = el("div", "savebar");
+    bar.setAttribute("aria-live", "polite");
+    if (s.saved) { bar.appendChild(el("p", "ok", "Saved to your Journal ✓")); return bar; }
+    bar.classList.add("calm");
+    bar.appendChild(el("p", null, "Not saved to your Journal yet: " + (s.error || "the Journal could not be reached.")));
+    var b = el("button", "btn", s.busy ? "Saving…" : "Try saving again");
+    b.type = "button"; b.disabled = !!s.busy;
+    b.addEventListener("click", function () { retrySave(v); });
+    bar.appendChild(b);
+    return bar;
+  }
+  async function retrySave(v) {
+    var s = v.save; if (s.busy) return;
+    s.busy = true; refreshSaveBar(v);
+    var entry = entryOfView(v), out;
+    try {
+      if (state.mode === "github") out = await gh.retrySave(entry);
+      else { var j = await post("/api/journal/retry", { entry: entry }); out = { saved: j.saved !== false }; }
+    } catch (e) { out = { saved: false, error: e && e.message }; }
+    s.busy = false;
+    if (out && out.saved) { s.saved = true; s.error = ""; addToJournal(v); }
+    else s.error = (out && out.error) || "the Journal could not be reached.";
+    refreshSaveBar(v, true);
+  }
+  function refreshSaveBar(v, focusNew) {
+    var old = els.resp.querySelector(".savebar");
+    if (!old || state.openId !== v.id) return;
+    var nb = saveBar(v);
+    old.replaceWith(nb);
+    if (focusNew) { var b = nb.querySelector("button"); if (b) b.focus(); }
+  }
+
   /* ---------- response card ---------- */
-  function renderResult(entry, focus) {
-    var r = entry.result;
+  function renderResult(v, focus) {
+    var r = v.r;
     stopTick();
     els.resp.textContent = "";
     els.status.textContent = "";
     var wrap = el("div");
-    if (r.concern === "possible" || r.concern === "urgent") {
+    var crisis = r.concern === "possible" || r.concern === "urgent";
+    if (crisis) {
       var sb = el("div", "support" + (r.concern === "urgent" ? " urgent" : ""));
       sb.setAttribute("role", "note");
       sb.appendChild(el("p", "t", "💛 You are not alone"));
@@ -730,9 +953,11 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     card.tabIndex = -1;
     card.setAttribute("aria-label", "Your diary's response");
     var q = el("p", "quote");
-    var qt = el("span", "qt", "“" + entry.text + "”"); qt.dir = "auto";
+    var qt = el("span", "qt", "“" + v.text + "”"); qt.dir = "auto";
     q.appendChild(qt);
-    q.appendChild(el("span", "qd", " · " + fmtDate(entry.ts, true)));
+    q.appendChild(el("span", "qd", " · " + fmtDate(v.ts, true)));
+    if (v.imported) q.appendChild(el("span", "tag", "Imported"));
+    if (v.hidden) q.appendChild(el("span", "tag", "Hidden"));
     card.appendChild(q);
 
     var pe = byId[r.primary_emotion];
@@ -767,7 +992,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     bar.appendChild(fill);
     card.appendChild(bar);
 
-    var lang = typeof r.language === "string" && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(r.language) ? r.language : "";
+    var lang = safeLang(r.language);
     var body = el("div");
     if (lang) body.lang = lang;
     var sum = el("p", "summary", r.summary); sum.dir = "auto";
@@ -789,83 +1014,351 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
       body.appendChild(st);
     }
     card.appendChild(body);
-    var ct = cost(r.usage);
+    var ct = cost(v.usage);
     if (ct) card.appendChild(el("p", "foot", ct));
+    if (v.save) card.appendChild(saveBar(v));
     wrap.appendChild(card);
+    /* the quote always comes after the card, and after the support box when there is one */
+    wrap.appendChild(el("div")).style.height = "var(--gap)";
+    wrap.appendChild(quoteCard(v, !!v.save));
     els.resp.appendChild(wrap);
     if (focus) {
       try { card.focus({ preventScroll: true }); card.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
     }
   }
 
-  /* ---------- history ---------- */
-  function renderEntries() {
-    els.entries.textContent = "";
-    els.emptyHist.hidden = state.entries.length > 0;
-    els.clearAll.hidden = state.entries.length === 0;
-    state.entries.forEach(function (en) {
-      var li = el("li", "entry");
-      var open = el("button", "open");
-      open.type = "button";
-      if (en.id === state.openId) open.setAttribute("aria-current", "true");
-      var pe = byId[en.result.primary_emotion];
-      var em = el("span", "em", pe.emoji); em.setAttribute("aria-hidden", "true");
-      open.appendChild(em);
-      open.appendChild(el("span", "d", fmtDate(en.ts) + " · " + pe.label));
-      var tx = el("span", "tx", en.text); tx.dir = "auto";
-      open.appendChild(tx);
-      var sm2 = el("span", "sm", en.result.summary); sm2.dir = "auto";
-      open.appendChild(sm2);
-      open.setAttribute("aria-label", "Open entry from " + fmtDate(en.ts, true) + ": " + en.text);
-      open.addEventListener("click", function () {
-        state.openId = en.id; renderResult(en, true); renderEntries();
+  /* ---------- the Journal: load ---------- */
+  function setJMsg(text, opts) {
+    opts = opts || {};
+    var m = els.jmsg; m.textContent = "";
+    if (!text && !(opts.lines && opts.lines.length)) { m.hidden = true; return; }
+    m.hidden = false; m.classList.toggle("bad", !!opts.bad);
+    if (text) m.appendChild(el("p", null, text));
+    if (opts.lines && opts.lines.length) { var ul = el("ul"); opts.lines.forEach(function (l) { ul.appendChild(el("li", null, l)); }); m.appendChild(ul); }
+    if (opts.actions) {
+      var row = el("div", "actions");
+      opts.actions.forEach(function (a) {
+        var b = el("button", "btn" + (a.primary ? " primary" : ""), a.label); b.type = "button"; b.addEventListener("click", a.fn); row.appendChild(b);
       });
-      var del = el("button", "btn del", "🗑");
-      del.type = "button";
-      del.setAttribute("aria-label", "Delete entry from " + fmtDate(en.ts, true));
-      del.addEventListener("click", function () {
-        if (!window.confirm("Delete this diary entry? This cannot be undone.")) return;
-        state.entries = state.entries.filter(function (x) { return x.id !== en.id; });
-        if (!saveEntries()) notify("Couldn't update the saved diary on this device (storage is full or blocked).", true);
-        if (state.openId === en.id) { state.openId = null; els.resp.textContent = ""; }
-        renderEntries(); renderStrip();
-        els.entry.focus();
-      });
-      li.appendChild(open); li.appendChild(del);
-      els.entries.appendChild(li);
-    });
-  }
-
-  els.clearAll.addEventListener("click", function () {
-    if (!state.entries.length) return;
-    if (!window.confirm("Delete all " + state.entries.length + " diary entries from this device? This cannot be undone.")) return;
-    state.entries = []; state.openId = null;
-    if (!saveEntries()) notify("Couldn't update the saved diary on this device (storage is full or blocked).", true);
-    if (!state.busy) { els.resp.textContent = ""; els.status.textContent = "All entries deleted."; }
-    renderEntries(); renderStrip();
-    els.entry.focus();
-  });
-
-  function renderStrip() {
-    els.strip.textContent = "";
-    var now = new Date();
-    for (var i = 6; i >= 0; i--) {
-      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      var key = dayKey(d.getTime());
-      var found = null;
-      for (var k = 0; k < state.entries.length; k++) { if (dayKey(state.entries[k].ts) === key) { found = state.entries[k]; break; } }
-      var name = d.toLocaleDateString(undefined, { weekday: "short" });
-      var li = el("li");
-      var e = el("span", "e", found ? byId[found.result.primary_emotion].emoji : "·");
-      e.setAttribute("aria-hidden", "true");
-      li.appendChild(e);
-      li.appendChild(el("span", null, name));
-      li.appendChild(el("span", "sr-only", found
-        ? ": " + byId[found.result.primary_emotion].label + ", mood " + Math.round(found.result.mood_score) + " out of 10"
-        : ": no entry"));
-      els.strip.appendChild(li);
+      m.appendChild(row);
     }
   }
+  var loadSeq = 0;
+  var MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+  function monthList(d) { /* { all: newest first, loaded } from the server's allMonths; null when it has none (then everything is loaded) */
+    if (!d || !Array.isArray(d.allMonths)) return null;
+    var all = [];
+    d.allMonths.forEach(function (m) { var k = m && typeof m.month === "string" ? m.month : (typeof m === "string" ? m : ""); if (MONTH_RE.test(k) && all.indexOf(k) === -1) all.push(k); });
+    all.sort().reverse();
+    var got = Array.isArray(d.months) ? d.months.map(function (m) { return typeof m === "string" ? m : (m && m.month); }).filter(function (k) { return typeof k === "string" && MONTH_RE.test(k); }) : [];
+    var loaded = got.length ? got : all.slice(0, LATEST_MONTHS);
+    return { all: all, loaded: loaded };
+  }
+  function addEntries(list) {
+    var have = Object.create(null);
+    state.j.entries.forEach(function (v) { have[v.id] = true; });
+    (Array.isArray(list) ? list : []).forEach(function (e) { var v = viewFromEntry(e); if (v && !have[v.id]) { have[v.id] = true; state.j.entries.push(v); } });
+    state.j.entries.sort(function (a, b) { return b.ts - a.ts; });
+  }
+  async function loadJournal() {
+    if (state.mode !== "server" && state.mode !== "github") { renderJournal(); return; }
+    var seq = ++loadSeq;
+    state.j = { status: "loading", entries: [], problems: [], message: "", all: null, loaded: [] };
+    renderJournal();
+    var d, st = "ready", message = "";
+    try {
+      if (state.mode === "server") d = await api("/api/journal?latest=" + LATEST_MONTHS);
+      else {
+        var probs = gh.journalSettingsProblems(gh.loadSettings());
+        if (probs.length) { st = "settings"; message = "Add your GitHub settings to open your Journal. " + probs[0]; }
+        else d = await gh.loadJournal({ latest: LATEST_MONTHS });
+      }
+    } catch (e) {
+      if (e && e.code === "not_configured" && state.mode === "server") { st = "unconfigured"; message = (e.message && e.message !== "The Journal request did not work. Please try again.") ? e.message : NOT_CONFIGURED_TEXT; message += await missingNames(message); }
+      else if (e && (e.code === "settings" || e.code === "passphrase")) { st = "settings"; message = e.message; }
+      else { st = "error"; message = (e && e.message) || "Your Journal could not be opened."; }
+    }
+    if (seq !== loadSeq) return;
+    state.j = { status: st, entries: [], problems: [], message: message, all: null, loaded: [] };
+    if (st === "ready") {
+      addEntries(d && d.entries);
+      state.j.problems = d && Array.isArray(d.problems) ? d.problems : [];
+      var ml = monthList(d);
+      if (ml) { state.j.all = ml.all; state.j.loaded = ml.loaded; }
+    }
+    renderJournal();
+  }
+  async function missingNames(msg) { /* the server says which .env names are missing; add them if its message doesn't */
+    try {
+      var r = await fetch(state.base + "/api/status", { cache: "no-store" }), j = await r.json();
+      var miss = j && Array.isArray(j.journalMissing) ? j.journalMissing.filter(function (n) { return typeof n === "string" && /^[A-Z_]{3,40}$/.test(n); }) : [];
+      if (miss.length && msg.indexOf(miss[0]) === -1) return " Missing in .env: " + miss.join(", ") + ".";
+    } catch (e) {}
+    return "";
+  }
+  function unloadedMonths() {
+    var j = state.j;
+    return j.all ? j.all.filter(function (k) { return j.loaded.indexOf(k) === -1; }) : [];
+  }
+  function shortMonth(k, withYear) {
+    var p = k.split(".")[0].split("-");
+    try { return new Date(Number(p[0]), Number(p[1]) - 1, 1).toLocaleDateString(undefined, withYear ? { month: "short", year: "numeric" } : { month: "short" }); } catch (e) { return k; }
+  }
+  function loadedRange() {
+    var l = state.j.loaded.slice().sort();
+    if (!l.length) return "";
+    var a = l[0], b = l[l.length - 1], y = a.slice(0, 4) !== b.slice(0, 4);
+    return a === b ? shortMonth(a, true) : shortMonth(a, y) + "–" + shortMonth(b, y);
+  }
+  async function loadOlder() {
+    var target = els.jolderSel.value, todo = unloadedMonths();
+    var stop = todo.indexOf(target);
+    if (stop === -1 || state.jbusy) return;
+    todo = todo.slice(0, stop + 1);
+    var seq = loadSeq, j = state.j;
+    state.jbusy = true; els.jolderBtn.disabled = true; els.jolderSel.disabled = true;
+    try {
+      for (var i = 0; i < todo.length; i++) {
+        var m = todo[i];
+        els.jolderMsg.textContent = "Opening " + monthLabel(m) + "…";
+        var d = state.mode === "server" ? await api("/api/journal?month=" + encodeURIComponent(m)) : await gh.loadMonth(m);
+        if (seq !== loadSeq || state.j !== j) return; /* the Journal was reloaded meanwhile */
+        addEntries(d && d.entries);
+        if (d && Array.isArray(d.problems)) j.problems = j.problems.concat(d.problems);
+        j.loaded.push(m);
+      }
+      els.status.textContent = "Loaded " + monthLabel(todo[todo.length - 1]) + (todo.length > 1 ? " and the months after it" : "") + ".";
+      els.jolderMsg.textContent = "";
+    } catch (e) {
+      els.jolderMsg.textContent = (e && e.message) || "That month could not be opened. Please try again.";
+    }
+    state.jbusy = false; els.jolderBtn.disabled = false; els.jolderSel.disabled = false;
+    renderJournal();
+    els.jolderBtn.focus();
+  }
+  els.jolderBtn.addEventListener("click", loadOlder);
+
+  /* ---------- the Journal: view ---------- */
+  function visibleList() {
+    var q = state.jquery.trim().toLowerCase();
+    return state.j.entries.filter(function (v) {
+      if (v.hidden && !state.jshowHidden) return false;
+      if (state.jmonth && monthKey(v.ts) !== state.jmonth) return false;
+      if (!q) return true;
+      var hay = [v.text, v.r.summary, v.quote ? v.quote.text : "", v.quote ? v.quote.author : "", v.quote ? v.quote.source : ""].join("\n").toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+  }
+  function renderTrend() {
+    var box = els.trend; box.textContent = "";
+    var vis = state.j.entries.filter(function (v) { return !v.hidden; });
+    var now = new Date();
+    function dayAvg(offset) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset), key = dayKey(d.getTime()), sum = 0, n = 0, last = null;
+      vis.forEach(function (v) { if (dayKey(v.ts) === key) { sum += v.r.mood_score; n++; if (!last || v.ts > last.ts) last = v; } });
+      return { date: d, avg: n ? sum / n : null, n: n, last: last };
+    }
+    function summary(days, label) {
+      var scores = [];
+      vis.forEach(function (v) { var age = (new Date(now.getFullYear(), now.getMonth(), now.getDate()) - new Date(new Date(v.ts).getFullYear(), new Date(v.ts).getMonth(), new Date(v.ts).getDate())) / 864e5; if (age >= 0 && age < days.length) scores.push(v.r.mood_score); });
+      var p = el("p");
+      if (scores.length < 2) { p.textContent = label + ": not enough entries yet (" + scores.length + " so far)."; return p; }
+      var avg = scores.reduce(function (a, b) { return a + b; }, 0) / scores.length;
+      p.textContent = label + ": average mood " + avg.toFixed(1) + " out of 10 (" + moodWord(Math.round(avg)) + "), from " + scores.length + " entries. Lowest " + Math.min.apply(null, scores) + ", highest " + Math.max.apply(null, scores) + ".";
+      return p;
+    }
+    var h = el("h3", null, "Mood trend"); box.appendChild(h);
+    var w7 = []; for (var i = 6; i >= 0; i--) w7.push(dayAvg(i));
+    var strip = el("ul", "strip"); strip.setAttribute("aria-label", "Mood over the last 7 days");
+    w7.forEach(function (x) {
+      var li = el("li");
+      var e = el("span", "e", x.last ? byId[x.last.r.primary_emotion].emoji : "·"); e.setAttribute("aria-hidden", "true");
+      li.appendChild(e);
+      var col = el("span", "bcol"); col.setAttribute("aria-hidden", "true");
+      var bar = el("i"); bar.style.height = x.avg ? Math.round(x.avg * 10) + "%" : "0"; col.appendChild(bar);
+      li.appendChild(col);
+      li.appendChild(el("span", "n", x.avg ? String(Math.round(x.avg)) : "–")).setAttribute("aria-hidden", "true");
+      li.appendChild(el("span", null, x.date.toLocaleDateString(undefined, { weekday: "short" })));
+      li.appendChild(el("span", "sr-only", x.last ? ": " + byId[x.last.r.primary_emotion].label + ", mood " + Math.round(x.avg) + " out of 10" : ": no entry"));
+      strip.appendChild(li);
+    });
+    box.appendChild(strip);
+    box.appendChild(summary(w7, "Last 7 days"));
+    var w30 = []; for (var k = 29; k >= 0; k--) w30.push(dayAvg(k));
+    var mini = el("div", "mini"); mini.setAttribute("aria-hidden", "true");
+    w30.forEach(function (x) { var b = el("i", x.avg ? "" : "none"); if (x.avg) b.style.height = Math.round(x.avg * 10) + "%"; b.title = x.date.toLocaleDateString() + (x.avg ? ": " + Math.round(x.avg) + "/10" : ": no entry"); mini.appendChild(b); });
+    box.appendChild(mini);
+    box.appendChild(summary(w30, "Last 30 days"));
+  }
+  function renderMonths() {
+    var counts = Object.create(null), keys = [];
+    state.j.entries.forEach(function (v) { if (v.hidden && !state.jshowHidden) return; var k = monthKey(v.ts); if (!counts[k]) { counts[k] = 0; keys.push(k); } counts[k]++; });
+    keys.sort().reverse();
+    if (state.jmonth && keys.indexOf(state.jmonth) === -1) state.jmonth = "";
+    var sel = els.jmonth; sel.textContent = "";
+    var all = el("option", null, "All months"); all.value = ""; sel.appendChild(all);
+    keys.forEach(function (k) { var o = el("option", null, monthLabel(k) + " (" + counts[k] + ")"); o.value = k; sel.appendChild(o); });
+    sel.value = state.jmonth;
+  }
+  function renderJournal() {
+    var j = state.j, mode = state.mode;
+    syncZones();
+    var hiddenN = j.entries.filter(function (v) { return v.hidden; }).length;
+    var ready = j.status === "ready";
+    els.jbody.hidden = !ready;
+    els.jshowHiddenText.textContent = "Show hidden (" + hiddenN + ")";
+    /* messages */
+    var canImport = ready && state.legacy.length > 0 && !state.jbusy;
+    els.jbanner.hidden = !(ready && state.legacy.length > 0);
+    if (!els.jbanner.hidden) {
+      var n = state.legacy.length, ent = n === 1 ? " entry" : " entries";
+      els.importBtn.hidden = state.stuck; els.stuckTools.hidden = !state.stuck;
+      els.jbannerText.textContent = state.stuck
+        ? n + (n === 1 ? " entry couldn't" : " entries couldn't") + " be moved and " + (n === 1 ? "is" : "are") + " still kept in this browser."
+        : "You have " + n + ent + " saved only in this browser. Move them into your encrypted Journal?";
+      els.importBtn.disabled = !canImport;
+    }
+    if (mode === "offline" || mode === "checking") {
+      setJMsg(mode === "offline" ? "Your Journal is encrypted in your private Gist, so it needs the local server (npm start) or the online version to be opened. Nothing of it is kept in this browser." : "Getting ready…");
+    } else if (j.status === "loading") setJMsg("Opening your Journal…");
+    else if (j.status === "unconfigured") setJMsg(j.message, { actions: [{ label: "Check again", fn: loadJournal }] });
+    else if (j.status === "settings") setJMsg(j.message, mode === "github"
+      ? { bad: true, actions: [{ label: "Open Settings", primary: true, fn: function () { openSettings(false); } }] }
+      : { bad: true, actions: [{ label: "Check again", primary: true, fn: loadJournal }] }); /* local mode: Settings has nothing to set */
+    else if (j.status === "error") setJMsg(j.message, { bad: true, actions: [{ label: mode === "server" ? "Check again" : "Try again", primary: true, fn: loadJournal }] });
+    else if (j.problems.length) {
+      var lines = j.problems.map(function (p) { return p && p.message ? String(p.message) : (p && /version/i.test(String(p.kind || p.code || "")) ? "This month was saved by a newer version of the diary. Update this page to open it." : "A month file is damaged."); });
+      setJMsg(j.problems.length === 1 ? "One month couldn't be opened: " + lines[0] : j.problems.length + " months couldn't be opened:", { bad: true, lines: j.problems.length === 1 ? null : lines });
+    } else setJMsg("");
+    renderJournalBody(ready);
+  }
+  function syncZones() { /* Download and Delete only make sense once the Journal is open */
+    var conn = state.mode === "server" || state.mode === "github", ready = conn && state.j.status === "ready";
+    els.journalSettings.hidden = !ready;
+    els.connectFirst.hidden = !(conn && state.j.status !== "ready" && state.j.status !== "loading" && state.j.status !== "idle");
+  }
+  function renderOlder() {
+    var left = unloadedMonths(), sel = els.jolderSel;
+    var canLoad = state.mode === "server" || typeof (gh && gh.loadMonth) === "function";
+    els.jolder.hidden = !left.length || !canLoad;
+    els.jscope.textContent = left.length && canLoad ? "Searching loaded months (" + loadedRange() + "). Load older to search further." : "";
+    if (els.jolder.hidden) return;
+    var keep = sel.value;
+    sel.textContent = "";
+    left.forEach(function (k) { var o = el("option", null, monthLabel(k)); o.value = k; sel.appendChild(o); });
+    sel.value = left.indexOf(keep) !== -1 ? keep : left[0];
+  }
+  function renderJournalBody(ready) {
+    if (!ready) { els.jlist.textContent = ""; return; }
+    renderTrend(); renderMonths(); renderOlder();
+    var list = visibleList();
+    els.jlist.textContent = "";
+    if (!list.length) {
+      els.jlist.appendChild(el("p", "empty", state.j.entries.length
+        ? (state.jquery.trim() ? "Nothing matches your search." : "No entries to show here.")
+        : "Your Journal is empty. Your first entry will appear here."));
+      els.jcount.textContent = "0 entries shown";
+      return;
+    }
+    var shown = list.slice(0, state.jlimit), lastMonth = "", ul = null;
+    shown.forEach(function (v) {
+      var mk = monthKey(v.ts);
+      if (mk !== lastMonth) {
+        lastMonth = mk;
+        els.jlist.appendChild(el("h3", "jmonth", monthLabel(mk)));
+        ul = el("ul", "entries"); els.jlist.appendChild(ul);
+      }
+      ul.appendChild(entryItem(v));
+    });
+    if (list.length > shown.length) {
+      var more = el("button", "btn more", "Show more (" + (list.length - shown.length) + " left)"); more.type = "button";
+      more.addEventListener("click", function () { state.jlimit += PAGE; renderJournal(); });
+      els.jlist.appendChild(more);
+    }
+    els.jcount.textContent = list.length + (list.length === 1 ? " entry shown" : " entries shown");
+  }
+  function entryItem(v) {
+    var pe = byId[v.r.primary_emotion];
+    var li = el("li", "entry" + (v.hidden ? " hid" : ""));
+    var open = el("button", "open"); open.type = "button";
+    if (v.id === state.openId) open.setAttribute("aria-current", "true");
+    var em = el("span", "em", pe.emoji); em.setAttribute("aria-hidden", "true");
+    open.appendChild(em);
+    var d = el("span", "d", fmtDate(v.ts) + " · " + pe.label);
+    if (v.hidden) d.appendChild(el("span", "tag", "Hidden"));
+    if (v.imported) d.appendChild(el("span", "tag", "Imported"));
+    open.appendChild(d);
+    var tx = el("span", "tx", v.text); tx.dir = "auto"; open.appendChild(tx);
+    var sm = el("span", "sm", v.r.summary); sm.dir = "auto"; open.appendChild(sm);
+    if (v.quote) { var qa = el("span", "qa", "Quote: " + v.quote.author); qa.dir = "auto"; open.appendChild(qa); }
+    open.setAttribute("aria-label", "Open entry from " + fmtDate(v.ts, true) + (v.hidden ? " (hidden)" : "") + ": " + v.text);
+    open.addEventListener("click", function () { state.openId = v.id; renderResult(v, true); renderJournal(); });
+    var hb = el("button", "btn hidebtn", v.hidden ? "Unhide" : "Hide"); hb.type = "button";
+    hb.setAttribute("aria-label", (v.hidden ? "Unhide" : "Hide") + " entry from " + fmtDate(v.ts, true));
+    hb.addEventListener("click", function () { setHidden(v, !v.hidden, li); });
+    li.appendChild(open); li.appendChild(hb);
+    return li;
+  }
+  async function setHidden(v, hide, li) {
+    if (state.jbusy) return;
+    state.jbusy = true;
+    var idx = Array.prototype.indexOf.call(els.jlist.querySelectorAll("li.entry"), li);
+    try {
+      if (state.mode === "server") await post(hide ? "/api/journal/hide" : "/api/journal/unhide", { id: v.id });
+      else if (hide) await gh.hideEntry(v.id); else await gh.unhideEntry(v.id);
+      v.hidden = hide;
+      els.status.textContent = hide ? "Entry hidden. You can bring it back under Show hidden." : "Entry is back in your Journal.";
+      state.jbusy = false;
+      renderJournal();
+      var btns = els.jlist.querySelectorAll("li.entry .hidebtn");
+      var target = btns[Math.min(idx, btns.length - 1)] || els.jsearch;
+      if (target) target.focus();
+    } catch (e) {
+      state.jbusy = false;
+      setJMsg((e && e.message) || "That didn't work. Please try again.", { bad: true });
+      if (state.mode === "github" && e && e.code === "settings") openSettings(false);
+    }
+  }
+  var searchTimer = null;
+  els.jsearch.addEventListener("input", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () { state.jquery = els.jsearch.value; state.jlimit = PAGE; renderJournal(); }, 150);
+  });
+  els.jmonth.addEventListener("change", function () { state.jmonth = els.jmonth.value; state.jlimit = PAGE; renderJournal(); });
+  els.jshowHidden.addEventListener("change", function () { state.jshowHidden = els.jshowHidden.checked; state.jlimit = PAGE; renderJournal(); });
+
+  /* ---------- one-time move of the old browser history ---------- */
+  function idSet(a) { var o = Object.create(null); (Array.isArray(a) ? a : []).forEach(function (x) { if (typeof x === "string") o[x] = true; }); return o; }
+  els.importBtn.addEventListener("click", async function () {
+    if (state.jbusy || !state.legacy.length) return;
+    state.jbusy = true; els.importBtn.disabled = true; els.importBtn.textContent = "Moving…";
+    var sent = state.legacy, out;
+    try {
+      if (state.mode === "server") out = await post("/api/journal/import", { entries: sent });
+      else out = await gh.importLegacy(sent);
+    } catch (e) {
+      state.jbusy = false; els.importBtn.textContent = "Move them into my Journal"; els.importBtn.disabled = false;
+      setJMsg("Not moved yet: " + ((e && e.message) || "the Journal could not be reached.") + " Your old entries are still safe in this browser.", { bad: true });
+      if (state.mode === "github" && e && e.code === "settings") openSettings(false);
+      return;
+    }
+    /* Only entries the Journal confirmed (added, or already there) leave the browser; everything else stays. */
+    var added = Number(out && out.added) || 0, skipped = Number(out && out.skipped) || 0;
+    var done = idSet(out && out.addedIds), already = idSet(out && out.skippedIds);
+    var rest = sent.filter(function (e) { var id = e && typeof e.id === "string" ? e.id : null; return !(id !== null && (done[id] || already[id])); });
+    var saved = true;
+    if (!rest.length) lsDel(LOG_STORE); else saved = lsSet(LOG_STORE, JSON.stringify(rest));
+    state.legacy = saved ? rest : sent; state.stuck = rest.length > 0; state.jbusy = false; els.importBtn.textContent = "Move them into my Journal";
+    var msg = "Moved " + added + (added === 1 ? " entry" : " entries") + " into your Journal" + (skipped ? " (" + skipped + (skipped === 1 ? " was" : " were") + " already there)" : "") + "." +
+      (rest.length ? "" : " The copy in this browser was removed.");
+    els.status.textContent = msg + (rest.length ? " " + rest.length + (rest.length === 1 ? " entry couldn't" : " entries couldn't") + " be moved and " + (rest.length === 1 ? "is" : "are") + " still kept in this browser." : "");
+    await loadJournal();
+    setJMsg(msg);
+  });
+  els.stuckDownload.addEventListener("click", function () {
+    download(new Blob([JSON.stringify(state.legacy, null, 2)], { type: "application/json" }), "empathy-diary-unmoved-" + new Date().toISOString().slice(0, 10) + ".json");
+    els.status.textContent = "Your file was downloaded. Remember: it is not encrypted.";
+  });
 
   /* ---------- settings ---------- */
   var lastFocus = null;
@@ -882,6 +1375,9 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     var isGh = state.mode === "github" && !!gh;
     els.ghFields.hidden = !isGh; els.saveKey.hidden = !isGh; els.forgetKey.hidden = !isGh;
     els.problems.textContent = ""; els.saved.textContent = "";
+    els.exportMsg.textContent = ""; els.deleteMsg.textContent = "";
+    els.deletePhrase.value = ""; els.deleteBtn.disabled = true; els.dangerZone.open = false;
+    syncZones();
     if (isGh) {
       els.setIntro.textContent = intro
         ? "Welcome. This online diary reaches Claude through your own GitHub, so it needs a few settings once on this device."
@@ -890,7 +1386,7 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
       els.gistToken.value = els.runToken.value = els.passphrase.value = "";
       refreshSaved();
     } else if (state.mode === "server") {
-      els.setIntro.textContent = "Nothing to set up here. The local server holds your Claude key in Study-05/.env and never sends it to the page.";
+      els.setIntro.textContent = "Nothing to set up here. The local server holds your Claude key in Study-05/.env and never sends it to the page. Your Journal is connected through FC_GIST_ID, FC_GIST_TOKEN and FC_PASSPHRASE in the same file.";
     } else {
       els.setIntro.textContent = "Nothing to set up here. Locally, the Claude key lives in Study-05/.env and is read only by the local server. Online, the diary uses GitHub mode instead.";
     }
@@ -898,7 +1394,8 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     (isGh ? els.gistId : $("closeSettings")).focus();
   }
   function afterClose() {
-    els.gistToken.value = els.runToken.value = els.passphrase.value = "";
+    els.gistToken.value = els.runToken.value = els.passphrase.value = els.deletePhrase.value = "";
+    els.deleteBtn.disabled = true;
     var f = lastFocus; lastFocus = null;
     if (f && f.focus && document.contains(f)) f.focus();
     updateSend();
@@ -934,19 +1431,71 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
     closeSettings();
     notify("Saved. Your diary is ready.");
     els.entry.focus();
+    loadJournal();
   });
   els.forgetKey.addEventListener("click", async function () {
     els.forgetKey.disabled = true;
     try { await cancelActive(); } catch (e) {} /* stop any wait first, while the tokens can still delete the request */
     if (gh) gh.forgetSettings();
-    lsDel(PENDING_TEXT);
     els.forgetKey.disabled = false;
     els.gistId.value = els.gistToken.value = els.runToken.value = els.passphrase.value = "";
     refreshSaved(); updateSend();
     lastFocus = els.entry;
     closeSettings();
-    notify("Your GitHub settings were removed from this device. FridgeChef (Study-04) uses the same settings, so it's signed out here too.");
+    state.openId = null; els.resp.textContent = "";
+    loadJournal(); /* with no settings this clears the Journal from memory and asks for them again */
+    notify("Your GitHub settings were removed from this device, and your Journal was closed here. FridgeChef (Study-04) uses the same settings, so it's signed out here too.");
     els.entry.focus();
+  });
+
+  /* download my Journal */
+  function download(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a"); a.href = url; a.download = filename; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+  els.exportBtn.addEventListener("click", async function () {
+    var fmt = document.querySelector('input[name="fmt"]:checked').value === "txt" ? "txt" : "md";
+    var withHidden = els.exHidden.checked;
+    els.exportBtn.disabled = true; els.exportMsg.textContent = "Preparing your file…";
+    try {
+      if (state.mode === "server") {
+        var r = await fetch(state.base + "/api/journal/export?format=" + fmt + "&hidden=" + (withHidden ? "1" : "0"), { headers: { "X-Diary": "1" } });
+        if (!r.ok) { var j = null; try { j = await r.json(); } catch (e) {} var er = new Error((j && j.error) || "The Journal could not be downloaded."); er.code = j && j.code; throw er; }
+        var blob = await r.blob();
+        download(blob, "empathy-journal-" + new Date().toISOString().slice(0, 10) + "." + fmt);
+      } else {
+        var out = await gh.exportJournal(fmt, { includeHidden: withHidden });
+        download(new Blob([out.text], { type: out.mime }), out.filename);
+      }
+      els.exportMsg.textContent = "Your file was downloaded. Remember: it is not encrypted.";
+    } catch (e) {
+      els.exportMsg.textContent = (e && e.code === "not_configured") ? NOT_CONFIGURED_TEXT : ((e && e.message) || "The Journal could not be downloaded.");
+    }
+    els.exportBtn.disabled = false;
+  });
+
+  /* delete the whole journal: only with the exact phrase */
+  els.deletePhrase.addEventListener("input", function () { els.deleteBtn.disabled = els.deletePhrase.value !== DELETE_PHRASE; });
+  els.deletePhrase.addEventListener("keydown", function (e) { if (e.key === "Enter") e.preventDefault(); }); /* Enter must not submit the settings form */
+  els.deleteBtn.addEventListener("click", async function () {
+    var phrase = els.deletePhrase.value;
+    if (phrase !== DELETE_PHRASE) { els.deleteBtn.disabled = true; return; }
+    els.deleteBtn.disabled = true; els.deleteMsg.textContent = "Deleting…";
+    try {
+      var out;
+      if (state.mode === "server") out = await post("/api/journal/delete-all", { confirm: phrase });
+      else out = await gh.deleteJournal(phrase);
+      state.j = { status: "ready", entries: [], problems: [], message: "", all: null, loaded: [] };
+      state.openId = null; els.resp.textContent = ""; state.jmonth = ""; state.jquery = ""; els.jsearch.value = "";
+      els.deletePhrase.value = "";
+      renderJournal();
+      var n = out && Number(out.deleted);
+      els.deleteMsg.textContent = "Your Journal was deleted" + (isFinite(n) ? " (" + n + (n === 1 ? " file" : " files") + ")" : "") + ". Older versions remain in your Gist's revision history on GitHub.";
+    } catch (e) {
+      els.deleteMsg.textContent = (e && e.message) || "The Journal could not be deleted.";
+      els.deleteBtn.disabled = els.deletePhrase.value !== DELETE_PHRASE;
+    }
   });
 
   /* ---------- wiring ---------- */
@@ -960,8 +1509,8 @@ dialog::backdrop { background: rgba(40, 24, 14, .55); }
   els.send.addEventListener("click", submit);
 
   els.today.textContent = fmtDate(Date.now(), true);
-  removeOldKeys(); loadEntries();
-  renderEntries(); renderStrip(); updateSend();
+  removeOldKeys(); loadLegacy();
+  renderJournal(); updateSend();
   detectMode();
 })();
 </script>

@@ -6,7 +6,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import Anthropic from "@anthropic-ai/sdk";
+import { createClaude } from "./claude.mjs";
+import { handleJournalRoute, isJournalRoute, journalFromEnv, JOURNAL_RATE_MAX, notConfiguredMessage, saveReflection } from "./server-journal.mjs";
 
 const require = createRequire(import.meta.url);
 const Core = require("./diary-core.js");
@@ -18,24 +19,7 @@ const MAX_BODY = 4096;
 const RATE_MAX = 20;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 
-/** The real Claude client. Returns the raw API message. */
-export function createClaude({ apiKey, workspaceId, ci = false }) {
-  const defaultHeaders = workspaceId ? { "anthropic-workspace-id": workspaceId } : undefined;
-  const client = new Anthropic({ apiKey, maxRetries: 2, timeout: 60_000, defaultHeaders });
-  return {
-    async reflect(body) {
-      try {
-        // Same call pattern as Study-04 (structured outputs + server-side fallback).
-        return await client.beta.messages.create({ ...body, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
-      } catch (err) {
-        const status = err?.status ?? 0;
-        const e = new Error(Core.describeError(status, JSON.stringify(err?.error ?? {}), { server: !ci, ci }));
-        e.status = status === 0 || status >= 500 ? 502 : status;
-        throw e;
-      }
-    },
-  };
-}
+export { createClaude };
 
 function sendJson(res, status, obj, headers = {}) {
   const body = JSON.stringify(obj);
@@ -51,13 +35,13 @@ const HTML_HEADERS = {
   "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8791; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 };
 
-function readBody(req) {
+function readBody(req, max = MAX_BODY) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     req.on("data", (c) => {
       size += c.length;
-      if (size > MAX_BODY) {
+      if (size > max) {
         reject(Object.assign(new Error("That request was too large."), { status: 413 }));
         return;
       }
@@ -69,10 +53,22 @@ function readBody(req) {
 }
 
 /**
- * @param {{ claude: { reflect(body: object): Promise<object> } | null, now?: () => number, baseDir?: string }} opts
+ * @param {{ claude: { reflect(body: object): Promise<object> } | null, journal?: object | null, now?: () => number, baseDir?: string }} opts
+ *   journal: web/journal.mjs's createJournal() result, or null when the journal isn't configured
+ *   journalMissing / journalProblem: from journalFromEnv, used to word the "not connected" message
  */
-export function createServer({ claude, now = Date.now, baseDir = HERE } = {}) {
+export function createServer({ claude, journal = null, journalMissing = [], journalProblem = "", now = Date.now, baseDir = HERE } = {}) {
+  const notConfigured = notConfiguredMessage(journalMissing, journalProblem);
   let hits = [];
+  let journalHits = [];
+
+  function journalLimited() {
+    const t = now();
+    journalHits = journalHits.filter((h) => t - h < RATE_WINDOW_MS);
+    if (journalHits.length >= JOURNAL_RATE_MAX) return true;
+    journalHits.push(t);
+    return false;
+  }
 
   function rateLimited() {
     const t = now();
@@ -94,10 +90,11 @@ export function createServer({ claude, now = Date.now, baseDir = HERE } = {}) {
       Object.assign(cors, { "access-control-allow-origin": origin, vary: "Origin" });
     }
     try {
-      const route = new URL(req.url ?? "/", "http://127.0.0.1").pathname;
+      const url = new URL(req.url ?? "/", "http://127.0.0.1");
+      const route = url.pathname;
 
       if (req.method === "OPTIONS") {
-        res.writeHead(204, { ...cors, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "600" });
+        res.writeHead(204, { ...cors, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type, x-diary", "access-control-max-age": "600" });
         return res.end();
       }
 
@@ -124,7 +121,7 @@ export function createServer({ claude, now = Date.now, baseDir = HERE } = {}) {
 
       if (route === "/api/status") {
         if (req.method !== "GET") return sendJson(res, 405, { error: "Use GET." }, { ...cors, allow: "GET" });
-        return sendJson(res, 200, { ok: true, mode: "server", model: Core.MODEL, keyLoaded: Boolean(claude) }, cors);
+        return sendJson(res, 200, { ok: true, mode: "server", model: Core.MODEL, keyLoaded: Boolean(claude), journalConfigured: Boolean(journal), journalMissing: journal ? [] : journalMissing }, cors);
       }
 
       if (route === "/api/reflect") {
@@ -138,14 +135,21 @@ export function createServer({ claude, now = Date.now, baseDir = HERE } = {}) {
         if (!claude) return sendJson(res, 503, { error: "The server has no API key. Add ANTHROPIC_API_KEY to .env and restart." }, cors);
         if (rateLimited()) return sendJson(res, 429, { error: "That is a lot of entries in a short time. Please wait a few minutes and try again." }, { ...cors, "retry-after": "600" });
         const message = await claude.reflect(Core.buildRequestBody(text));
-        return sendJson(res, 200, Core.parseResult(message), cors);
+        const result = Core.parseResult(message);
+        // The reply always goes out; the journal save only adds saved / entryId (and saveError + entry when it failed).
+        return sendJson(res, 200, { ...result, ...(await saveReflection(journal, { text, result, now: now(), notConfigured })) }, cors);
+      }
+
+      if (isJournalRoute(route)) {
+        return await handleJournalRoute({ req, res, route, url, journal, cors, sendJson, readBody, limited: journalLimited, now, notConfigured });
       }
 
       return sendJson(res, 404, { error: "Not found." }, cors);
     } catch (err) {
       const status = Number.isInteger(err?.status) && err.status >= 400 && err.status < 600 ? err.status : 500;
       const message = err?.status ? String(err.message) : "Something went wrong on the server.";
-      if (!res.headersSent) sendJson(res, status, { error: message }, cors);
+      const code = err?.status && typeof err.code === "string" ? { code: err.code } : {};
+      if (!res.headersSent) sendJson(res, status, { error: message, ...code }, cors);
       else res.end();
     }
   });
@@ -159,7 +163,8 @@ function loadEnv() {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { apiKey, workspaceId } = loadEnv();
   const claude = apiKey ? createClaude({ apiKey, workspaceId }) : null;
-  const server = createServer({ claude });
+  const { journal, problem: journalProblem, missing: journalMissing } = journalFromEnv(process.env);
+  const server = createServer({ claude, journal, journalMissing, journalProblem });
   server.on("error", (err) => {
     console.error(err?.code === "EADDRINUSE" ? `Port ${PORT} is busy: is the diary server already running?` : `The server could not start (${err?.code ?? "unknown error"}).`);
     process.exit(1);
@@ -169,6 +174,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(`Model: ${Core.MODEL}`);
     console.log(`API key found: ${apiKey ? "yes" : "no"}`);
     console.log(`Workspace ID found: ${workspaceId ? "yes" : "no"}`);
+    console.log(`Journal: ${journal ? "connected" : `not configured: ${journalProblem}`}`);
     if (!apiKey) console.log("Add ANTHROPIC_API_KEY to .env (see .env.example) and restart.");
   });
 }

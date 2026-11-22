@@ -8,11 +8,16 @@
 //      puts the encrypted answer in the Gist
 //   4. the page picks it up, decrypts it and deletes it from the Gist
 //
+// The journal (journal-YYYY-MM.enc files in the same Gist, see journal.mjs) is saved by the job
+// after Claude answers; the page reads and changes it itself with the functions at the bottom
+// (loadJournal, hideEntry, ...). The decrypted journal lives in memory only, never in storage.
+//
 // The two tokens, the Gist ID and the passphrase are the same device settings
 // FridgeChef uses (same origin, same storage key), kept only in this
 // browser's storage on this device. "Forget" removes them.
 
 import { decryptJson, encryptJson } from "./fc-crypto.mjs";
+import { createJournal, JournalError, renderMarkdown, renderText, validateEntry } from "./journal.mjs";
 import { createGistClient, GitHubError, isRequestId, MAX_AGE_MS, newRequestId, requestFile, requestTime, resultFile } from "./mailbox.mjs";
 
 export const REPO = "aufisn/VibeCoding";
@@ -345,7 +350,16 @@ function unwrap(answer) {
   if (isObject(answer) && answer.ok === false) throw new Error(typeof answer.error === "string" && answer.error ? answer.error : "The GitHub job could not answer. Try again.");
   const r = isObject(answer) && answer.ok === true ? answer.result : null;
   if (!isObject(r) || typeof r.primary_emotion !== "string" || !Array.isArray(r.emotions) || typeof r.empathy !== "string") throw new Error("The answer from GitHub could not be read. Try again.");
-  return r;
+  const saveError = typeof answer.saveError === "string" ? answer.saveError.slice(0, 300) : "";
+  // The full entry (with the text) comes back whether or not it was saved, so the page never has to keep the text itself.
+  const entry = validateEntry(answer.entry);
+  return {
+    ...r,
+    saved: answer.saved === true,
+    entryId: typeof answer.entryId === "string" ? answer.entryId.slice(0, 64) : entry?.id ?? null,
+    entry,
+    ...(answer.saved === true ? {} : { saveError: saveError || "Your entry was not saved to your journal." }),
+  };
 }
 
 /** Wraps `onProgress(phrase, elapsedSeconds)`; a throwing callback never breaks the wait. */
@@ -390,4 +404,91 @@ export async function resumePending({ onProgress, signal, settings = loadSetting
   needSettings(settings);
   const answer = await waitForAnswer({ settings, id, fetch, storage, now, signal, resumed: true, onStage: progressReporter(onProgress, now), ...rest });
   return unwrap(answer);
+}
+
+/* ---------- The journal, read and changed by the page itself ---------- */
+// Everything below uses the device settings (Gist ID, Gist token, passphrase). The decrypted
+// journal is returned to the caller and kept nowhere else: nothing is written to browser storage.
+
+/** Problems that stop journal access (the run token isn't needed: it only starts workflows). */
+export function journalSettingsProblems(s) {
+  const all = settingsProblems({ ...s, runToken: "github_pat_" + "x".repeat(20) });
+  return all;
+}
+
+function openJournal(settings, fetch, options = {}) {
+  const problems = journalSettingsProblems(settings);
+  if (problems.length) throw Object.assign(new JournalError("not_configured", `Your journal isn't set up on this device yet. ${problems[0]}`), { code: "settings" });
+  return createJournal({ gist: createGistClient({ token: settings.gistToken, gistId: settings.gistId, fetch }), passphrase: settings.passphrase, ...options });
+}
+
+const journalArgs = ({ settings = loadSettings(), fetch = globalThis.fetch?.bind(globalThis), ...options } = {}) => openJournal(settings, fetch, options);
+
+/**
+ * Reads and decrypts the newest months only (default 2).
+ * `latest`: how many months (default 2), or "all" for every month (slow; export does this itself).
+ * Resolves { entries (newest first, each with `hidden`), months (the loaded ones), allMonths: [{ month, files }], problems }.
+ * Throws a plain Error (code "passphrase", "gist", "settings", "not_configured"). In memory only.
+ */
+export async function loadJournal({ latest = 2, ...opts } = {}) {
+  const journal = journalArgs(opts);
+  return latest === "all" ? journal.readAll() : journal.readLatest(latest);
+}
+
+/** One more month ("YYYY-MM"), same shape as loadJournal. */
+export const loadMonth = async (month, opts) => journalArgs(opts).readMonth(month);
+
+/** Splits the optional `month` hint (the month the entry was loaded from) off the options. */
+const withHint = ({ month, ...opts } = {}) => [opts, { month }];
+
+/** Hides an entry (it stays in the journal). Resolves { changed }. `opts.month` ("YYYY-MM") speeds it up. */
+export const hideEntry = async (id, opts) => {
+  const [rest, hint] = withHint(opts);
+  return journalArgs(rest).hide(id, hint);
+};
+
+/** Brings a hidden entry back. Resolves { changed }. */
+export const unhideEntry = async (id, opts) => {
+  const [rest, hint] = withHint(opts);
+  return journalArgs(rest).unhide(id, hint);
+};
+
+/** Deletes the WHOLE journal; `phrase` must be exactly "DELETE MY JOURNAL". Resolves { deleted }. */
+export const deleteJournal = async (phrase, opts) => journalArgs(opts).deleteAll(phrase);
+
+/**
+ * Moves the old browser history ([{ id, ts, text, result }]) into the journal. Resolves
+ * { added, skipped, invalid, addedIds, skippedIds, invalidIds, duplicateIds, invalidIndexes }
+ * (the id lists hold the original ids as sent; remove from the old history only addedIds and skippedIds).
+ */
+export const importLegacy = async (entries, opts) => journalArgs(opts).importLegacy(entries);
+
+/**
+ * The journal as text for a download. format: "md" (default) or "txt".
+ * Resolves { text, filename, mime, count }. Hidden entries only with includeHidden.
+ */
+export async function exportJournal(format = "md", { includeHidden = false, now = () => Date.now(), ...opts } = {}) {
+  if (format !== "md" && format !== "txt") throw new JournalError("invalid", 'The format should be "md" or "txt".');
+  const { entries } = await journalArgs(opts).readAll();
+  const exportedAt = new Date(now());
+  const render = format === "md" ? renderMarkdown : renderText;
+  return {
+    text: render(entries, { includeHidden, exportedAt }),
+    filename: `empathy-journal-${exportedAt.toISOString().slice(0, 10)}.${format}`,
+    mime: format === "md" ? "text/markdown;charset=utf-8" : "text/plain;charset=utf-8",
+    count: entries.filter((e) => includeHidden || !e.hidden).length,
+  };
+}
+
+/**
+ * "Try saving again": saves an entry the job couldn't save (the `entry` from the answer).
+ * Never throws: resolves { saved: true, entryId } or { saved: false, entryId, error }.
+ */
+export async function retrySave(entry, opts) {
+  try {
+    const r = await journalArgs(opts).append(entry);
+    return { saved: true, entryId: r.entryId };
+  } catch (err) {
+    return { saved: false, entryId: typeof entry?.id === "string" ? entry.id : null, error: err instanceof JournalError ? err.message : "The journal could not be saved." };
+  }
 }

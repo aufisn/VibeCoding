@@ -9,6 +9,7 @@
 // once it has shown it. Anything older than a day is cleaned up by the job.
 
 const API = "https://api.github.com";
+export const REQUEST_TIMEOUT_MS = 30_000;
 export const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 /** A request ID: the time (base 36), a dash, 8 random hex characters. */
@@ -62,11 +63,15 @@ export function createGistClient({ token, gistId, fetch = globalThis.fetch }) {
   // out of it, so the 304 reaches this code and the header goes as written.)
   let lastTag = null;
   let lastFiles = null;
+  let listTruncated = false;
+
+  // Never wait forever on GitHub (a hung connection would hang the page, the server or the job).
+  const timeout = () => (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function" ? { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) } : {});
 
   async function call(method, body, extraHeaders = {}) {
     let res;
     try {
-      res = await fetch(`${API}/gists/${gistId}`, { method, headers: { ...headers, ...(body ? { "Content-Type": "application/json" } : {}), ...extraHeaders }, body: body && JSON.stringify(body), cache: "no-store" });
+      res = await fetch(`${API}/gists/${gistId}`, { method, headers: { ...headers, ...(body ? { "Content-Type": "application/json" } : {}), ...extraHeaders }, body: body && JSON.stringify(body), cache: "no-store", ...timeout() });
     } catch {
       throw new GitHubError(0, "The Gist");
     }
@@ -74,12 +79,18 @@ export function createGistClient({ token, gistId, fetch = globalThis.fetch }) {
   }
 
   return {
+    /** True when GitHub said the Gist has more files than it lists (about 300). */
+    get listTruncated() {
+      return listTruncated;
+    },
     /** { name: fileObject } for every file in the Gist. */
     async files() {
       const res = await call("GET", undefined, lastTag && lastFiles ? { "If-None-Match": lastTag } : {});
       if (res.status === 304 && lastFiles) return lastFiles;
       if (!res.ok) throw new GitHubError(res.status, "The Gist");
-      const files = (await res.json()).files ?? {};
+      const gist = await res.json();
+      const files = gist.files ?? {};
+      listTruncated = gist.truncated === true;
       lastTag = res.headers?.get?.("etag") ?? null;
       lastFiles = lastTag ? files : null;
       return files;
@@ -91,7 +102,7 @@ export function createGistClient({ token, gistId, fetch = globalThis.fetch }) {
     async version() {
       let res;
       try {
-        res = await fetch(`${API}/gists/${gistId}/commits?per_page=1`, { headers, cache: "no-store" });
+        res = await fetch(`${API}/gists/${gistId}/commits?per_page=1`, { headers, cache: "no-store", ...timeout() });
       } catch {
         throw new GitHubError(0, "The Gist");
       }
@@ -102,7 +113,13 @@ export function createGistClient({ token, gistId, fetch = globalThis.fetch }) {
     /** The full text of one file object (big files are fetched from raw_url). */
     async text(file) {
       if (!file.truncated) return file.content;
-      const res = await fetch(file.raw_url, { cache: "no-store" });
+      if (typeof file.raw_url !== "string" || !file.raw_url.startsWith("https://")) throw new GitHubError(0, "The Gist");
+      let res;
+      try {
+        res = await fetch(file.raw_url, { cache: "no-store", ...timeout() });
+      } catch {
+        throw new GitHubError(0, "The Gist");
+      }
       if (!res.ok) throw new GitHubError(res.status, "The Gist");
       return res.text();
     },

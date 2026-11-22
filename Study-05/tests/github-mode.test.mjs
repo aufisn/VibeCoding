@@ -149,7 +149,10 @@ test("full round trip: entry goes in encrypted, the reflection comes back, every
   assert.equal(result.usage.input_tokens, 1000);
   assert.match(claude.calls[0].messages[0].content, /A long day but a good one/);
   assert.equal(claude.calls[0].model, "claude-sonnet-5-5");
-  assert.deepEqual(Object.keys(gh.files), [], "request and answer are deleted");
+  assert.equal(result.saved, true);
+  assert.match(result.entryId, /^[0-9a-z]+-[0-9a-f]{8}$/);
+  assert.deepEqual(Object.keys(gh.files).filter((n) => !n.startsWith("journal-")), [], "request and answer are deleted");
+  assert.equal(Object.keys(gh.files).filter((n) => n.startsWith("journal-")).length, 1, "the entry is in the journal");
   assert.equal(storage.m.size, 0, "nothing pending");
   const phrases = progress.map((p) => p[0]);
   assert.ok(phrases.includes("Sending your words securely…") && phrases.includes("Waiting for GitHub to start…") && phrases.includes("Almost there…"));
@@ -286,7 +289,7 @@ test("the job deletes stale mailbox files (also FridgeChef's) but nothing else",
   gh.files["req-not-an-id.enc"] = "keep";
   gh.files[`req-${id}.enc`] = await encryptJson({ type: "reflect", text: "hello there" }, SETTINGS.passphrase);
   await runRequest({ id, passphrase: SETTINGS.passphrase, gist, claude: fakeClaude(), now: () => now, log: () => {} });
-  assert.deepEqual(Object.keys(gh.files).sort(), ["notes.txt", `res-${id}.enc`, "req-not-an-id.enc"].sort());
+  assert.deepEqual(Object.keys(gh.files).sort(), ["notes.txt", `res-${id}.enc`, "req-not-an-id.enc", "journal-2026-11.enc"].sort());
 });
 
 test("the workflow passes the request ID through env only and keeps secrets in the last step", async () => {
@@ -442,4 +445,118 @@ test("workflow: one run per request ID at a time, and a re-dispatched, already a
   assert.equal(again.ok, false);
   assert.match(again.message, /isn't in the Gist/);
   assert.equal(claude.calls.length, 1, "no second Claude call");
+});
+
+/* ---------- the journal, from the page ---------- */
+import { deleteJournal, exportJournal, hideEntry, importLegacy, loadJournal, loadMonth, retrySave, unhideEntry } from "../web/github-mode.mjs";
+import { createFakeGist, GIST_TOKEN as FAKE_TOKEN, makeEntry } from "./helpers/fake-gist.mjs";
+
+const PAGE = { gistId: GIST_ID, gistToken: FAKE_TOKEN, runToken: "github_pat_" + "b".repeat(40), passphrase: "correct horse battery" };
+const pageOpts = (fake, extra = {}) => ({ settings: PAGE, fetch: fake.fetch, sleep: noSleep, ...extra });
+
+test("page journal API: load, hide, unhide, export, import, retrySave, delete - nothing goes to storage", async () => {
+  const fake = createFakeGist();
+  const store = memoryStorage();
+  const realStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", { value: store, configurable: true });
+  try {
+    assert.deepEqual((await loadJournal(pageOpts(fake))).entries, []);
+    const saved = await retrySave(makeEntry({ id: "page-entry-0001", text: "Hello from the phone" }), pageOpts(fake));
+    assert.deepEqual(saved, { saved: true, entryId: "page-entry-0001" });
+    assert.deepEqual(await importLegacy([{ id: "o1", ts: Date.UTC(2026, 9, 1), text: "Old one", result: GOOD }], pageOpts(fake)), { added: 1, skipped: 0, invalid: 0, addedIds: ["o1"], skippedIds: [], invalidIds: [], duplicateIds: [], invalidIndexes: [] });
+    assert.deepEqual(await importLegacy([{ id: "o1", ts: Date.UTC(2026, 9, 1), text: "Old one", result: GOOD }], pageOpts(fake)), { added: 0, skipped: 1, invalid: 0, addedIds: [], skippedIds: ["o1"], invalidIds: [], duplicateIds: [], invalidIndexes: [] });
+    assert.deepEqual(await hideEntry("page-entry-0001", pageOpts(fake)), { changed: true });
+    let all = await loadJournal(pageOpts(fake));
+    assert.equal(all.entries.length, 2);
+    assert.equal(all.entries.find((e) => e.id === "page-entry-0001").hidden, true);
+    assert.deepEqual(all.allMonths.map((m) => m.month), ["2026-11", "2026-10"]);
+    assert.deepEqual((await loadJournal({ ...pageOpts(fake), latest: 1 })).months.map((m) => m.month), ["2026-11"]);
+    const oct = await loadMonth("2026-10", pageOpts(fake));
+    assert.deepEqual(oct.entries.map((e) => e.id), ["legacy-o1"]);
+    assert.equal(oct.allMonths.length, 2);
+    assert.equal((await loadJournal({ ...pageOpts(fake), latest: "all" })).entries.length, 2);
+    const md = await exportJournal("md", pageOpts(fake, { now: () => Date.UTC(2026, 10, 30) }));
+    assert.equal(md.filename, "empathy-journal-2026-11-30.md");
+    assert.match(md.mime, /markdown/);
+    assert.equal(md.count, 1);
+    assert.ok(md.text.includes("Old one") && !md.text.includes("Hello from the phone"));
+    const txt = await exportJournal("txt", pageOpts(fake, { includeHidden: true }));
+    assert.ok(txt.text.includes("Hello from the phone") && txt.filename.endsWith(".txt") && txt.count === 2);
+    await assert.rejects(exportJournal("pdf", pageOpts(fake)), /md.*txt/);
+    assert.deepEqual(await unhideEntry("page-entry-0001", pageOpts(fake)), { changed: true });
+    await assert.rejects(deleteJournal("delete my journal", pageOpts(fake)), (e) => e.code === "confirm");
+    assert.equal((await loadJournal(pageOpts(fake))).entries.length, 2);
+    assert.deepEqual(await deleteJournal("DELETE MY JOURNAL", pageOpts(fake)), { deleted: 2 });
+    assert.deepEqual((await loadJournal(pageOpts(fake))).entries, []);
+    assert.equal(store.m.size, 0, "no journal text (or anything else) was written to browser storage");
+    for (const f of Object.values(fake.files)) assert.ok(!f.includes("phone"));
+  } finally {
+    if (realStorage) Object.defineProperty(globalThis, "localStorage", realStorage);
+    else delete globalThis.localStorage;
+  }
+});
+
+test("page journal API: missing settings, wrong passphrase and Gist trouble give plain messages; retrySave never throws", async () => {
+  const fake = createFakeGist();
+  await assert.rejects(loadJournal({ settings: { gistId: "", gistToken: "", runToken: "", passphrase: "" }, fetch: fake.fetch }), (e) => e.code === "settings" && /isn't set up on this device/.test(e.message));
+  assert.equal(fake.calls.get, 0);
+  await retrySave(makeEntry({ id: "page-entry-0002" }), pageOpts(fake));
+  await assert.rejects(loadJournal({ ...pageOpts(fake), settings: { ...PAGE, passphrase: "another long passphrase" } }), (e) => e.code === "passphrase");
+  const bad = await retrySave(makeEntry({ id: "page-entry-0003" }), { ...pageOpts(fake), settings: { ...PAGE, gistToken: "ghp_" + "z".repeat(36) } });
+  assert.equal(bad.saved, false);
+  assert.match(bad.error, /refused the token/);
+  assert.ok(!bad.error.includes("ghp_"));
+  const nonsense = await retrySave({ nope: 1 }, pageOpts(fake));
+  assert.deepEqual([nonsense.saved, nonsense.entryId], [false, null]);
+  assert.match(nonsense.error, /can't be saved/);
+});
+
+test("the page gets saved, entryId, saveError and the entry (to retry) from the job's answer", async () => {
+  const claude = fakeClaude();
+  let gh;
+  let failJournal = false;
+  gh = fakeGitHub({
+    onDispatch: async (id, run) => {
+      run.status = "in_progress";
+      const gist = createGistClient({ token: SETTINGS.gistToken, gistId: GIST_ID, fetch: gh.fetch });
+      const journal = failJournal ? { append: async () => { throw Object.assign(new Error("Could not reach your journal (GitHub had a server problem)."), { name: "JournalError" }); } } : undefined;
+      await runRequest({ id, passphrase: SETTINGS.passphrase, gist, claude, journal, log: () => {} });
+      run.status = "completed";
+    },
+  });
+  const ok = await reflectViaGitHub({ text: "A good day", settings: SETTINGS, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep });
+  assert.equal(ok.saved, true);
+  assert.ok(ok.entryId);
+  assert.equal(ok.entry.text, "A good day", "the full entry comes back even when saved");
+  assert.equal(ok.entry.id, ok.entryId);
+  failJournal = true;
+  const notSaved = await reflectViaGitHub({ text: "Another good day", settings: SETTINGS, fetch: gh.fetch, storage: memoryStorage(), sleep: noSleep });
+  assert.equal(notSaved.saved, false);
+  assert.equal(notSaved.empathy, "That sounds lovely.");
+  assert.match(notSaved.saveError, /Could not reach your journal/);
+  assert.equal(notSaved.entry.text, "Another good day");
+  // and "Try saving again" works from that entry
+  assert.equal((await retrySave(notSaved.entry, { settings: SETTINGS, fetch: gh.fetch, sleep: noSleep })).saved, true);
+});
+
+test("resumePending returns entryId, saved and the full entry (with text), saved or not", async () => {
+  for (const failJournal of [false, true]) {
+    const gh = fakeGitHub();
+    const id = newRequestId();
+    const text = failJournal ? "Not saved today" : "Saved today";
+    gh.files[`req-${id}.enc`] = await encryptJson({ type: "reflect", text }, SETTINGS.passphrase);
+    gh.runs.push({ id: 1, display_title: `Empathy Diary ${id}`, status: "completed", conclusion: "success" });
+    const gist = createGistClient({ token: SETTINGS.gistToken, gistId: GIST_ID, fetch: gh.fetch });
+    const journal = failJournal ? { append: async () => { throw Object.assign(new Error("Could not reach your journal (GitHub had a server problem)."), { name: "JournalError" }); } } : undefined;
+    await runRequest({ id, passphrase: SETTINGS.passphrase, gist, claude: fakeClaude(), journal, log: () => {} });
+    const storage = memoryStorage();
+    storage.setItem(PENDING, id);
+    const r = await resumePending({ settings: SETTINGS, fetch: gh.fetch, storage, sleep: noSleep });
+    assert.equal(r.saved, !failJournal);
+    assert.equal(r.entryId, id);
+    assert.equal(r.entry.id, id);
+    assert.equal(r.entry.text, text);
+    assert.equal(r.entry.mode, "github");
+    assert.equal("saveError" in r, failJournal);
+  }
 });
